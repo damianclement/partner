@@ -327,42 +327,6 @@ export default function PartnersPage() {
             </div>
           </div>
         </div>
-
-        {/* Partner Status Overview */}
-        {/* <div className="p-6 rounded-lg border border-white/20">
-          <h3 className="text-lg font-semibold text-white mb-4">
-            Partner Status Overview
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="text-center">
-              <div className="text-3xl font-bold text-white mb-2">189</div>
-              <Badge variant="success" className="mb-2">
-                ACTIVE
-              </Badge>
-              <p className="text-sm text-obus-text-light">
-                Partners currently active
-              </p>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-obus-accent mb-2">23</div>
-              <Badge variant="warning" className="mb-2">
-                PENDING
-              </Badge>
-              <p className="text-sm text-obus-text-light">Awaiting approval</p>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-obus-text-light mb-2">
-                35
-              </div>
-              <Badge variant="destructive" className="mb-2">
-                SUSPENDED
-              </Badge>
-              <p className="text-sm text-obus-text-light">
-                Temporarily suspended
-              </p>
-            </div>
-          </div>
-        </div> */}
       </div>
     </DashboardLayout>
   );
