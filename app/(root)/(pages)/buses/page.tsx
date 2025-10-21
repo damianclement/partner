@@ -4,19 +4,7 @@ import * as React from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Plus,
-  Search,
-  Filter,
-  MoreHorizontal,
-  Edit,
-  Trash2,
-  MapPin,
-  Clock,
-  BarChart3,
-  ArrowUpDown,
-  ChevronDown,
-} from "lucide-react";
+import { Plus, MoreHorizontal, MapPin, Clock } from "lucide-react";
 // Simple table implementation without external dependencies
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -93,9 +81,7 @@ export default function BusesPage() {
   // Simple state management for filtering and selection
   const [filterValue, setFilterValue] = React.useState("");
   const [selectedBuses, setSelectedBuses] = React.useState<number[]>([]);
-  const [selectAll, setSelectAll] = React.useState(false);
-
-  // Filter buses based on search input
+// Filter buses based on search input
   const filteredBuses = buses.filter(
     (bus) =>
       bus.registration.toLowerCase().includes(filterValue.toLowerCase()) ||
@@ -115,7 +101,6 @@ export default function BusesPage() {
 
   // Handle select all
   const handleSelectAll = (checked: boolean) => {
-    setSelectAll(checked);
     if (checked) {
       setSelectedBuses(filteredBuses.map((bus) => bus.id));
     } else {
@@ -126,9 +111,6 @@ export default function BusesPage() {
   // Check if all filtered buses are selected
   const isAllSelected =
     filteredBuses.length > 0 && selectedBuses.length === filteredBuses.length;
-  const isIndeterminate =
-    selectedBuses.length > 0 && selectedBuses.length < filteredBuses.length;
-
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -148,37 +130,37 @@ export default function BusesPage() {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="p-6 rounded-lg border border-white/20">
-            <div className="text-sm font-medium text-obus-text-light mb-2">
+          <div className="rounded-lg border border-obus-primary/10 bg-white p-6 shadow-sm transition-colors dark:border-white/20 dark:bg-white/5">
+            <div className="text-sm font-medium text-obus-text-secondary dark:text-obus-text-light mb-2">
               Total Buses
             </div>
-            <div className="text-2xl font-bold text-white">847</div>
+            <div className="text-2xl font-bold text-obus-primary dark:text-white">847</div>
             <p className="text-xs text-obus-accent mt-1">+23 this month</p>
           </div>
 
-          <div className="p-6 rounded-lg border border-white/20">
-            <div className="text-sm font-medium text-obus-text-light mb-2">
+          <div className="rounded-lg border border-obus-primary/10 bg-white p-6 shadow-sm transition-colors dark:border-white/20 dark:bg-white/5">
+            <div className="text-sm font-medium text-obus-text-secondary dark:text-obus-text-light mb-2">
               Active Buses
             </div>
-            <div className="text-2xl font-bold text-white">782</div>
+            <div className="text-2xl font-bold text-obus-primary dark:text-white">782</div>
             <p className="text-xs text-obus-accent mt-1">92.3% operational</p>
           </div>
 
-          <div className="p-6 rounded-lg border border-white/20">
-            <div className="text-sm font-medium text-obus-text-light mb-2">
+          <div className="rounded-lg border border-obus-primary/10 bg-white p-6 shadow-sm transition-colors dark:border-white/20 dark:bg-white/5">
+            <div className="text-sm font-medium text-obus-text-secondary dark:text-obus-text-light mb-2">
               In Maintenance
             </div>
-            <div className="text-2xl font-bold text-white">45</div>
-            <p className="text-xs text-obus-text-light mt-1">
+            <div className="text-2xl font-bold text-obus-primary dark:text-white">45</div>
+            <p className="text-xs text-obus-text-secondary dark:text-obus-text-light mt-1">
               Scheduled maintenance
             </p>
           </div>
 
-          <div className="p-6 rounded-lg border border-white/20">
-            <div className="text-sm font-medium text-obus-text-light mb-2">
+          <div className="rounded-lg border border-obus-primary/10 bg-white p-6 shadow-sm transition-colors dark:border-white/20 dark:bg-white/5">
+            <div className="text-sm font-medium text-obus-text-secondary dark:text-obus-text-light mb-2">
               Total Routes
             </div>
-            <div className="text-2xl font-bold text-white">156</div>
+            <div className="text-2xl font-bold text-obus-primary dark:text-white">156</div>
             <p className="text-xs text-obus-accent mt-1">+8 new routes</p>
           </div>
         </div>
@@ -186,48 +168,48 @@ export default function BusesPage() {
         {/* Buses Table */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-white">All Buses</h3>
+            <h3 className="text-lg font-semibold text-obus-primary dark:text-white">All Buses</h3>
             <div className="flex items-center gap-2">
               <Input
                 placeholder="Filter buses..."
                 value={filterValue}
                 onChange={(event) => setFilterValue(event.target.value)}
-                className="max-w-sm bg-white/5 border-white/20 text-white"
+                className="max-w-sm"
               />
             </div>
           </div>
 
-          <div className="rounded-md border border-white/20 overflow-hidden">
+          <div className="rounded-md border border-obus-primary/10 bg-white overflow-hidden shadow-sm transition-colors dark:border-white/20 dark:bg-white/5">
             <Table>
               <TableHeader>
-                <TableRow className="hover:bg-transparent border-white/10">
-                  <TableHead className="text-obus-text-light w-12">
+                <TableRow className="hover:bg-transparent border-obus-primary/10 dark:border-white/20">
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light w-12">
                     <Checkbox
                       checked={isAllSelected}
                       onCheckedChange={handleSelectAll}
                       aria-label="Select all"
                     />
                   </TableHead>
-                  <TableHead className="text-obus-text-light">
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light">
                     Bus Registration
                   </TableHead>
-                  <TableHead className="text-obus-text-light">Route</TableHead>
-                  <TableHead className="text-obus-text-light">
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light">Route</TableHead>
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light">
                     Operator
                   </TableHead>
-                  <TableHead className="text-obus-text-light text-center">
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light text-center">
                     Capacity
                   </TableHead>
-                  <TableHead className="text-obus-text-light text-center">
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light text-center">
                     Location
                   </TableHead>
-                  <TableHead className="text-obus-text-light text-center">
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light text-center">
                     Next Departure
                   </TableHead>
-                  <TableHead className="text-obus-text-light text-center">
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light text-center">
                     Status
                   </TableHead>
-                  <TableHead className="text-obus-text-light">
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light">
                     Actions
                   </TableHead>
                 </TableRow>
@@ -237,7 +219,7 @@ export default function BusesPage() {
                   filteredBuses.map((bus) => (
                     <TableRow
                       key={bus.id}
-                      className="border-white/10 hover:bg-obus-primary/20"
+                      className="border-obus-primary/10 hover:bg-obus-primary/5 dark:border-white/20 dark:hover:bg-obus-primary/20"
                     >
                       <TableCell>
                         <Checkbox
@@ -254,10 +236,10 @@ export default function BusesPage() {
                             {bus.registration.substring(0, 3)}
                           </div>
                           <div>
-                            <p className="font-medium text-white">
+                            <p className="font-medium text-obus-primary dark:text-white">
                               {bus.registration}
                             </p>
-                            <p className="text-xs text-obus-text-light">
+                            <p className="text-xs text-obus-text-secondary dark:text-obus-text-light">
                               Bus ID: {bus.id}
                             </p>
                           </div>
@@ -265,27 +247,27 @@ export default function BusesPage() {
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          <MapPin className="w-4 h-4 text-obus-text-light" />
-                          <p className="font-medium text-white">{bus.route}</p>
+                          <MapPin className="w-4 h-4 text-obus-text-secondary dark:text-obus-text-light" />
+                          <p className="font-medium text-obus-primary dark:text-white">{bus.route}</p>
                         </div>
                       </TableCell>
                       <TableCell>
-                        <p className="font-medium text-white">{bus.operator}</p>
+                        <p className="font-medium text-obus-primary dark:text-white">{bus.operator}</p>
                       </TableCell>
                       <TableCell className="text-center">
-                        <p className="font-semibold text-white">
+                        <p className="font-semibold text-obus-primary dark:text-white">
                           {bus.capacity}
                         </p>
                       </TableCell>
                       <TableCell className="text-center">
-                        <p className="font-semibold text-white">
+                        <p className="font-semibold text-obus-primary dark:text-white">
                           {bus.currentLocation}
                         </p>
                       </TableCell>
                       <TableCell className="text-center">
                         <div className="flex items-center justify-center gap-2">
-                          <Clock className="w-4 h-4 text-obus-text-light" />
-                          <p className="font-semibold text-white">
+                          <Clock className="w-4 h-4 text-obus-text-secondary dark:text-obus-text-light" />
+                          <p className="font-semibold text-obus-primary dark:text-white">
                             {bus.nextDeparture}
                           </p>
                         </div>
@@ -301,10 +283,10 @@ export default function BusesPage() {
                           }
                           className={
                             bus.status === "active"
-                              ? "bg-green-500/20 text-green-400"
+                              ? "bg-green-500/20 text-green-400 hover:bg-green-500/20"
                               : bus.status === "maintenance"
-                              ? "bg-yellow-500/20 text-yellow-400"
-                              : "bg-gray-500/20 text-gray-400"
+                              ? "bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/20"
+                              : "bg-gray-500/20 text-gray-400 hover:bg-gray-500/20"
                           }
                         >
                           {bus.status.toUpperCase()}
@@ -320,12 +302,12 @@ export default function BusesPage() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent
                             align="end"
-                            className="bg-obus-primary border-white/20 text-white"
+                            className="border border-obus-primary/10 bg-white text-obus-text-primary dark:border-white/20 dark:bg-obus-primary dark:text-white"
                           >
-                            <DropdownMenuCheckboxItem className="text-white">
+                            <DropdownMenuCheckboxItem className="text-obus-text-primary dark:text-white">
                               View details
                             </DropdownMenuCheckboxItem>
-                            <DropdownMenuCheckboxItem className="text-white">
+                            <DropdownMenuCheckboxItem className="text-obus-text-primary dark:text-white">
                               Edit bus
                             </DropdownMenuCheckboxItem>
                           </DropdownMenuContent>
@@ -337,7 +319,7 @@ export default function BusesPage() {
                   <TableRow>
                     <TableCell
                       colSpan={9}
-                      className="h-24 text-center text-obus-text-light"
+                      className="h-24 text-center text-obus-text-secondary dark:text-obus-text-light"
                     >
                       No results.
                     </TableCell>
@@ -348,7 +330,7 @@ export default function BusesPage() {
           </div>
 
           <div className="flex items-center justify-between py-4">
-            <div className="text-sm text-obus-text-light">
+            <div className="text-sm text-obus-text-secondary dark:text-obus-text-light">
               {selectedBuses.length > 0
                 ? `${selectedBuses.length} of ${filteredBuses.length} buses selected`
                 : `Showing ${filteredBuses.length} of ${buses.length} buses`}
@@ -359,3 +341,8 @@ export default function BusesPage() {
     </DashboardLayout>
   );
 }
+
+
+
+
+

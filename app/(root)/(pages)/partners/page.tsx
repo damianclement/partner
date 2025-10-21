@@ -4,17 +4,7 @@ import * as React from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Plus,
-  Search,
-  Filter,
-  MoreHorizontal,
-  Edit,
-  Trash2,
-  BarChart3,
-  ArrowUpDown,
-  ChevronDown,
-} from "lucide-react";
+import { Plus, MoreHorizontal } from "lucide-react";
 // Simple table implementation without external dependencies
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -86,9 +76,7 @@ export default function PartnersPage() {
   // Simple state management for filtering and selection
   const [filterValue, setFilterValue] = React.useState("");
   const [selectedPartners, setSelectedPartners] = React.useState<number[]>([]);
-  const [selectAll, setSelectAll] = React.useState(false);
-
-  // Filter partners based on search input
+// Filter partners based on search input
   const filteredPartners = partners.filter(
     (partner) =>
       partner.name.toLowerCase().includes(filterValue.toLowerCase()) ||
@@ -106,7 +94,6 @@ export default function PartnersPage() {
 
   // Handle select all
   const handleSelectAll = (checked: boolean) => {
-    setSelectAll(checked);
     if (checked) {
       setSelectedPartners(filteredPartners.map((partner) => partner.id));
     } else {
@@ -118,10 +105,6 @@ export default function PartnersPage() {
   const isAllSelected =
     filteredPartners.length > 0 &&
     selectedPartners.length === filteredPartners.length;
-  const isIndeterminate =
-    selectedPartners.length > 0 &&
-    selectedPartners.length < filteredPartners.length;
-
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -141,35 +124,35 @@ export default function PartnersPage() {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="p-6 rounded-lg border border-white/20">
-            <div className="text-sm font-medium text-obus-text-light mb-2">
+          <div className="rounded-lg border border-obus-primary/10 bg-white p-6 shadow-sm transition-colors dark:border-white/20 dark:bg-white/5">
+            <div className="text-sm font-medium text-obus-text-secondary dark:text-obus-text-light mb-2">
               Total Partners
             </div>
-            <div className="text-2xl font-bold text-white">247</div>
+            <div className="text-2xl font-bold text-obus-primary dark:text-white">247</div>
             <p className="text-xs text-obus-accent mt-1">+12 this month</p>
           </div>
 
-          <div className="p-6 rounded-lg border border-white/20">
-            <div className="text-sm font-medium text-obus-text-light mb-2">
+          <div className="rounded-lg border border-obus-primary/10 bg-white p-6 shadow-sm transition-colors dark:border-white/20 dark:bg-white/5">
+            <div className="text-sm font-medium text-obus-text-secondary dark:text-obus-text-light mb-2">
               Active Partners
             </div>
-            <div className="text-2xl font-bold text-white">189</div>
+            <div className="text-2xl font-bold text-obus-primary dark:text-white">189</div>
             <p className="text-xs text-obus-accent mt-1">76% of total</p>
           </div>
 
-          <div className="p-6 rounded-lg border border-white/20">
-            <div className="text-sm font-medium text-obus-text-light mb-2">
+          <div className="rounded-lg border border-obus-primary/10 bg-white p-6 shadow-sm transition-colors dark:border-white/20 dark:bg-white/5">
+            <div className="text-sm font-medium text-obus-text-secondary dark:text-obus-text-light mb-2">
               Pending Approval
             </div>
-            <div className="text-2xl font-bold text-white">23</div>
-            <p className="text-xs text-obus-text-light mt-1">Awaiting review</p>
+            <div className="text-2xl font-bold text-obus-primary dark:text-white">23</div>
+            <p className="text-xs text-obus-text-secondary dark:text-obus-text-light mt-1">Awaiting review</p>
           </div>
 
-          <div className="p-6 rounded-lg border border-white/20">
-            <div className="text-sm font-medium text-obus-text-light mb-2">
+          <div className="rounded-lg border border-obus-primary/10 bg-white p-6 shadow-sm transition-colors dark:border-white/20 dark:bg-white/5">
+            <div className="text-sm font-medium text-obus-text-secondary dark:text-obus-text-light mb-2">
               Total Revenue
             </div>
-            <div className="text-2xl font-bold text-white">$124.5K</div>
+            <div className="text-2xl font-bold text-obus-primary dark:text-white">$124.5K</div>
             <p className="text-xs text-obus-accent mt-1">+15% this month</p>
           </div>
         </div>
@@ -177,44 +160,44 @@ export default function PartnersPage() {
         {/* Partners Table */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-white">All Partners</h3>
+            <h3 className="text-lg font-semibold text-obus-primary dark:text-white">All Partners</h3>
             <div className="flex items-center gap-2">
               <Input
                 placeholder="Filter partners..."
                 value={filterValue}
                 onChange={(event) => setFilterValue(event.target.value)}
-                className="max-w-sm bg-white/5 border-white/20 text-white"
+                className="max-w-sm"
               />
             </div>
           </div>
 
-          <div className="rounded-md border border-white/20 overflow-hidden">
+          <div className="rounded-md border border-obus-primary/10 bg-white overflow-hidden shadow-sm transition-colors dark:border-white/20 dark:bg-white/5">
             <Table>
               <TableHeader>
-                <TableRow className="hover:bg-transparent border-white/10">
-                  <TableHead className="text-obus-text-light w-12">
+                <TableRow className="hover:bg-transparent border-obus-primary/10 dark:border-white/20">
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light w-12">
                     <Checkbox
                       checked={isAllSelected}
                       onCheckedChange={handleSelectAll}
                       aria-label="Select all"
                     />
                   </TableHead>
-                  <TableHead className="text-obus-text-light">
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light">
                     Partner Name
                   </TableHead>
-                  <TableHead className="text-obus-text-light text-center">
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light text-center">
                     Agents
                   </TableHead>
-                  <TableHead className="text-obus-text-light text-center">
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light text-center">
                     Bookings
                   </TableHead>
-                  <TableHead className="text-obus-text-light text-center">
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light text-center">
                     Revenue
                   </TableHead>
-                  <TableHead className="text-obus-text-light text-center">
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light text-center">
                     Status
                   </TableHead>
-                  <TableHead className="text-obus-text-light">
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light">
                     Actions
                   </TableHead>
                 </TableRow>
@@ -224,7 +207,7 @@ export default function PartnersPage() {
                   filteredPartners.map((partner) => (
                     <TableRow
                       key={partner.id}
-                      className="border-white/10 hover:bg-obus-primary/20"
+                      className="border-obus-primary/10 hover:bg-obus-primary/5 dark:border-white/20 dark:hover:bg-obus-primary/20"
                     >
                       <TableCell>
                         <Checkbox
@@ -241,27 +224,27 @@ export default function PartnersPage() {
                             {partner.name.charAt(0)}
                           </div>
                           <div>
-                            <p className="font-medium text-white">
+                            <p className="font-medium text-obus-primary dark:text-white">
                               {partner.name}
                             </p>
-                            <p className="text-xs text-obus-text-light">
+                            <p className="text-xs text-obus-text-secondary dark:text-obus-text-light">
                               {partner.location}
                             </p>
                           </div>
                         </div>
                       </TableCell>
                       <TableCell className="text-center">
-                        <p className="font-semibold text-white">
+                        <p className="font-semibold text-obus-primary dark:text-white">
                           {partner.agents}
                         </p>
                       </TableCell>
                       <TableCell className="text-center">
-                        <p className="font-semibold text-white">
+                        <p className="font-semibold text-obus-primary dark:text-white">
                           {partner.bookings}
                         </p>
                       </TableCell>
                       <TableCell className="text-center">
-                        <p className="font-semibold text-white">
+                        <p className="font-semibold text-obus-primary dark:text-white">
                           {partner.revenue}
                         </p>
                       </TableCell>
@@ -276,10 +259,10 @@ export default function PartnersPage() {
                           }
                           className={
                             partner.status === "active"
-                              ? "bg-green-500/20 text-green-400"
+                              ? "bg-green-500/20 text-green-400 hover:bg-green-500/20"
                               : partner.status === "pending"
-                              ? "bg-yellow-500/20 text-yellow-400"
-                              : "bg-red-500/20 text-red-400"
+                              ? "bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/20"
+                              : "bg-red-500/20 text-red-400 hover:bg-red-500/20"
                           }
                         >
                           {partner.status.toUpperCase()}
@@ -295,12 +278,12 @@ export default function PartnersPage() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent
                             align="end"
-                            className="bg-obus-primary border-white/20 text-white"
+                            className="border border-obus-primary/10 bg-white text-obus-text-primary dark:border-white/20 dark:bg-obus-primary dark:text-white"
                           >
-                            <DropdownMenuCheckboxItem className="text-white">
+                            <DropdownMenuCheckboxItem className="text-obus-text-primary dark:text-white">
                               View details
                             </DropdownMenuCheckboxItem>
-                            <DropdownMenuCheckboxItem className="text-white">
+                            <DropdownMenuCheckboxItem className="text-obus-text-primary dark:text-white">
                               Edit partner
                             </DropdownMenuCheckboxItem>
                           </DropdownMenuContent>
@@ -312,7 +295,7 @@ export default function PartnersPage() {
                   <TableRow>
                     <TableCell
                       colSpan={7}
-                      className="h-24 text-center text-obus-text-light"
+                      className="h-24 text-center text-obus-text-secondary dark:text-obus-text-light"
                     >
                       No results.
                     </TableCell>
@@ -323,7 +306,7 @@ export default function PartnersPage() {
           </div>
 
           <div className="flex items-center justify-between py-4">
-            <div className="text-sm text-obus-text-light">
+            <div className="text-sm text-obus-text-secondary dark:text-obus-text-light">
               {selectedPartners.length > 0
                 ? `${selectedPartners.length} of ${filteredPartners.length} partners selected`
                 : `Showing ${filteredPartners.length} of ${partners.length} partners`}
@@ -334,3 +317,8 @@ export default function PartnersPage() {
     </DashboardLayout>
   );
 }
+
+
+
+
+

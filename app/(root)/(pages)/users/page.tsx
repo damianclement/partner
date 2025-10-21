@@ -6,16 +6,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Plus,
-  Search,
-  Filter,
   MoreHorizontal,
-  Edit,
-  Trash2,
   Shield,
   ShieldCheck,
-  BarChart3,
-  ArrowUpDown,
-  ChevronDown,
+  Eye,
+  Edit,
+  ToggleLeft,
+  ToggleRight,
+  Building2,
 } from "lucide-react";
 // Simple table implementation without external dependencies
 import { Input } from "@/components/ui/input";
@@ -37,65 +35,141 @@ import {
 
 export type User = {
   id: number;
-  name: string;
+  displayName: string;
+  fullName: string;
+  username: string;
   email: string;
-  role: string;
+  employeeId: string;
+  department: string;
+  position: string;
+  userType: "admin" | "partner";
+  partner?: {
+    name: string;
+    code: string;
+  };
   status: "active" | "inactive";
+  createdAt: string;
   lastLogin: string;
-  permissions: string[];
 };
 
 export default function UsersPage() {
   const users: User[] = [
     {
       id: 1,
-      name: "John Doe",
+      displayName: "John Doe",
+      fullName: "John Michael Doe",
+      username: "jdoe",
       email: "john.doe@obus.com",
-      role: "Administrator",
+      employeeId: "EMP001",
+      department: "IT Administration",
+      position: "System Administrator",
+      userType: "admin",
       status: "active",
+      createdAt: "2024-01-15",
       lastLogin: "2 hours ago",
-      permissions: ["all"],
     },
     {
       id: 2,
-      name: "Jane Smith",
+      displayName: "Jane Smith",
+      fullName: "Jane Elizabeth Smith",
+      username: "jsmith",
       email: "jane.smith@obus.com",
-      role: "Manager",
+      employeeId: "EMP002",
+      department: "Operations",
+      position: "Operations Manager",
+      userType: "admin",
       status: "active",
+      createdAt: "2024-01-20",
       lastLogin: "1 day ago",
-      permissions: ["partners", "agents", "reports"],
     },
     {
       id: 3,
-      name: "Bob Johnson",
+      displayName: "Bob Johnson",
+      fullName: "Robert Johnson",
+      username: "bjohnson",
       email: "bob.johnson@obus.com",
-      role: "Support Staff",
+      employeeId: "EMP003",
+      department: "Customer Support",
+      position: "Support Specialist",
+      userType: "admin",
       status: "active",
+      createdAt: "2024-02-01",
       lastLogin: "3 days ago",
-      permissions: ["bookings", "customers"],
     },
     {
       id: 4,
-      name: "Alice Brown",
+      displayName: "Alice Brown",
+      fullName: "Alice Marie Brown",
+      username: "abrown",
       email: "alice.brown@obus.com",
-      role: "Manager",
+      employeeId: "EMP004",
+      department: "Partner Relations",
+      position: "Partner Manager",
+      userType: "partner",
+      partner: {
+        name: "City Transport Ltd",
+        code: "CT001",
+      },
       status: "inactive",
+      createdAt: "2024-02-10",
       lastLogin: "2 weeks ago",
-      permissions: ["partners", "agents"],
+    },
+    {
+      id: 5,
+      displayName: "Mike Wilson",
+      fullName: "Michael James Wilson",
+      username: "mwilson",
+      email: "mike.wilson@citytransport.com",
+      employeeId: "CT002",
+      department: "Operations",
+      position: "Fleet Manager",
+      userType: "partner",
+      partner: {
+        name: "City Transport Ltd",
+        code: "CT001",
+      },
+      status: "active",
+      createdAt: "2024-02-15",
+      lastLogin: "1 hour ago",
+    },
+    {
+      id: 6,
+      displayName: "Sarah Davis",
+      fullName: "Sarah Anne Davis",
+      username: "sdavis",
+      email: "sarah.davis@metrotransit.com",
+      employeeId: "MT001",
+      department: "Customer Service",
+      position: "Customer Service Lead",
+      userType: "partner",
+      partner: {
+        name: "Metro Transit Co",
+        code: "MT001",
+      },
+      status: "active",
+      createdAt: "2024-02-20",
+      lastLogin: "30 minutes ago",
     },
   ];
 
   // Simple state management for filtering and selection
   const [filterValue, setFilterValue] = React.useState("");
   const [selectedUsers, setSelectedUsers] = React.useState<number[]>([]);
-  const [selectAll, setSelectAll] = React.useState(false);
-
   // Filter users based on search input
   const filteredUsers = users.filter(
     (user) =>
-      user.name.toLowerCase().includes(filterValue.toLowerCase()) ||
+      user.displayName.toLowerCase().includes(filterValue.toLowerCase()) ||
+      user.fullName.toLowerCase().includes(filterValue.toLowerCase()) ||
+      user.username.toLowerCase().includes(filterValue.toLowerCase()) ||
       user.email.toLowerCase().includes(filterValue.toLowerCase()) ||
-      user.role.toLowerCase().includes(filterValue.toLowerCase())
+      user.employeeId.toLowerCase().includes(filterValue.toLowerCase()) ||
+      user.department.toLowerCase().includes(filterValue.toLowerCase()) ||
+      user.position.toLowerCase().includes(filterValue.toLowerCase()) ||
+      user.userType.toLowerCase().includes(filterValue.toLowerCase()) ||
+      (user.partner &&
+        user.partner.name.toLowerCase().includes(filterValue.toLowerCase())) ||
+      (user.partner &&
+        user.partner.code.toLowerCase().includes(filterValue.toLowerCase()))
   );
 
   // Handle individual user selection
@@ -109,7 +183,6 @@ export default function UsersPage() {
 
   // Handle select all
   const handleSelectAll = (checked: boolean) => {
-    setSelectAll(checked);
     if (checked) {
       setSelectedUsers(filteredUsers.map((user) => user.id));
     } else {
@@ -120,9 +193,6 @@ export default function UsersPage() {
   // Check if all filtered users are selected
   const isAllSelected =
     filteredUsers.length > 0 && selectedUsers.length === filteredUsers.length;
-  const isIndeterminate =
-    selectedUsers.length > 0 && selectedUsers.length < filteredUsers.length;
-
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -142,36 +212,46 @@ export default function UsersPage() {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="p-6 rounded-lg border border-white/20">
-            <div className="text-sm font-medium text-obus-text-light mb-2">
+          <div className="rounded-lg border border-obus-primary/10 bg-white p-6 shadow-sm transition-colors dark:border-white/20 dark:bg-white/5">
+            <div className="text-sm font-medium text-obus-text-secondary dark:text-obus-text-light mb-2">
               Total Users
             </div>
-            <div className="text-2xl font-bold text-white">156</div>
+            <div className="text-2xl font-bold text-obus-primary dark:text-white">
+              156
+            </div>
             <p className="text-xs text-obus-accent mt-1">+5 this month</p>
           </div>
 
-          <div className="p-6 rounded-lg border border-white/20">
-            <div className="text-sm font-medium text-obus-text-light mb-2">
+          <div className="rounded-lg border border-obus-primary/10 bg-white p-6 shadow-sm transition-colors dark:border-white/20 dark:bg-white/5">
+            <div className="text-sm font-medium text-obus-text-secondary dark:text-obus-text-light mb-2">
               Active Users
             </div>
-            <div className="text-2xl font-bold text-white">142</div>
+            <div className="text-2xl font-bold text-obus-primary dark:text-white">
+              142
+            </div>
             <p className="text-xs text-obus-accent mt-1">91% active rate</p>
           </div>
 
-          <div className="p-6 rounded-lg border border-white/20">
-            <div className="text-sm font-medium text-obus-text-light mb-2">
+          <div className="rounded-lg border border-obus-primary/10 bg-white p-6 shadow-sm transition-colors dark:border-white/20 dark:bg-white/5">
+            <div className="text-sm font-medium text-obus-text-secondary dark:text-obus-text-light mb-2">
               Administrators
             </div>
-            <div className="text-2xl font-bold text-white">3</div>
-            <p className="text-xs text-obus-text-light mt-1">System admins</p>
+            <div className="text-2xl font-bold text-obus-primary dark:text-white">
+              3
+            </div>
+            <p className="text-xs text-obus-text-secondary dark:text-obus-text-light mt-1">
+              System admins
+            </p>
           </div>
 
-          <div className="p-6 rounded-lg border border-white/20">
-            <div className="text-sm font-medium text-obus-text-light mb-2">
+          <div className="rounded-lg border border-obus-primary/10 bg-white p-6 shadow-sm transition-colors dark:border-white/20 dark:bg-white/5">
+            <div className="text-sm font-medium text-obus-text-secondary dark:text-obus-text-light mb-2">
               Pending Invites
             </div>
-            <div className="text-2xl font-bold text-white">8</div>
-            <p className="text-xs text-obus-text-light mt-1">
+            <div className="text-2xl font-bold text-obus-primary dark:text-white">
+              8
+            </div>
+            <p className="text-xs text-obus-text-secondary dark:text-obus-text-light mt-1">
               Awaiting acceptance
             </p>
           </div>
@@ -180,42 +260,61 @@ export default function UsersPage() {
         {/* Users Table */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-white">All Users</h3>
+            <h3 className="text-lg font-semibold text-obus-primary dark:text-white">
+              All Users
+            </h3>
             <div className="flex items-center gap-2">
               <Input
                 placeholder="Filter users..."
                 value={filterValue}
                 onChange={(event) => setFilterValue(event.target.value)}
-                className="max-w-sm bg-white/5 border-white/20 text-white"
+                className="max-w-sm"
               />
             </div>
           </div>
 
-          <div className="rounded-md border border-white/20 overflow-hidden">
+          <div className="rounded-md border border-obus-primary/10 bg-white overflow-hidden shadow-sm transition-colors dark:border-white/20 dark:bg-white/5">
             <Table>
               <TableHeader>
-                <TableRow className="hover:bg-transparent border-white/10">
-                  <TableHead className="text-obus-text-light w-12">
+                <TableRow className="hover:bg-transparent border-obus-primary/10 dark:border-white/20">
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light w-12">
                     <Checkbox
                       checked={isAllSelected}
                       onCheckedChange={handleSelectAll}
                       aria-label="Select all"
                     />
                   </TableHead>
-                  <TableHead className="text-obus-text-light">
-                    User Name
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light">
+                    User
                   </TableHead>
-                  <TableHead className="text-obus-text-light">Role</TableHead>
-                  <TableHead className="text-obus-text-light text-center">
-                    Permissions
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light">
+                    Type
                   </TableHead>
-                  <TableHead className="text-obus-text-light text-center">
-                    Last Login
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light">
+                    Username
                   </TableHead>
-                  <TableHead className="text-obus-text-light text-center">
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light">
+                    Email
+                  </TableHead>
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light">
+                    Employee ID
+                  </TableHead>
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light">
+                    Department
+                  </TableHead>
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light">
+                    Position
+                  </TableHead>
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light">
+                    Partner
+                  </TableHead>
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light text-center">
                     Status
                   </TableHead>
-                  <TableHead className="text-obus-text-light">
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light text-center">
+                    Created
+                  </TableHead>
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light">
                     Actions
                   </TableHead>
                 </TableRow>
@@ -225,7 +324,7 @@ export default function UsersPage() {
                   filteredUsers.map((user) => (
                     <TableRow
                       key={user.id}
-                      className="border-white/10 hover:bg-obus-primary/20"
+                      className="border-obus-primary/10 hover:bg-obus-primary/5 dark:border-white/20 dark:hover:bg-obus-primary/20"
                     >
                       <TableCell>
                         <Checkbox
@@ -233,43 +332,94 @@ export default function UsersPage() {
                           onCheckedChange={(checked) =>
                             handleUserSelect(user.id, !!checked)
                           }
-                          aria-label={`Select ${user.name}`}
+                          aria-label={`Select ${user.displayName}`}
                         />
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 bg-obus-accent rounded-lg flex items-center justify-center text-white font-bold text-sm">
-                            {user.name.charAt(0)}
+                          <div className="relative">
+                            <div className="w-10 h-10 bg-gradient-to-br from-obus-accent to-obus-accent/80 rounded-full flex items-center justify-center text-white font-semibold text-sm shadow-md ring-2 ring-obus-accent/20 hover:ring-obus-accent/40 transition-all duration-200">
+                              {user.displayName.charAt(0)}
+                            </div>
+                            <div
+                              className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white dark:border-obus-primary ${
+                                user.status === "active"
+                                  ? "bg-green-500"
+                                  : "bg-gray-400"
+                              }`}
+                            ></div>
                           </div>
                           <div>
-                            <p className="font-medium text-white">
-                              {user.name}
+                            <p className="font-medium text-obus-primary dark:text-white">
+                              {user.displayName}
                             </p>
-                            <p className="text-xs text-obus-text-light">
-                              {user.email}
+                            <p className="text-xs text-obus-text-secondary dark:text-obus-text-light">
+                              {user.fullName}
                             </p>
                           </div>
                         </div>
                       </TableCell>
                       <TableCell>
-                        <div className="flex items-center gap-2">
-                          {user.role === "Administrator" ? (
-                            <ShieldCheck className="w-4 h-4 text-obus-accent" />
+                        <Badge
+                          className={
+                            user.userType === "admin"
+                              ? "bg-red-500/20 text-red-400 hover:bg-red-500/20"
+                              : "bg-blue-500/20 text-blue-400 hover:bg-blue-500/20"
+                          }
+                        >
+                          {user.userType === "admin" ? (
+                            <div className="flex items-center gap-1">
+                              <ShieldCheck className="w-3 h-3" />
+                              Admin
+                            </div>
                           ) : (
-                            <Shield className="w-4 h-4 text-obus-text-light" />
+                            <div className="flex items-center gap-1">
+                              <Building2 className="w-3 h-3" />
+                              Partner
+                            </div>
                           )}
-                          <p className="font-medium text-white">{user.role}</p>
-                        </div>
+                        </Badge>
                       </TableCell>
-                      <TableCell className="text-center">
-                        <p className="font-semibold text-white">
-                          {user.permissions.length}
+                      <TableCell>
+                        <p className="font-medium text-obus-primary dark:text-white">
+                          {user.username}
                         </p>
                       </TableCell>
-                      <TableCell className="text-center">
-                        <p className="font-semibold text-white">
-                          {user.lastLogin}
+                      <TableCell>
+                        <p className="font-medium text-obus-primary dark:text-white">
+                          {user.email}
                         </p>
+                      </TableCell>
+                      <TableCell>
+                        <p className="font-medium text-obus-primary dark:text-white">
+                          {user.employeeId}
+                        </p>
+                      </TableCell>
+                      <TableCell>
+                        <p className="font-medium text-obus-primary dark:text-white">
+                          {user.department}
+                        </p>
+                      </TableCell>
+                      <TableCell>
+                        <p className="font-medium text-obus-primary dark:text-white">
+                          {user.position}
+                        </p>
+                      </TableCell>
+                      <TableCell>
+                        {user.partner ? (
+                          <div>
+                            <p className="font-medium text-obus-primary dark:text-white">
+                              {user.partner.name}
+                            </p>
+                            <p className="text-xs text-obus-text-secondary dark:text-obus-text-light">
+                              Code: {user.partner.code}
+                            </p>
+                          </div>
+                        ) : (
+                          <p className="text-obus-text-secondary dark:text-obus-text-light">
+                            -
+                          </p>
+                        )}
                       </TableCell>
                       <TableCell className="text-center">
                         <Badge
@@ -278,12 +428,17 @@ export default function UsersPage() {
                           }
                           className={
                             user.status === "active"
-                              ? "bg-green-500/20 text-green-400"
-                              : "bg-gray-500/20 text-gray-400"
+                              ? "bg-green-500/20 text-green-400 hover:bg-green-500/20"
+                              : "bg-gray-500/20 text-gray-400 hover:bg-gray-500/20"
                           }
                         >
                           {user.status.toUpperCase()}
                         </Badge>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <p className="font-medium text-obus-primary dark:text-white">
+                          {user.createdAt}
+                        </p>
                       </TableCell>
                       <TableCell>
                         <DropdownMenu>
@@ -295,13 +450,23 @@ export default function UsersPage() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent
                             align="end"
-                            className="bg-obus-primary border-white/20 text-white"
+                            className="border border-obus-primary/10 bg-white text-obus-text-primary dark:border-white/20 dark:bg-obus-primary dark:text-white"
                           >
-                            <DropdownMenuCheckboxItem className="text-white">
+                            <DropdownMenuCheckboxItem className="text-obus-text-primary dark:text-white flex items-center gap-2">
+                              <Eye className="w-4 h-4" />
                               View details
                             </DropdownMenuCheckboxItem>
-                            <DropdownMenuCheckboxItem className="text-white">
+                            <DropdownMenuCheckboxItem className="text-obus-text-primary dark:text-white flex items-center gap-2">
+                              <Edit className="w-4 h-4" />
                               Edit user
+                            </DropdownMenuCheckboxItem>
+                            <DropdownMenuCheckboxItem className="text-obus-text-primary dark:text-white flex items-center gap-2">
+                              {user.status === "active" ? (
+                                <ToggleLeft className="w-4 h-4" />
+                              ) : (
+                                <ToggleRight className="w-4 h-4" />
+                              )}
+                              Toggle Status
                             </DropdownMenuCheckboxItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -311,8 +476,8 @@ export default function UsersPage() {
                 ) : (
                   <TableRow>
                     <TableCell
-                      colSpan={7}
-                      className="h-24 text-center text-obus-text-light"
+                      colSpan={12}
+                      className="h-24 text-center text-obus-text-secondary dark:text-obus-text-light"
                     >
                       No results.
                     </TableCell>
@@ -323,7 +488,7 @@ export default function UsersPage() {
           </div>
 
           <div className="flex items-center justify-between py-4">
-            <div className="text-sm text-obus-text-light">
+            <div className="text-sm text-obus-text-secondary dark:text-obus-text-light">
               {selectedUsers.length > 0
                 ? `${selectedUsers.length} of ${filteredUsers.length} users selected`
                 : `Showing ${filteredUsers.length} of ${users.length} users`}

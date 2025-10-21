@@ -11,6 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 interface TopBarProps {
   sidebarCollapsed: boolean;
@@ -28,7 +29,7 @@ export function TopBar({
   return (
     <header
       className={cn(
-        "fixed top-0 right-0 z-30 bg-obus-primary text-white h-16 flex items-center justify-between px-6 shadow-sm transition-all duration-300 ease-in-out border-b border-white/10",
+        "fixed top-0 right-0 z-30 bg-white text-obus-text-primary h-16 flex items-center justify-between px-6 shadow-sm transition-all duration-300 ease-in-out border-b border-obus-primary/10 dark:bg-obus-primary dark:text-white dark:border-white/10",
         isMobile ? "left-0" : sidebarCollapsed ? "left-16" : "left-64"
       )}
     >
@@ -36,7 +37,7 @@ export function TopBar({
       <div className="flex items-center">
         <button
           onClick={onToggleSidebar}
-          className="p-2 hover:bg-obus-primary/80 rounded-md transition-colors"
+          className="p-2 rounded-md transition-colors hover:bg-obus-primary/5 dark:hover:bg-white/10"
           title="Toggle sidebar"
         >
           <Menu className="w-5 h-5" />
@@ -51,47 +52,54 @@ export function TopBar({
             placeholder="Search partners, agents, users..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="bg-white/10 border-white/20 text-white placeholder:text-obus-text-light focus:bg-white/20 focus:border-obus-accent"
+            className="bg-obus-bg border-obus-primary/15 text-obus-text-primary placeholder:text-obus-text-secondary focus:bg-white focus:border-obus-accent/70 dark:bg-white/10 dark:border-white/20 dark:text-white dark:placeholder:text-obus-text-light"
           />
           {!isMobile && (
-            <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-obus-text-light">
+            <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-obus-text-secondary dark:text-obus-text-light">
               <Search className="w-4 h-4" />
             </div>
           )}
         </div>
       </div>
 
-      {/* Right Section - Notifications & User Menu */}
+      {/* Right Section - Notifications, Theme & User Menu */}
       <div className="flex items-center gap-4">
+        <ThemeToggle />
+
         {/* Notifications */}
-        <button className="relative p-2 hover:bg-obus-primary/80 rounded-md transition-colors">
+        <button className="relative p-2 rounded-md transition-colors hover:bg-obus-primary/5 dark:hover:bg-white/10">
           <Bell className="w-5 h-5" />
-          <span className="absolute -top-1 -right-1 w-3 h-3 bg-obus-accent rounded-full"></span>
+          <span className="absolute -top-1 -right-1 w-3 h-3 bg-obus-accent rounded-full" />
         </button>
 
         {/* User Profile */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-3 hover:bg-obus-primary/80 rounded-md p-2 transition-colors">
+            <button className="flex items-center gap-3 rounded-md p-2 transition-colors hover:bg-obus-primary/5 dark:hover:bg-white/10">
               <div className="w-8 h-8 bg-obus-accent rounded-full flex items-center justify-center text-white font-semibold text-sm">
                 JD
               </div>
               {!isMobile && (
                 <div className="text-sm">
-                  <p className="font-medium text-white">John Doe</p>
-                  <p className="text-xs text-obus-text-light">Administrator</p>
+                  <p className="font-medium text-obus-primary dark:text-white">John Doe</p>
+                  <p className="text-xs text-obus-text-secondary dark:text-obus-text-light">
+                    Administrator
+                  </p>
                 </div>
               )}
-              <ChevronDown className="w-4 h-4 text-obus-text-light" />
+              <ChevronDown className="w-4 h-4 text-obus-text-secondary dark:text-obus-text-light" />
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuItem className="cursor-pointer">
+          <DropdownMenuContent
+            align="end"
+            className="w-56 border border-obus-primary/10 bg-white text-obus-text-primary shadow-lg dark:border-white/10 dark:bg-obus-primary dark:text-white"
+          >
+            <DropdownMenuItem className="cursor-pointer text-obus-text-secondary hover:bg-obus-primary/5 hover:text-obus-primary focus:bg-obus-primary/5 focus:text-obus-primary dark:text-obus-text-light dark:hover:bg-white/10 dark:hover:text-white dark:focus:bg-white/10 dark:focus:text-white">
               <User className="w-4 h-4 mr-2" />
               Profile
             </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="cursor-pointer text-red-600 focus:text-red-600">
+            <DropdownMenuSeparator className="bg-obus-primary/10 dark:bg-white/10" />
+            <DropdownMenuItem className="cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-600/10 hover:text-red-600 hover:bg-red-600/10">
               <LogOut className="w-4 h-4 mr-2" />
               Logout
             </DropdownMenuItem>

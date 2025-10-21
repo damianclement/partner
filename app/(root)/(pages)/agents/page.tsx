@@ -4,19 +4,7 @@ import * as React from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Plus,
-  Search,
-  Filter,
-  MoreHorizontal,
-  Edit,
-  Trash2,
-  UserCheck,
-  UserX,
-  BarChart3,
-  ArrowUpDown,
-  ChevronDown,
-} from "lucide-react";
+import { Plus, MoreHorizontal } from "lucide-react";
 // Simple table implementation without external dependencies
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -93,9 +81,7 @@ export default function AgentsPage() {
   // Simple state management for filtering and selection
   const [filterValue, setFilterValue] = React.useState("");
   const [selectedAgents, setSelectedAgents] = React.useState<number[]>([]);
-  const [selectAll, setSelectAll] = React.useState(false);
-
-  // Filter agents based on search input
+// Filter agents based on search input
   const filteredAgents = agents.filter(
     (agent) =>
       agent.name.toLowerCase().includes(filterValue.toLowerCase()) ||
@@ -114,7 +100,6 @@ export default function AgentsPage() {
 
   // Handle select all
   const handleSelectAll = (checked: boolean) => {
-    setSelectAll(checked);
     if (checked) {
       setSelectedAgents(filteredAgents.map((agent) => agent.id));
     } else {
@@ -126,9 +111,6 @@ export default function AgentsPage() {
   const isAllSelected =
     filteredAgents.length > 0 &&
     selectedAgents.length === filteredAgents.length;
-  const isIndeterminate =
-    selectedAgents.length > 0 && selectedAgents.length < filteredAgents.length;
-
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -148,37 +130,37 @@ export default function AgentsPage() {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="p-6 rounded-lg border border-white/20">
-            <div className="text-sm font-medium text-obus-text-light mb-2">
+          <div className="rounded-lg border border-obus-primary/10 bg-white p-6 shadow-sm transition-colors dark:border-white/20 dark:bg-white/5">
+            <div className="text-sm font-medium text-obus-text-secondary dark:text-obus-text-light mb-2">
               Total Agents
             </div>
-            <div className="text-2xl font-bold text-white">1,423</div>
+            <div className="text-2xl font-bold text-obus-primary dark:text-white">1,423</div>
             <p className="text-xs text-obus-accent mt-1">+8% this month</p>
           </div>
 
-          <div className="p-6 rounded-lg border border-white/20">
-            <div className="text-sm font-medium text-obus-text-light mb-2">
+          <div className="rounded-lg border border-obus-primary/10 bg-white p-6 shadow-sm transition-colors dark:border-white/20 dark:bg-white/5">
+            <div className="text-sm font-medium text-obus-text-secondary dark:text-obus-text-light mb-2">
               Active Agents
             </div>
-            <div className="text-2xl font-bold text-white">1,289</div>
+            <div className="text-2xl font-bold text-obus-primary dark:text-white">1,289</div>
             <p className="text-xs text-obus-accent mt-1">90.5% active rate</p>
           </div>
 
-          <div className="p-6 rounded-lg border border-white/20">
-            <div className="text-sm font-medium text-obus-text-light mb-2">
+          <div className="rounded-lg border border-obus-primary/10 bg-white p-6 shadow-sm transition-colors dark:border-white/20 dark:bg-white/5">
+            <div className="text-sm font-medium text-obus-text-secondary dark:text-obus-text-light mb-2">
               Pending Approval
             </div>
-            <div className="text-2xl font-bold text-white">87</div>
-            <p className="text-xs text-obus-text-light mt-1">
+            <div className="text-2xl font-bold text-obus-primary dark:text-white">87</div>
+            <p className="text-xs text-obus-text-secondary dark:text-obus-text-light mt-1">
               Awaiting verification
             </p>
           </div>
 
-          <div className="p-6 rounded-lg border border-white/20">
-            <div className="text-sm font-medium text-obus-text-light mb-2">
+          <div className="rounded-lg border border-obus-primary/10 bg-white p-6 shadow-sm transition-colors dark:border-white/20 dark:bg-white/5">
+            <div className="text-sm font-medium text-obus-text-secondary dark:text-obus-text-light mb-2">
               Avg. Rating
             </div>
-            <div className="text-2xl font-bold text-white">4.6</div>
+            <div className="text-2xl font-bold text-obus-primary dark:text-white">4.6</div>
             <p className="text-xs text-obus-accent mt-1">+0.2 this month</p>
           </div>
         </div>
@@ -186,47 +168,47 @@ export default function AgentsPage() {
         {/* Agents Table */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-white">All Agents</h3>
+            <h3 className="text-lg font-semibold text-obus-primary dark:text-white">All Agents</h3>
             <div className="flex items-center gap-2">
               <Input
                 placeholder="Filter agents..."
                 value={filterValue}
                 onChange={(event) => setFilterValue(event.target.value)}
-                className="max-w-sm bg-white/5 border-white/20 text-white"
+                className="max-w-sm"
               />
             </div>
           </div>
 
-          <div className="rounded-md border border-white/20 overflow-hidden">
+          <div className="rounded-md border border-obus-primary/10 bg-white overflow-hidden shadow-sm transition-colors dark:border-white/20 dark:bg-white/5">
             <Table>
               <TableHeader>
-                <TableRow className="hover:bg-transparent border-white/10">
-                  <TableHead className="text-obus-text-light w-12">
+                <TableRow className="hover:bg-transparent border-obus-primary/10 dark:border-white/20">
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light w-12">
                     <Checkbox
                       checked={isAllSelected}
                       onCheckedChange={handleSelectAll}
                       aria-label="Select all"
                     />
                   </TableHead>
-                  <TableHead className="text-obus-text-light">
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light">
                     Agent Name
                   </TableHead>
-                  <TableHead className="text-obus-text-light">
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light">
                     Partner
                   </TableHead>
-                  <TableHead className="text-obus-text-light text-center">
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light text-center">
                     Role
                   </TableHead>
-                  <TableHead className="text-obus-text-light text-center">
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light text-center">
                     Bookings
                   </TableHead>
-                  <TableHead className="text-obus-text-light text-center">
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light text-center">
                     Rating
                   </TableHead>
-                  <TableHead className="text-obus-text-light text-center">
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light text-center">
                     Status
                   </TableHead>
-                  <TableHead className="text-obus-text-light">
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light">
                     Actions
                   </TableHead>
                 </TableRow>
@@ -236,7 +218,7 @@ export default function AgentsPage() {
                   filteredAgents.map((agent) => (
                     <TableRow
                       key={agent.id}
-                      className="border-white/10 hover:bg-obus-primary/20"
+                      className="border-obus-primary/10 hover:bg-obus-primary/5 dark:border-white/20 dark:hover:bg-obus-primary/20"
                     >
                       <TableCell>
                         <Checkbox
@@ -253,30 +235,30 @@ export default function AgentsPage() {
                             {agent.name.charAt(0)}
                           </div>
                           <div>
-                            <p className="font-medium text-white">
+                            <p className="font-medium text-obus-primary dark:text-white">
                               {agent.name}
                             </p>
-                            <p className="text-xs text-obus-text-light">
+                            <p className="text-xs text-obus-text-secondary dark:text-obus-text-light">
                               {agent.email}
                             </p>
                           </div>
                         </div>
                       </TableCell>
                       <TableCell>
-                        <p className="font-medium text-white">
+                        <p className="font-medium text-obus-primary dark:text-white">
                           {agent.partner}
                         </p>
                       </TableCell>
                       <TableCell className="text-center">
-                        <p className="font-semibold text-white">{agent.role}</p>
+                        <p className="font-semibold text-obus-primary dark:text-white">{agent.role}</p>
                       </TableCell>
                       <TableCell className="text-center">
-                        <p className="font-semibold text-white">
+                        <p className="font-semibold text-obus-primary dark:text-white">
                           {agent.bookings}
                         </p>
                       </TableCell>
                       <TableCell className="text-center">
-                        <p className="font-semibold text-white">
+                        <p className="font-semibold text-obus-primary dark:text-white">
                           {agent.rating > 0 ? agent.rating : "N/A"}
                         </p>
                       </TableCell>
@@ -291,10 +273,10 @@ export default function AgentsPage() {
                           }
                           className={
                             agent.status === "active"
-                              ? "bg-green-500/20 text-green-400"
+                              ? "bg-green-500/20 text-green-400 hover:bg-green-500/20"
                               : agent.status === "pending"
-                              ? "bg-yellow-500/20 text-yellow-400"
-                              : "bg-red-500/20 text-red-400"
+                              ? "bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/20"
+                              : "bg-red-500/20 text-red-400 hover:bg-red-500/20"
                           }
                         >
                           {agent.status.toUpperCase()}
@@ -310,12 +292,12 @@ export default function AgentsPage() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent
                             align="end"
-                            className="bg-obus-primary border-white/20 text-white"
+                            className="border border-obus-primary/10 bg-white text-obus-text-primary dark:border-white/20 dark:bg-obus-primary dark:text-white"
                           >
-                            <DropdownMenuCheckboxItem className="text-white">
+                            <DropdownMenuCheckboxItem className="text-obus-text-primary dark:text-white">
                               View details
                             </DropdownMenuCheckboxItem>
-                            <DropdownMenuCheckboxItem className="text-white">
+                            <DropdownMenuCheckboxItem className="text-obus-text-primary dark:text-white">
                               Edit agent
                             </DropdownMenuCheckboxItem>
                           </DropdownMenuContent>
@@ -327,7 +309,7 @@ export default function AgentsPage() {
                   <TableRow>
                     <TableCell
                       colSpan={8}
-                      className="h-24 text-center text-obus-text-light"
+                      className="h-24 text-center text-obus-text-secondary dark:text-obus-text-light"
                     >
                       No results.
                     </TableCell>
@@ -338,7 +320,7 @@ export default function AgentsPage() {
           </div>
 
           <div className="flex items-center justify-between py-4">
-            <div className="text-sm text-obus-text-light">
+            <div className="text-sm text-obus-text-secondary dark:text-obus-text-light">
               {selectedAgents.length > 0
                 ? `${selectedAgents.length} of ${filteredAgents.length} agents selected`
                 : `Showing ${filteredAgents.length} of ${agents.length} agents`}
@@ -349,3 +331,9 @@ export default function AgentsPage() {
     </DashboardLayout>
   );
 }
+
+
+
+
+
+

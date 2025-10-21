@@ -4,20 +4,7 @@ import * as React from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Plus,
-  Search,
-  Filter,
-  MoreHorizontal,
-  Edit,
-  Trash2,
-  Shield,
-  ShieldCheck,
-  Key,
-  Users,
-  ArrowUpDown,
-  ChevronDown,
-} from "lucide-react";
+import { Plus, MoreHorizontal, Shield, ShieldCheck, Key, Users } from "lucide-react";
 // Simple table implementation without external dependencies
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -114,9 +101,7 @@ export default function UserRolesPage() {
   // Simple state management for filtering and selection
   const [filterValue, setFilterValue] = React.useState("");
   const [selectedRoles, setSelectedRoles] = React.useState<number[]>([]);
-  const [selectAll, setSelectAll] = React.useState(false);
-
-  // Filter roles based on search input
+// Filter roles based on search input
   const filteredRoles = roles.filter(
     (role) =>
       role.name.toLowerCase().includes(filterValue.toLowerCase()) ||
@@ -135,7 +120,6 @@ export default function UserRolesPage() {
 
   // Handle select all
   const handleSelectAll = (checked: boolean) => {
-    setSelectAll(checked);
     if (checked) {
       setSelectedRoles(filteredRoles.map((role) => role.id));
     } else {
@@ -146,22 +130,19 @@ export default function UserRolesPage() {
   // Check if all filtered roles are selected
   const isAllSelected =
     filteredRoles.length > 0 && selectedRoles.length === filteredRoles.length;
-  const isIndeterminate =
-    selectedRoles.length > 0 && selectedRoles.length < filteredRoles.length;
-
   // Get access level badge styling
   const getAccessLevelBadge = (level: string) => {
     switch (level) {
       case "admin":
-        return "bg-red-500/20 text-red-400";
+        return "bg-red-500/20 text-red-400 hover:bg-red-500/20";
       case "manager":
-        return "bg-blue-500/20 text-blue-400";
+        return "bg-blue-500/20 text-blue-400 hover:bg-blue-500/20";
       case "staff":
-        return "bg-green-500/20 text-green-400";
+        return "bg-green-500/20 text-green-400 hover:bg-green-500/20";
       case "viewer":
-        return "bg-gray-500/20 text-gray-400";
+        return "bg-gray-500/20 text-gray-400 hover:bg-gray-500/20";
       default:
-        return "bg-gray-500/20 text-gray-400";
+        return "bg-gray-500/20 text-gray-400 hover:bg-gray-500/20";
     }
   };
 
@@ -185,35 +166,35 @@ export default function UserRolesPage() {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="p-6 rounded-lg border border-white/20">
-            <div className="text-sm font-medium text-obus-text-light mb-2">
+          <div className="rounded-lg border border-obus-primary/10 bg-white p-6 shadow-sm transition-colors dark:border-white/20 dark:bg-white/5">
+            <div className="text-sm font-medium text-obus-text-secondary dark:text-obus-text-light mb-2">
               Total Roles
             </div>
-            <div className="text-2xl font-bold text-white">6</div>
+            <div className="text-2xl font-bold text-obus-primary dark:text-white">6</div>
             <p className="text-xs text-obus-accent mt-1">+1 this month</p>
           </div>
 
-          <div className="p-6 rounded-lg border border-white/20">
-            <div className="text-sm font-medium text-obus-text-light mb-2">
+          <div className="rounded-lg border border-obus-primary/10 bg-white p-6 shadow-sm transition-colors dark:border-white/20 dark:bg-white/5">
+            <div className="text-sm font-medium text-obus-text-secondary dark:text-obus-text-light mb-2">
               Active Roles
             </div>
-            <div className="text-2xl font-bold text-white">5</div>
+            <div className="text-2xl font-bold text-obus-primary dark:text-white">5</div>
             <p className="text-xs text-obus-accent mt-1">83% active</p>
           </div>
 
-          <div className="p-6 rounded-lg border border-white/20">
-            <div className="text-sm font-medium text-obus-text-light mb-2">
+          <div className="rounded-lg border border-obus-primary/10 bg-white p-6 shadow-sm transition-colors dark:border-white/20 dark:bg-white/5">
+            <div className="text-sm font-medium text-obus-text-secondary dark:text-obus-text-light mb-2">
               Admin Roles
             </div>
-            <div className="text-2xl font-bold text-white">1</div>
-            <p className="text-xs text-obus-text-light mt-1">System admins</p>
+            <div className="text-2xl font-bold text-obus-primary dark:text-white">1</div>
+            <p className="text-xs text-obus-text-secondary dark:text-obus-text-light mt-1">System admins</p>
           </div>
 
-          <div className="p-6 rounded-lg border border-white/20">
-            <div className="text-sm font-medium text-obus-text-light mb-2">
+          <div className="rounded-lg border border-obus-primary/10 bg-white p-6 shadow-sm transition-colors dark:border-white/20 dark:bg-white/5">
+            <div className="text-sm font-medium text-obus-text-secondary dark:text-obus-text-light mb-2">
               Total Users
             </div>
-            <div className="text-2xl font-bold text-white">40</div>
+            <div className="text-2xl font-bold text-obus-primary dark:text-white">40</div>
             <p className="text-xs text-obus-accent mt-1">Across all roles</p>
           </div>
         </div>
@@ -221,47 +202,47 @@ export default function UserRolesPage() {
         {/* Roles Table */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-white">All Roles</h3>
+            <h3 className="text-lg font-semibold text-obus-primary dark:text-white">All Roles</h3>
             <div className="flex items-center gap-2">
               <Input
                 placeholder="Filter roles..."
                 value={filterValue}
                 onChange={(event) => setFilterValue(event.target.value)}
-                className="max-w-sm bg-white/5 border-white/20 text-white"
+                className="max-w-sm"
               />
             </div>
           </div>
 
-          <div className="rounded-md border border-white/20 overflow-hidden">
+          <div className="rounded-md border border-obus-primary/10 bg-white overflow-hidden shadow-sm transition-colors dark:border-white/20 dark:bg-white/5">
             <Table>
               <TableHeader>
-                <TableRow className="hover:bg-transparent border-white/10">
-                  <TableHead className="text-obus-text-light w-12">
+                <TableRow className="hover:bg-transparent border-obus-primary/10 dark:border-white/20">
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light w-12">
                     <Checkbox
                       checked={isAllSelected}
                       onCheckedChange={handleSelectAll}
                       aria-label="Select all"
                     />
                   </TableHead>
-                  <TableHead className="text-obus-text-light">
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light">
                     Role Name
                   </TableHead>
-                  <TableHead className="text-obus-text-light">
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light">
                     Description
                   </TableHead>
-                  <TableHead className="text-obus-text-light text-center">
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light text-center">
                     Access Level
                   </TableHead>
-                  <TableHead className="text-obus-text-light text-center">
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light text-center">
                     Permissions
                   </TableHead>
-                  <TableHead className="text-obus-text-light text-center">
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light text-center">
                     Users
                   </TableHead>
-                  <TableHead className="text-obus-text-light text-center">
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light text-center">
                     Status
                   </TableHead>
-                  <TableHead className="text-obus-text-light">
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light">
                     Actions
                   </TableHead>
                 </TableRow>
@@ -271,7 +252,7 @@ export default function UserRolesPage() {
                   filteredRoles.map((role) => (
                     <TableRow
                       key={role.id}
-                      className="border-white/10 hover:bg-obus-primary/20"
+                      className="border-obus-primary/10 hover:bg-obus-primary/5 dark:border-white/20 dark:hover:bg-obus-primary/20"
                     >
                       <TableCell>
                         <Checkbox
@@ -292,17 +273,17 @@ export default function UserRolesPage() {
                             )}
                           </div>
                           <div>
-                            <p className="font-medium text-white">
+                            <p className="font-medium text-obus-primary dark:text-white">
                               {role.name}
                             </p>
-                            <p className="text-xs text-obus-text-light">
+                            <p className="text-xs text-obus-text-secondary dark:text-obus-text-light">
                               Created: {role.createdAt}
                             </p>
                           </div>
                         </div>
                       </TableCell>
                       <TableCell>
-                        <p className="font-medium text-white">
+                        <p className="font-medium text-obus-primary dark:text-white">
                           {role.description}
                         </p>
                       </TableCell>
@@ -315,16 +296,16 @@ export default function UserRolesPage() {
                       </TableCell>
                       <TableCell className="text-center">
                         <div className="flex items-center justify-center gap-2">
-                          <Key className="w-4 h-4 text-obus-text-light" />
-                          <p className="font-semibold text-white">
+                          <Key className="w-4 h-4 text-obus-text-secondary dark:text-obus-text-light" />
+                          <p className="font-semibold text-obus-primary dark:text-white">
                             {role.permissions.length}
                           </p>
                         </div>
                       </TableCell>
                       <TableCell className="text-center">
                         <div className="flex items-center justify-center gap-2">
-                          <Users className="w-4 h-4 text-obus-text-light" />
-                          <p className="font-semibold text-white">
+                          <Users className="w-4 h-4 text-obus-text-secondary dark:text-obus-text-light" />
+                          <p className="font-semibold text-obus-primary dark:text-white">
                             {role.userCount}
                           </p>
                         </div>
@@ -336,8 +317,8 @@ export default function UserRolesPage() {
                           }
                           className={
                             role.status === "active"
-                              ? "bg-green-500/20 text-green-400"
-                              : "bg-gray-500/20 text-gray-400"
+                              ? "bg-green-500/20 text-green-400 hover:bg-green-500/20"
+                              : "bg-gray-500/20 text-gray-400 hover:bg-gray-500/20"
                           }
                         >
                           {role.status.toUpperCase()}
@@ -353,15 +334,15 @@ export default function UserRolesPage() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent
                             align="end"
-                            className="bg-obus-primary border-white/20 text-white"
+                            className="border border-obus-primary/10 bg-white text-obus-text-primary dark:border-white/20 dark:bg-obus-primary dark:text-white"
                           >
-                            <DropdownMenuCheckboxItem className="text-white">
+                            <DropdownMenuCheckboxItem className="text-obus-text-primary dark:text-white">
                               View details
                             </DropdownMenuCheckboxItem>
-                            <DropdownMenuCheckboxItem className="text-white">
+                            <DropdownMenuCheckboxItem className="text-obus-text-primary dark:text-white">
                               Edit role
                             </DropdownMenuCheckboxItem>
-                            <DropdownMenuCheckboxItem className="text-white">
+                            <DropdownMenuCheckboxItem className="text-obus-text-primary dark:text-white">
                               Manage permissions
                             </DropdownMenuCheckboxItem>
                           </DropdownMenuContent>
@@ -373,7 +354,7 @@ export default function UserRolesPage() {
                   <TableRow>
                     <TableCell
                       colSpan={8}
-                      className="h-24 text-center text-obus-text-light"
+                      className="h-24 text-center text-obus-text-secondary dark:text-obus-text-light"
                     >
                       No results.
                     </TableCell>
@@ -384,7 +365,7 @@ export default function UserRolesPage() {
           </div>
 
           <div className="flex items-center justify-between py-4">
-            <div className="text-sm text-obus-text-light">
+            <div className="text-sm text-obus-text-secondary dark:text-obus-text-light">
               {selectedRoles.length > 0
                 ? `${selectedRoles.length} of ${filteredRoles.length} roles selected`
                 : `Showing ${filteredRoles.length} of ${roles.length} roles`}
@@ -395,3 +376,8 @@ export default function UserRolesPage() {
     </DashboardLayout>
   );
 }
+
+
+
+
+

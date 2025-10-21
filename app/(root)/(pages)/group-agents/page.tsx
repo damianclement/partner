@@ -4,20 +4,7 @@ import * as React from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Plus,
-  Search,
-  Filter,
-  MoreHorizontal,
-  Edit,
-  Trash2,
-  Users2,
-  UserPlus,
-  Target,
-  BarChart3,
-  ArrowUpDown,
-  ChevronDown,
-} from "lucide-react";
+import { Plus, MoreHorizontal, UserPlus, Target } from "lucide-react";
 // Simple table implementation without external dependencies
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -140,9 +127,7 @@ export default function GroupAgentsPage() {
   // Simple state management for filtering and selection
   const [filterValue, setFilterValue] = React.useState("");
   const [selectedGroups, setSelectedGroups] = React.useState<number[]>([]);
-  const [selectAll, setSelectAll] = React.useState(false);
-
-  // Filter group agents based on search input
+// Filter group agents based on search input
   const filteredGroups = groupAgents.filter(
     (group) =>
       group.groupName.toLowerCase().includes(filterValue.toLowerCase()) ||
@@ -164,7 +149,6 @@ export default function GroupAgentsPage() {
 
   // Handle select all
   const handleSelectAll = (checked: boolean) => {
-    setSelectAll(checked);
     if (checked) {
       setSelectedGroups(filteredGroups.map((group) => group.id));
     } else {
@@ -176,22 +160,19 @@ export default function GroupAgentsPage() {
   const isAllSelected =
     filteredGroups.length > 0 &&
     selectedGroups.length === filteredGroups.length;
-  const isIndeterminate =
-    selectedGroups.length > 0 && selectedGroups.length < filteredGroups.length;
-
   // Get performance badge styling
   const getPerformanceBadge = (performance: string) => {
     switch (performance) {
       case "excellent":
-        return "bg-green-500/20 text-green-400";
+        return "bg-green-500/20 text-green-400 hover:bg-green-500/20";
       case "good":
-        return "bg-blue-500/20 text-blue-400";
+        return "bg-blue-500/20 text-blue-400 hover:bg-blue-500/20";
       case "average":
-        return "bg-yellow-500/20 text-yellow-400";
+        return "bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/20";
       case "needs-improvement":
-        return "bg-red-500/20 text-red-400";
+        return "bg-red-500/20 text-red-400 hover:bg-red-500/20";
       default:
-        return "bg-gray-500/20 text-gray-400";
+        return "bg-gray-500/20 text-gray-400 hover:bg-gray-500/20";
     }
   };
 
@@ -215,35 +196,35 @@ export default function GroupAgentsPage() {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="p-6 rounded-lg border border-white/20">
-            <div className="text-sm font-medium text-obus-text-light mb-2">
+          <div className="rounded-lg border border-obus-primary/10 bg-white p-6 shadow-sm transition-colors dark:border-white/20 dark:bg-white/5">
+            <div className="text-sm font-medium text-obus-text-secondary dark:text-obus-text-light mb-2">
               Total Groups
             </div>
-            <div className="text-2xl font-bold text-white">5</div>
+            <div className="text-2xl font-bold text-obus-primary dark:text-white">5</div>
             <p className="text-xs text-obus-accent mt-1">+1 this month</p>
           </div>
 
-          <div className="p-6 rounded-lg border border-white/20">
-            <div className="text-sm font-medium text-obus-text-light mb-2">
+          <div className="rounded-lg border border-obus-primary/10 bg-white p-6 shadow-sm transition-colors dark:border-white/20 dark:bg-white/5">
+            <div className="text-sm font-medium text-obus-text-secondary dark:text-obus-text-light mb-2">
               Total Members
             </div>
-            <div className="text-2xl font-bold text-white">30</div>
+            <div className="text-2xl font-bold text-obus-primary dark:text-white">30</div>
             <p className="text-xs text-obus-accent mt-1">Across all groups</p>
           </div>
 
-          <div className="p-6 rounded-lg border border-white/20">
-            <div className="text-sm font-medium text-obus-text-light mb-2">
+          <div className="rounded-lg border border-obus-primary/10 bg-white p-6 shadow-sm transition-colors dark:border-white/20 dark:bg-white/5">
+            <div className="text-sm font-medium text-obus-text-secondary dark:text-obus-text-light mb-2">
               Group Revenue
             </div>
-            <div className="text-2xl font-bold text-white">$294K</div>
+            <div className="text-2xl font-bold text-obus-primary dark:text-white">$294K</div>
             <p className="text-xs text-obus-accent mt-1">+22% this month</p>
           </div>
 
-          <div className="p-6 rounded-lg border border-white/20">
-            <div className="text-sm font-medium text-obus-text-light mb-2">
+          <div className="rounded-lg border border-obus-primary/10 bg-white p-6 shadow-sm transition-colors dark:border-white/20 dark:bg-white/5">
+            <div className="text-sm font-medium text-obus-text-secondary dark:text-obus-text-light mb-2">
               Avg. Performance
             </div>
-            <div className="text-2xl font-bold text-white">4.4</div>
+            <div className="text-2xl font-bold text-obus-primary dark:text-white">4.4</div>
             <p className="text-xs text-obus-accent mt-1">+0.2 this month</p>
           </div>
         </div>
@@ -251,7 +232,7 @@ export default function GroupAgentsPage() {
         {/* Group Agents Table */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-white">
+            <h3 className="text-lg font-semibold text-obus-primary dark:text-white">
               All Agent Groups
             </h3>
             <div className="flex items-center gap-2">
@@ -259,45 +240,45 @@ export default function GroupAgentsPage() {
                 placeholder="Filter groups..."
                 value={filterValue}
                 onChange={(event) => setFilterValue(event.target.value)}
-                className="max-w-sm bg-white/5 border-white/20 text-white"
+                className="max-w-sm"
               />
             </div>
           </div>
 
-          <div className="rounded-md border border-white/20 overflow-hidden">
+          <div className="rounded-md border border-obus-primary/10 bg-white overflow-hidden shadow-sm transition-colors dark:border-white/20 dark:bg-white/5">
             <Table>
               <TableHeader>
-                <TableRow className="hover:bg-transparent border-white/10">
-                  <TableHead className="text-obus-text-light w-12">
+                <TableRow className="hover:bg-transparent border-obus-primary/10 dark:border-white/20">
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light w-12">
                     <Checkbox
                       checked={isAllSelected}
                       onCheckedChange={handleSelectAll}
                       aria-label="Select all"
                     />
                   </TableHead>
-                  <TableHead className="text-obus-text-light">
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light">
                     Group Name
                   </TableHead>
-                  <TableHead className="text-obus-text-light">Leader</TableHead>
-                  <TableHead className="text-obus-text-light">
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light">Leader</TableHead>
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light">
                     Partner
                   </TableHead>
-                  <TableHead className="text-obus-text-light text-center">
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light text-center">
                     Members
                   </TableHead>
-                  <TableHead className="text-obus-text-light text-center">
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light text-center">
                     Bookings
                   </TableHead>
-                  <TableHead className="text-obus-text-light text-center">
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light text-center">
                     Revenue
                   </TableHead>
-                  <TableHead className="text-obus-text-light text-center">
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light text-center">
                     Performance
                   </TableHead>
-                  <TableHead className="text-obus-text-light text-center">
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light text-center">
                     Status
                   </TableHead>
-                  <TableHead className="text-obus-text-light">
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light">
                     Actions
                   </TableHead>
                 </TableRow>
@@ -307,7 +288,7 @@ export default function GroupAgentsPage() {
                   filteredGroups.map((group) => (
                     <TableRow
                       key={group.id}
-                      className="border-white/10 hover:bg-obus-primary/20"
+                      className="border-obus-primary/10 hover:bg-obus-primary/5 dark:border-white/20 dark:hover:bg-obus-primary/20"
                     >
                       <TableCell>
                         <Checkbox
@@ -320,50 +301,50 @@ export default function GroupAgentsPage() {
                       </TableCell>
                       <TableCell>
                         <div>
-                          <p className="font-medium text-white">
+                          <p className="font-medium text-obus-primary dark:text-white">
                             {group.groupName}
                           </p>
-                          <p className="text-xs text-obus-text-light">
+                          <p className="text-xs text-obus-text-secondary dark:text-obus-text-light">
                             Formed: {group.formedDate}
                           </p>
                         </div>
                       </TableCell>
                       <TableCell>
                         <div>
-                          <p className="font-medium text-white">
+                          <p className="font-medium text-obus-primary dark:text-white">
                             {group.leader}
                           </p>
-                          <p className="text-xs text-obus-text-light">
+                          <p className="text-xs text-obus-text-secondary dark:text-obus-text-light">
                             {group.leaderEmail}
                           </p>
                         </div>
                       </TableCell>
                       <TableCell>
-                        <p className="font-medium text-white">
+                        <p className="font-medium text-obus-primary dark:text-white">
                           {group.partner}
                         </p>
                       </TableCell>
                       <TableCell className="text-center">
                         <div className="flex items-center justify-center gap-2">
-                          <UserPlus className="w-4 h-4 text-obus-text-light" />
-                          <p className="font-semibold text-white">
+                          <UserPlus className="w-4 h-4 text-obus-text-secondary dark:text-obus-text-light" />
+                          <p className="font-semibold text-obus-primary dark:text-white">
                             {group.memberCount}
                           </p>
                         </div>
                       </TableCell>
                       <TableCell className="text-center">
                         <div className="flex items-center justify-center gap-2">
-                          <Target className="w-4 h-4 text-obus-text-light" />
-                          <p className="font-semibold text-white">
+                          <Target className="w-4 h-4 text-obus-text-secondary dark:text-obus-text-light" />
+                          <p className="font-semibold text-obus-primary dark:text-white">
                             {group.totalBookings}
                           </p>
                         </div>
                       </TableCell>
                       <TableCell className="text-center">
-                        <p className="font-semibold text-white">
+                        <p className="font-semibold text-obus-primary dark:text-white">
                           {group.groupRevenue}
                         </p>
-                        <p className="text-xs text-obus-text-light">
+                        <p className="text-xs text-obus-text-secondary dark:text-obus-text-light">
                           Avg: {group.avgRating}★
                         </p>
                       </TableCell>
@@ -385,10 +366,10 @@ export default function GroupAgentsPage() {
                           }
                           className={
                             group.status === "active"
-                              ? "bg-green-500/20 text-green-400"
+                              ? "bg-green-500/20 text-green-400 hover:bg-green-500/20"
                               : group.status === "pending"
-                              ? "bg-yellow-500/20 text-yellow-400"
-                              : "bg-red-500/20 text-red-400"
+                              ? "bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/20"
+                              : "bg-red-500/20 text-red-400 hover:bg-red-500/20"
                           }
                         >
                           {group.status.toUpperCase()}
@@ -404,21 +385,21 @@ export default function GroupAgentsPage() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent
                             align="end"
-                            className="bg-obus-primary border-white/20 text-white"
+                            className="border border-obus-primary/10 bg-white text-obus-text-primary dark:border-white/20 dark:bg-obus-primary dark:text-white"
                           >
-                            <DropdownMenuCheckboxItem className="text-white">
+                            <DropdownMenuCheckboxItem className="text-obus-text-primary dark:text-white">
                               View details
                             </DropdownMenuCheckboxItem>
-                            <DropdownMenuCheckboxItem className="text-white">
+                            <DropdownMenuCheckboxItem className="text-obus-text-primary dark:text-white">
                               Edit group
                             </DropdownMenuCheckboxItem>
-                            <DropdownMenuCheckboxItem className="text-white">
+                            <DropdownMenuCheckboxItem className="text-obus-text-primary dark:text-white">
                               Manage members
                             </DropdownMenuCheckboxItem>
-                            <DropdownMenuCheckboxItem className="text-white">
+                            <DropdownMenuCheckboxItem className="text-obus-text-primary dark:text-white">
                               View performance
                             </DropdownMenuCheckboxItem>
-                            <DropdownMenuCheckboxItem className="text-white">
+                            <DropdownMenuCheckboxItem className="text-obus-text-primary dark:text-white">
                               Manage territories
                             </DropdownMenuCheckboxItem>
                           </DropdownMenuContent>
@@ -430,7 +411,7 @@ export default function GroupAgentsPage() {
                   <TableRow>
                     <TableCell
                       colSpan={10}
-                      className="h-24 text-center text-obus-text-light"
+                      className="h-24 text-center text-obus-text-secondary dark:text-obus-text-light"
                     >
                       No results.
                     </TableCell>
@@ -441,7 +422,7 @@ export default function GroupAgentsPage() {
           </div>
 
           <div className="flex items-center justify-between py-4">
-            <div className="text-sm text-obus-text-light">
+            <div className="text-sm text-obus-text-secondary dark:text-obus-text-light">
               {selectedGroups.length > 0
                 ? `${selectedGroups.length} of ${filteredGroups.length} groups selected`
                 : `Showing ${filteredGroups.length} of ${groupAgents.length} groups`}
@@ -452,3 +433,8 @@ export default function GroupAgentsPage() {
     </DashboardLayout>
   );
 }
+
+
+
+
+

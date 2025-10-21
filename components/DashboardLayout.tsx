@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Sidebar } from "@/components/Sidebar";
 import { TopBar } from "@/components/TopBar";
-import { Footer } from "@/components/Footer";
+// import { Footer } from "@/components/Footer";
 import { cn } from "@/lib/utils";
 
 interface DashboardLayoutProps {
@@ -41,7 +41,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   };
 
   return (
-    <div className="min-h-screen bg-obus-primary">
+    <div className="min-h-screen bg-obus-bg text-obus-text-primary transition-colors duration-300 dark:bg-obus-primary dark:text-white">
       {/* Mobile Sidebar Overlay */}
       {isMobile && mobileSidebarOpen && (
         <div
