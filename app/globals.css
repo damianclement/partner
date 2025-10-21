@@ -201,9 +201,15 @@
   
   /* Sidebar Styles */
   .sidebar-item {
-    @apply flex items-center gap-3 px-4 py-3 text-obus-text-light hover:text-white hover:bg-obus-primary/80 transition-colors rounded-md;
+    @apply flex items-center gap-3 px-4 py-3 text-obus-text-light transition-all duration-200 ease-in-out rounded-md;
+  }
+  .sidebar-item:hover {
+    @apply text-white bg-white/10;
   }
   .sidebar-item-active {
     @apply bg-obus-accent text-white;
+  }
+  .sidebar-item-active:hover {
+    @apply bg-obus-accent/90;
   }
 }

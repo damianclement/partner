@@ -191,7 +191,7 @@ export default function PartnersPage() {
           <div className="rounded-md border border-white/20 overflow-hidden">
             <Table>
               <TableHeader>
-                <TableRow>
+                <TableRow className="hover:bg-transparent border-white/10">
                   <TableHead className="text-obus-text-light w-12">
                     <Checkbox
                       checked={isAllSelected}
@@ -224,7 +224,7 @@ export default function PartnersPage() {
                   filteredPartners.map((partner) => (
                     <TableRow
                       key={partner.id}
-                      className="border-white/20 hover:bg-white/5"
+                      className="border-white/10 hover:bg-obus-primary/20"
                     >
                       <TableCell>
                         <Checkbox
@@ -293,11 +293,14 @@ export default function PartnersPage() {
                               <MoreHorizontal />
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuCheckboxItem>
+                          <DropdownMenuContent
+                            align="end"
+                            className="bg-obus-primary border-white/20 text-white"
+                          >
+                            <DropdownMenuCheckboxItem className="text-white">
                               View details
                             </DropdownMenuCheckboxItem>
-                            <DropdownMenuCheckboxItem>
+                            <DropdownMenuCheckboxItem className="text-white">
                               Edit partner
                             </DropdownMenuCheckboxItem>
                           </DropdownMenuContent>

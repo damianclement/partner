@@ -12,6 +12,9 @@ import {
   Calendar,
   Settings,
   Handshake,
+  ChevronDown,
+  UserCheck,
+  Users2,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -38,9 +41,24 @@ const navigationItems = [
     icon: Users,
   },
   {
+    name: "Group Agent Management",
+    href: "/group-agents",
+    icon: Users2,
+  },
+  {
+    name: "Super Agent Management",
+    href: "/super-agents",
+    icon: UserCheck,
+  },
+  {
     name: "User Management",
     href: "/users",
     icon: User,
+    hasDropdown: true,
+    dropdownItems: [
+      { name: "All Users", href: "/users" },
+      { name: "User Roles", href: "/users/roles" },
+    ],
   },
   {
     name: "Bus Systems",
@@ -48,7 +66,7 @@ const navigationItems = [
     icon: Bus,
   },
   {
-    name: "Bookings",
+    name: "Booking Management",
     href: "/bookings",
     icon: Calendar,
   },
@@ -67,6 +85,7 @@ export function Sidebar({
 }: SidebarProps) {
   const pathname = usePathname();
   const [activeItem, setActiveItem] = useState("Dashboard");
+  const [openDropdowns, setOpenDropdowns] = useState<string[]>([]);
 
   // Update active item based on current pathname
   React.useEffect(() => {
@@ -77,6 +96,15 @@ export function Sidebar({
       setActiveItem("Dashboard");
     }
   }, [pathname]);
+
+  const toggleDropdown = (itemName: string) => {
+    setOpenDropdowns(
+      (prev) =>
+        prev.includes(itemName)
+          ? [] // Close current dropdown
+          : [itemName] // Open only this dropdown (close others)
+    );
+  };
 
   return (
     <div
@@ -109,27 +137,86 @@ export function Sidebar({
       {/* Navigation */}
       <nav className="flex-1 p-4 space-y-2">
         {navigationItems.map((item) => (
-          <Link
-            key={item.name}
-            href={item.href}
-            onClick={() => {
-              setActiveItem(item.name);
-              if (isMobile && onMobileSidebarClose) {
-                onMobileSidebarClose();
-              }
-            }}
-            className={cn(
-              "sidebar-item",
-              activeItem === item.name && "sidebar-item-active",
-              isCollapsed && !isMobile && "justify-center px-2"
+          <div key={item.name}>
+            {item.hasDropdown ? (
+              <div>
+                <button
+                  onClick={() => toggleDropdown(item.name)}
+                  className={cn(
+                    "sidebar-item w-full group",
+                    activeItem === item.name && "sidebar-item-active",
+                    isCollapsed && !isMobile && "justify-center px-2",
+                    "hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/20"
+                  )}
+                  title={isCollapsed && !isMobile ? item.name : undefined}
+                >
+                  <item.icon className="w-5 h-5 shrink-0" />
+                  {(!isCollapsed || isMobile) && (
+                    <>
+                      <span className="text-sm font-medium flex-1 text-left">
+                        {item.name}
+                      </span>
+                      <ChevronDown
+                        className={cn(
+                          "w-4 h-4 transition-transform duration-300 ease-in-out",
+                          openDropdowns.includes(item.name) && "rotate-180"
+                        )}
+                      />
+                    </>
+                  )}
+                </button>
+                {openDropdowns.includes(item.name) &&
+                  (!isCollapsed || isMobile) && (
+                    <div className="ml-6 mt-2 space-y-1 animate-in slide-in-from-top-2 duration-200">
+                      {item.dropdownItems?.map((dropdownItem) => (
+                        <Link
+                          key={dropdownItem.name}
+                          href={dropdownItem.href}
+                          onClick={() => {
+                            setActiveItem(item.name);
+                            if (isMobile && onMobileSidebarClose) {
+                              onMobileSidebarClose();
+                            }
+                          }}
+                          className={cn(
+                            "flex items-center px-3 py-2 text-sm text-obus-text-light rounded-md transition-all duration-200",
+                            "hover:text-white hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/20",
+                            pathname === dropdownItem.href &&
+                              "text-white font-medium"
+                          )}
+                        >
+                          <span className="flex-1">{dropdownItem.name}</span>
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+              </div>
+            ) : (
+              <Link
+                href={item.href}
+                onClick={() => {
+                  setActiveItem(item.name);
+                  if (isMobile && onMobileSidebarClose) {
+                    onMobileSidebarClose();
+                  }
+                }}
+                className={cn(
+                  "sidebar-item group",
+                  activeItem === item.name && "sidebar-item-active",
+                  isCollapsed && !isMobile && "justify-center px-2",
+                  "hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/20"
+                )}
+                title={isCollapsed && !isMobile ? item.name : undefined}
+              >
+                <item.icon className="w-5 h-5 shrink-0" />
+                {(!isCollapsed || isMobile) && (
+                  <span className="text-sm font-medium flex-1">
+                    {item.name}
+                  </span>
+                )}
+              </Link>
             )}
-            title={isCollapsed && !isMobile ? item.name : undefined}
-          >
-            <item.icon className="w-5 h-5" />
-            {(!isCollapsed || isMobile) && (
-              <span className="text-sm font-medium">{item.name}</span>
-            )}
-          </Link>
+          </div>
         ))}
       </nav>
 

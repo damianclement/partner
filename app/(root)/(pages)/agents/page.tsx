@@ -1,3 +1,6 @@
+"use client";
+
+import * as React from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -11,10 +14,40 @@ import {
   UserCheck,
   UserX,
   BarChart3,
+  ArrowUpDown,
+  ChevronDown,
 } from "lucide-react";
+// Simple table implementation without external dependencies
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
+export type Agent = {
+  id: number;
+  name: string;
+  email: string;
+  partner: string;
+  status: "active" | "pending" | "suspended";
+  role: string;
+  bookings: number;
+  rating: number;
+};
 
 export default function AgentsPage() {
-  const agents = [
+  const agents: Agent[] = [
     {
       id: 1,
       name: "Sarah Johnson",
@@ -56,6 +89,45 @@ export default function AgentsPage() {
       rating: 3.2,
     },
   ];
+
+  // Simple state management for filtering and selection
+  const [filterValue, setFilterValue] = React.useState("");
+  const [selectedAgents, setSelectedAgents] = React.useState<number[]>([]);
+  const [selectAll, setSelectAll] = React.useState(false);
+
+  // Filter agents based on search input
+  const filteredAgents = agents.filter(
+    (agent) =>
+      agent.name.toLowerCase().includes(filterValue.toLowerCase()) ||
+      agent.email.toLowerCase().includes(filterValue.toLowerCase()) ||
+      agent.partner.toLowerCase().includes(filterValue.toLowerCase())
+  );
+
+  // Handle individual agent selection
+  const handleAgentSelect = (agentId: number, checked: boolean) => {
+    if (checked) {
+      setSelectedAgents((prev) => [...prev, agentId]);
+    } else {
+      setSelectedAgents((prev) => prev.filter((id) => id !== agentId));
+    }
+  };
+
+  // Handle select all
+  const handleSelectAll = (checked: boolean) => {
+    setSelectAll(checked);
+    if (checked) {
+      setSelectedAgents(filteredAgents.map((agent) => agent.id));
+    } else {
+      setSelectedAgents([]);
+    }
+  };
+
+  // Check if all filtered agents are selected
+  const isAllSelected =
+    filteredAgents.length > 0 &&
+    selectedAgents.length === filteredAgents.length;
+  const isIndeterminate =
+    selectedAgents.length > 0 && selectedAgents.length < filteredAgents.length;
 
   return (
     <DashboardLayout>
@@ -111,144 +183,165 @@ export default function AgentsPage() {
           </div>
         </div>
 
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Recent Agents */}
-          <div className="lg:col-span-2 p-6 rounded-lg border border-white/20">
-            <h3 className="text-lg font-semibold text-white mb-4">
-              Recent Agents
-            </h3>
-            <div className="space-y-4">
-              {agents.map((agent) => (
-                <div
-                  key={agent.id}
-                  className="flex items-center justify-between py-3 border-b border-white/20 last:border-b-0"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-obus-accent rounded-full flex items-center justify-center text-white font-bold text-sm">
-                      {agent.name.charAt(0)}
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-white">
-                        {agent.name}
-                      </p>
-                      <p className="text-xs text-obus-text-light">
-                        {agent.partner}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <div className="text-center">
-                      <p className="text-xs text-obus-text-light">Role</p>
-                      <p className="text-sm font-semibold text-white">
-                        {agent.role}
-                      </p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-xs text-obus-text-light">Bookings</p>
-                      <p className="text-sm font-semibold text-white">
-                        {agent.bookings}
-                      </p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-xs text-obus-text-light">Rating</p>
-                      <p className="text-sm font-semibold text-white">
-                        {agent.rating > 0 ? agent.rating : "N/A"}
-                      </p>
-                    </div>
-                    <Badge
-                      variant={
-                        agent.status === "active"
-                          ? "default"
-                          : agent.status === "pending"
-                          ? "secondary"
-                          : "destructive"
-                      }
-                      className={
-                        agent.status === "active"
-                          ? "bg-green-500/20 text-green-400"
-                          : agent.status === "pending"
-                          ? "bg-yellow-500/20 text-yellow-400"
-                          : "bg-red-500/20 text-red-400"
-                      }
+        {/* Agents Table */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold text-white">All Agents</h3>
+            <div className="flex items-center gap-2">
+              <Input
+                placeholder="Filter agents..."
+                value={filterValue}
+                onChange={(event) => setFilterValue(event.target.value)}
+                className="max-w-sm bg-white/5 border-white/20 text-white"
+              />
+            </div>
+          </div>
+
+          <div className="rounded-md border border-white/20 overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow className="hover:bg-transparent border-white/10">
+                  <TableHead className="text-obus-text-light w-12">
+                    <Checkbox
+                      checked={isAllSelected}
+                      onCheckedChange={handleSelectAll}
+                      aria-label="Select all"
+                    />
+                  </TableHead>
+                  <TableHead className="text-obus-text-light">
+                    Agent Name
+                  </TableHead>
+                  <TableHead className="text-obus-text-light">
+                    Partner
+                  </TableHead>
+                  <TableHead className="text-obus-text-light text-center">
+                    Role
+                  </TableHead>
+                  <TableHead className="text-obus-text-light text-center">
+                    Bookings
+                  </TableHead>
+                  <TableHead className="text-obus-text-light text-center">
+                    Rating
+                  </TableHead>
+                  <TableHead className="text-obus-text-light text-center">
+                    Status
+                  </TableHead>
+                  <TableHead className="text-obus-text-light">
+                    Actions
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredAgents.length ? (
+                  filteredAgents.map((agent) => (
+                    <TableRow
+                      key={agent.id}
+                      className="border-white/10 hover:bg-obus-primary/20"
                     >
-                      {agent.status.toUpperCase()}
-                    </Badge>
-                  </div>
-                </div>
-              ))}
-            </div>
+                      <TableCell>
+                        <Checkbox
+                          checked={selectedAgents.includes(agent.id)}
+                          onCheckedChange={(checked) =>
+                            handleAgentSelect(agent.id, !!checked)
+                          }
+                          aria-label={`Select ${agent.name}`}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-obus-accent rounded-lg flex items-center justify-center text-white font-bold text-sm">
+                            {agent.name.charAt(0)}
+                          </div>
+                          <div>
+                            <p className="font-medium text-white">
+                              {agent.name}
+                            </p>
+                            <p className="text-xs text-obus-text-light">
+                              {agent.email}
+                            </p>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <p className="font-medium text-white">
+                          {agent.partner}
+                        </p>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <p className="font-semibold text-white">{agent.role}</p>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <p className="font-semibold text-white">
+                          {agent.bookings}
+                        </p>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <p className="font-semibold text-white">
+                          {agent.rating > 0 ? agent.rating : "N/A"}
+                        </p>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Badge
+                          variant={
+                            agent.status === "active"
+                              ? "default"
+                              : agent.status === "pending"
+                              ? "secondary"
+                              : "destructive"
+                          }
+                          className={
+                            agent.status === "active"
+                              ? "bg-green-500/20 text-green-400"
+                              : agent.status === "pending"
+                              ? "bg-yellow-500/20 text-yellow-400"
+                              : "bg-red-500/20 text-red-400"
+                          }
+                        >
+                          {agent.status.toUpperCase()}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="h-8 w-8 p-0">
+                              <span className="sr-only">Open menu</span>
+                              <MoreHorizontal />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent
+                            align="end"
+                            className="bg-obus-primary border-white/20 text-white"
+                          >
+                            <DropdownMenuCheckboxItem className="text-white">
+                              View details
+                            </DropdownMenuCheckboxItem>
+                            <DropdownMenuCheckboxItem className="text-white">
+                              Edit agent
+                            </DropdownMenuCheckboxItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell
+                      colSpan={8}
+                      className="h-24 text-center text-obus-text-light"
+                    >
+                      No results.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
           </div>
 
-          {/* Quick Actions */}
-          <div className="p-6 rounded-lg border border-white/20">
-            <h3 className="text-lg font-semibold text-white mb-4">
-              Quick Actions
-            </h3>
-            <div className="space-y-2">
-              <button className="w-full flex items-center gap-3 p-3 rounded-lg bg-obus-accent/10 hover:bg-obus-accent/20 text-white transition-all duration-200 group">
-                <div className="w-8 h-8 rounded-lg bg-obus-accent/20 flex items-center justify-center group-hover:bg-obus-accent/30 transition-colors">
-                  <Plus className="w-4 h-4" />
-                </div>
-                <span className="font-medium">Add New Agent</span>
-              </button>
-
-              <button className="w-full flex items-center gap-3 p-3 rounded-lg bg-white/5 hover:bg-white/10 text-obus-text-light hover:text-white transition-all duration-200 group">
-                <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center group-hover:bg-white/20 transition-colors">
-                  <Search className="w-4 h-4" />
-                </div>
-                <span className="font-medium">Search Agents</span>
-              </button>
-
-              <button className="w-full flex items-center gap-3 p-3 rounded-lg bg-white/5 hover:bg-white/10 text-obus-text-light hover:text-white transition-all duration-200 group">
-                <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center group-hover:bg-white/20 transition-colors">
-                  <Filter className="w-4 h-4" />
-                </div>
-                <span className="font-medium">Filter Agents</span>
-              </button>
-
-              <button className="w-full flex items-center gap-3 p-3 rounded-lg bg-white/5 hover:bg-white/10 text-obus-text-light hover:text-white transition-all duration-200 group">
-                <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center group-hover:bg-white/20 transition-colors">
-                  <BarChart3 className="w-4 h-4" />
-                </div>
-                <span className="font-medium">View Reports</span>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Agent Status Overview */}
-        <div className="p-6 rounded-lg border border-white/20">
-          <h3 className="text-lg font-semibold text-white mb-4">
-            Agent Status Overview
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="text-center">
-              <div className="text-3xl font-bold text-white mb-2">1,289</div>
-              <Badge variant="success" className="mb-2">
-                ACTIVE
-              </Badge>
-              <p className="text-sm text-obus-text-light">
-                Agents currently active
-              </p>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-obus-accent mb-2">87</div>
-              <Badge variant="warning" className="mb-2">
-                PENDING
-              </Badge>
-              <p className="text-sm text-obus-text-light">Awaiting approval</p>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-obus-text-light mb-2">
-                47
-              </div>
-              <Badge variant="destructive" className="mb-2">
-                SUSPENDED
-              </Badge>
-              <p className="text-sm text-obus-text-light">
-                Temporarily suspended
-              </p>
+          <div className="flex items-center justify-between py-4">
+            <div className="text-sm text-obus-text-light">
+              {selectedAgents.length > 0
+                ? `${selectedAgents.length} of ${filteredAgents.length} agents selected`
+                : `Showing ${filteredAgents.length} of ${agents.length} agents`}
             </div>
           </div>
         </div>

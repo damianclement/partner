@@ -13,7 +13,8 @@ import {
   Trash2,
   Shield,
   ShieldCheck,
-  BarChart3,
+  Key,
+  Users,
   ArrowUpDown,
   ChevronDown,
 } from "lucide-react";
@@ -35,75 +36,100 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-export type User = {
+export type Role = {
   id: number;
   name: string;
-  email: string;
-  role: string;
-  status: "active" | "inactive";
-  lastLogin: string;
+  description: string;
   permissions: string[];
+  userCount: number;
+  status: "active" | "inactive";
+  createdAt: string;
+  accessLevel: "admin" | "manager" | "staff" | "viewer";
 };
 
-export default function UsersPage() {
-  const users: User[] = [
+export default function UserRolesPage() {
+  const roles: Role[] = [
     {
       id: 1,
-      name: "John Doe",
-      email: "john.doe@obus.com",
-      role: "Administrator",
-      status: "active",
-      lastLogin: "2 hours ago",
+      name: "Super Administrator",
+      description: "Full system access with all permissions",
       permissions: ["all"],
+      userCount: 2,
+      status: "active",
+      createdAt: "2024-01-01",
+      accessLevel: "admin",
     },
     {
       id: 2,
-      name: "Jane Smith",
-      email: "jane.smith@obus.com",
-      role: "Manager",
+      name: "Partner Manager",
+      description: "Manage partners, agents, and bookings",
+      permissions: ["partners", "agents", "bookings", "reports"],
+      userCount: 8,
       status: "active",
-      lastLogin: "1 day ago",
-      permissions: ["partners", "agents", "reports"],
+      createdAt: "2024-01-02",
+      accessLevel: "manager",
     },
     {
       id: 3,
-      name: "Bob Johnson",
-      email: "bob.johnson@obus.com",
-      role: "Support Staff",
+      name: "Support Staff",
+      description: "Handle customer support and basic operations",
+      permissions: ["bookings", "customers", "tickets"],
+      userCount: 15,
       status: "active",
-      lastLogin: "3 days ago",
-      permissions: ["bookings", "customers"],
+      createdAt: "2024-01-03",
+      accessLevel: "staff",
     },
     {
       id: 4,
-      name: "Alice Brown",
-      email: "alice.brown@obus.com",
-      role: "Manager",
+      name: "Finance Manager",
+      description: "Manage financial operations and reports",
+      permissions: ["finance", "reports", "transactions"],
+      userCount: 3,
+      status: "active",
+      createdAt: "2024-01-04",
+      accessLevel: "manager",
+    },
+    {
+      id: 5,
+      name: "Read Only Viewer",
+      description: "View-only access to reports and data",
+      permissions: ["reports", "dashboard"],
+      userCount: 12,
+      status: "active",
+      createdAt: "2024-01-05",
+      accessLevel: "viewer",
+    },
+    {
+      id: 6,
+      name: "Legacy Role",
+      description: "Deprecated role for migration purposes",
+      permissions: ["basic"],
+      userCount: 0,
       status: "inactive",
-      lastLogin: "2 weeks ago",
-      permissions: ["partners", "agents"],
+      createdAt: "2023-12-15",
+      accessLevel: "staff",
     },
   ];
 
   // Simple state management for filtering and selection
   const [filterValue, setFilterValue] = React.useState("");
-  const [selectedUsers, setSelectedUsers] = React.useState<number[]>([]);
+  const [selectedRoles, setSelectedRoles] = React.useState<number[]>([]);
   const [selectAll, setSelectAll] = React.useState(false);
 
-  // Filter users based on search input
-  const filteredUsers = users.filter(
-    (user) =>
-      user.name.toLowerCase().includes(filterValue.toLowerCase()) ||
-      user.email.toLowerCase().includes(filterValue.toLowerCase()) ||
-      user.role.toLowerCase().includes(filterValue.toLowerCase())
+  // Filter roles based on search input
+  const filteredRoles = roles.filter(
+    (role) =>
+      role.name.toLowerCase().includes(filterValue.toLowerCase()) ||
+      role.description.toLowerCase().includes(filterValue.toLowerCase()) ||
+      role.accessLevel.toLowerCase().includes(filterValue.toLowerCase())
   );
 
-  // Handle individual user selection
-  const handleUserSelect = (userId: number, checked: boolean) => {
+  // Handle individual role selection
+  const handleRoleSelect = (roleId: number, checked: boolean) => {
     if (checked) {
-      setSelectedUsers((prev) => [...prev, userId]);
+      setSelectedRoles((prev) => [...prev, roleId]);
     } else {
-      setSelectedUsers((prev) => prev.filter((id) => id !== userId));
+      setSelectedRoles((prev) => prev.filter((id) => id !== roleId));
     }
   };
 
@@ -111,17 +137,33 @@ export default function UsersPage() {
   const handleSelectAll = (checked: boolean) => {
     setSelectAll(checked);
     if (checked) {
-      setSelectedUsers(filteredUsers.map((user) => user.id));
+      setSelectedRoles(filteredRoles.map((role) => role.id));
     } else {
-      setSelectedUsers([]);
+      setSelectedRoles([]);
     }
   };
 
-  // Check if all filtered users are selected
+  // Check if all filtered roles are selected
   const isAllSelected =
-    filteredUsers.length > 0 && selectedUsers.length === filteredUsers.length;
+    filteredRoles.length > 0 && selectedRoles.length === filteredRoles.length;
   const isIndeterminate =
-    selectedUsers.length > 0 && selectedUsers.length < filteredUsers.length;
+    selectedRoles.length > 0 && selectedRoles.length < filteredRoles.length;
+
+  // Get access level badge styling
+  const getAccessLevelBadge = (level: string) => {
+    switch (level) {
+      case "admin":
+        return "bg-red-500/20 text-red-400";
+      case "manager":
+        return "bg-blue-500/20 text-blue-400";
+      case "staff":
+        return "bg-green-500/20 text-green-400";
+      case "viewer":
+        return "bg-gray-500/20 text-gray-400";
+      default:
+        return "bg-gray-500/20 text-gray-400";
+    }
+  };
 
   return (
     <DashboardLayout>
@@ -129,14 +171,15 @@ export default function UsersPage() {
         {/* Page Header */}
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-h1">User Management</h1>
+            <h1 className="text-h1">User Roles Management</h1>
             <p className="text-caption mt-2">
-              Manage system users, roles, and permissions
+              Manage user roles, permissions, and access levels across the
+              system
             </p>
           </div>
           <Button className="bg-obus-accent hover:bg-obus-accent/90">
             <Plus className="w-4 h-4 mr-2" />
-            Add New User
+            Create New Role
           </Button>
         </div>
 
@@ -144,46 +187,44 @@ export default function UsersPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <div className="p-6 rounded-lg border border-white/20">
             <div className="text-sm font-medium text-obus-text-light mb-2">
-              Total Users
+              Total Roles
             </div>
-            <div className="text-2xl font-bold text-white">156</div>
-            <p className="text-xs text-obus-accent mt-1">+5 this month</p>
+            <div className="text-2xl font-bold text-white">6</div>
+            <p className="text-xs text-obus-accent mt-1">+1 this month</p>
           </div>
 
           <div className="p-6 rounded-lg border border-white/20">
             <div className="text-sm font-medium text-obus-text-light mb-2">
-              Active Users
+              Active Roles
             </div>
-            <div className="text-2xl font-bold text-white">142</div>
-            <p className="text-xs text-obus-accent mt-1">91% active rate</p>
+            <div className="text-2xl font-bold text-white">5</div>
+            <p className="text-xs text-obus-accent mt-1">83% active</p>
           </div>
 
           <div className="p-6 rounded-lg border border-white/20">
             <div className="text-sm font-medium text-obus-text-light mb-2">
-              Administrators
+              Admin Roles
             </div>
-            <div className="text-2xl font-bold text-white">3</div>
+            <div className="text-2xl font-bold text-white">1</div>
             <p className="text-xs text-obus-text-light mt-1">System admins</p>
           </div>
 
           <div className="p-6 rounded-lg border border-white/20">
             <div className="text-sm font-medium text-obus-text-light mb-2">
-              Pending Invites
+              Total Users
             </div>
-            <div className="text-2xl font-bold text-white">8</div>
-            <p className="text-xs text-obus-text-light mt-1">
-              Awaiting acceptance
-            </p>
+            <div className="text-2xl font-bold text-white">40</div>
+            <p className="text-xs text-obus-accent mt-1">Across all roles</p>
           </div>
         </div>
 
-        {/* Users Table */}
+        {/* Roles Table */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-white">All Users</h3>
+            <h3 className="text-lg font-semibold text-white">All Roles</h3>
             <div className="flex items-center gap-2">
               <Input
-                placeholder="Filter users..."
+                placeholder="Filter roles..."
                 value={filterValue}
                 onChange={(event) => setFilterValue(event.target.value)}
                 className="max-w-sm bg-white/5 border-white/20 text-white"
@@ -203,14 +244,19 @@ export default function UsersPage() {
                     />
                   </TableHead>
                   <TableHead className="text-obus-text-light">
-                    User Name
+                    Role Name
                   </TableHead>
-                  <TableHead className="text-obus-text-light">Role</TableHead>
+                  <TableHead className="text-obus-text-light">
+                    Description
+                  </TableHead>
+                  <TableHead className="text-obus-text-light text-center">
+                    Access Level
+                  </TableHead>
                   <TableHead className="text-obus-text-light text-center">
                     Permissions
                   </TableHead>
                   <TableHead className="text-obus-text-light text-center">
-                    Last Login
+                    Users
                   </TableHead>
                   <TableHead className="text-obus-text-light text-center">
                     Status
@@ -221,68 +267,80 @@ export default function UsersPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredUsers.length ? (
-                  filteredUsers.map((user) => (
+                {filteredRoles.length ? (
+                  filteredRoles.map((role) => (
                     <TableRow
-                      key={user.id}
+                      key={role.id}
                       className="border-white/10 hover:bg-obus-primary/20"
                     >
                       <TableCell>
                         <Checkbox
-                          checked={selectedUsers.includes(user.id)}
+                          checked={selectedRoles.includes(role.id)}
                           onCheckedChange={(checked) =>
-                            handleUserSelect(user.id, !!checked)
+                            handleRoleSelect(role.id, !!checked)
                           }
-                          aria-label={`Select ${user.name}`}
+                          aria-label={`Select ${role.name}`}
                         />
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 bg-obus-accent rounded-lg flex items-center justify-center text-white font-bold text-sm">
-                            {user.name.charAt(0)}
+                            {role.accessLevel === "admin" ? (
+                              <ShieldCheck className="w-4 h-4" />
+                            ) : (
+                              <Shield className="w-4 h-4" />
+                            )}
                           </div>
                           <div>
                             <p className="font-medium text-white">
-                              {user.name}
+                              {role.name}
                             </p>
                             <p className="text-xs text-obus-text-light">
-                              {user.email}
+                              Created: {role.createdAt}
                             </p>
                           </div>
                         </div>
                       </TableCell>
                       <TableCell>
-                        <div className="flex items-center gap-2">
-                          {user.role === "Administrator" ? (
-                            <ShieldCheck className="w-4 h-4 text-obus-accent" />
-                          ) : (
-                            <Shield className="w-4 h-4 text-obus-text-light" />
-                          )}
-                          <p className="font-medium text-white">{user.role}</p>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <p className="font-semibold text-white">
-                          {user.permissions.length}
-                        </p>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <p className="font-semibold text-white">
-                          {user.lastLogin}
+                        <p className="font-medium text-white">
+                          {role.description}
                         </p>
                       </TableCell>
                       <TableCell className="text-center">
                         <Badge
+                          className={getAccessLevelBadge(role.accessLevel)}
+                        >
+                          {role.accessLevel.toUpperCase()}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <div className="flex items-center justify-center gap-2">
+                          <Key className="w-4 h-4 text-obus-text-light" />
+                          <p className="font-semibold text-white">
+                            {role.permissions.length}
+                          </p>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <div className="flex items-center justify-center gap-2">
+                          <Users className="w-4 h-4 text-obus-text-light" />
+                          <p className="font-semibold text-white">
+                            {role.userCount}
+                          </p>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Badge
                           variant={
-                            user.status === "active" ? "default" : "secondary"
+                            role.status === "active" ? "default" : "secondary"
                           }
                           className={
-                            user.status === "active"
+                            role.status === "active"
                               ? "bg-green-500/20 text-green-400"
                               : "bg-gray-500/20 text-gray-400"
                           }
                         >
-                          {user.status.toUpperCase()}
+                          {role.status.toUpperCase()}
                         </Badge>
                       </TableCell>
                       <TableCell>
@@ -301,7 +359,10 @@ export default function UsersPage() {
                               View details
                             </DropdownMenuCheckboxItem>
                             <DropdownMenuCheckboxItem className="text-white">
-                              Edit user
+                              Edit role
+                            </DropdownMenuCheckboxItem>
+                            <DropdownMenuCheckboxItem className="text-white">
+                              Manage permissions
                             </DropdownMenuCheckboxItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -311,7 +372,7 @@ export default function UsersPage() {
                 ) : (
                   <TableRow>
                     <TableCell
-                      colSpan={7}
+                      colSpan={8}
                       className="h-24 text-center text-obus-text-light"
                     >
                       No results.
@@ -324,9 +385,9 @@ export default function UsersPage() {
 
           <div className="flex items-center justify-between py-4">
             <div className="text-sm text-obus-text-light">
-              {selectedUsers.length > 0
-                ? `${selectedUsers.length} of ${filteredUsers.length} users selected`
-                : `Showing ${filteredUsers.length} of ${users.length} users`}
+              {selectedRoles.length > 0
+                ? `${selectedRoles.length} of ${filteredRoles.length} roles selected`
+                : `Showing ${filteredRoles.length} of ${roles.length} roles`}
             </div>
           </div>
         </div>
