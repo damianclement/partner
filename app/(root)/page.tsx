@@ -11,10 +11,9 @@ import {
   Clock,
   Rocket,
 } from "lucide-react";
-import { useUser, switchUserRole } from "@/lib/contexts/UserContext";
+import { useUser } from "@/lib/contexts/UserContext";
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
 
 export default function Home() {
   const { user } = useUser();
@@ -316,29 +315,6 @@ export default function Home() {
 
   return (
     <DashboardLayout>
-      {/* Temporary Global Role Switcher for Testing */}
-      <div className="mb-4 flex flex-wrap items-center justify-center gap-3 rounded-lg border border-yellow-200 bg-yellow-50 p-4 text-yellow-800 dark:border-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-200">
-        <span className="text-sm font-medium">Temporary Testing Toggle:</span>
-        <Button
-          size="sm"
-          className="h-8 px-3"
-          onClick={() => switchUserRole("admin")}
-        >
-          View as Admin
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-8 px-3"
-          onClick={() => switchUserRole("partner")}
-        >
-          View as Partner
-        </Button>
-        <span className="text-xs opacity-80">
-          Current: {user?.userType === "partner" ? "Partner" : "Admin"}
-        </span>
-      </div>
-
       {user?.userType === "partner" ? <PartnerDashboard /> : <AdminDashboard />}
     </DashboardLayout>
   );
