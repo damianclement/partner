@@ -11,7 +11,7 @@ const config: Config = {
     extend: {
       colors: {
         obus: {
-          primary: "#050934",
+          primary: "#374151",
           accent: "#FC7F05",
           bg: "#F5F7FA",
           "text-primary": "#212121",

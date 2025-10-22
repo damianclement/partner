@@ -43,7 +43,7 @@
   --radius-xl: calc(var(--radius) + 4px);
 
   /* OBUS Brand Colors */
-  --color-obus-primary: #050934;
+  --color-obus-primary: #374151;
   --color-obus-accent: #FC7F05;
   --color-obus-bg: #F5F7FA;
   --color-obus-text-primary: #212121;
