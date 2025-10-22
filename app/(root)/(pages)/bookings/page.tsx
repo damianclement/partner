@@ -4,7 +4,7 @@ import * as React from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Plus, MoreHorizontal, Calendar, MapPin } from "lucide-react";
+import { MoreHorizontal, Calendar, MapPin } from "lucide-react";
 // Simple table implementation without external dependencies
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -22,82 +22,143 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import Link from "next/link";
 
 export type Booking = {
   id: string;
-  passenger: string;
-  route: string;
-  bus: string;
-  date: string;
-  time: string;
-  status: "confirmed" | "pending" | "cancelled";
-  seat: string;
-  amount: string;
-  agent: string;
+  externalBookingId: string;
+  customer: {
+    name: string;
+    phone: string;
+  };
+  route: {
+    name: string;
+    busNumber: string;
+  };
+  departure: {
+    date: string;
+    time: string;
+  };
+  seatNumbers: string;
+  bookingStatus: "confirmed" | "pending" | "cancelled" | "completed";
+  paymentStatus: "paid" | "pending" | "failed" | "refunded";
+  amount: {
+    total: string;
+    currency: string;
+  };
 };
 
 export default function BookingsPage() {
   const bookings: Booking[] = [
     {
       id: "BK-001",
-      passenger: "Emmanuel Adebayo",
-      route: "Lagos - Abuja",
-      bus: "LAG-001-ABJ",
-      date: "2024-01-15",
-      time: "14:30",
-      status: "confirmed",
-      seat: "12A",
-      amount: "₦25,000",
-      agent: "Sarah Johnson",
+      externalBookingId: "EXT-BK-001",
+      customer: {
+        name: "Amina Mwakyusa",
+        phone: "+255-752-123-456",
+      },
+      route: {
+        name: "Dar es Salaam - Dodoma",
+        busNumber: "DAR-001-DDM",
+      },
+      departure: {
+        date: "2024-01-15",
+        time: "14:30",
+      },
+      seatNumbers: "12A",
+      bookingStatus: "confirmed",
+      paymentStatus: "paid",
+      amount: {
+        total: "45,000",
+        currency: "TZS",
+      },
     },
     {
       id: "BK-002",
-      passenger: "Chioma Okwu",
-      route: "Abuja - Port Harcourt",
-      bus: "ABJ-002-PH",
-      date: "2024-01-15",
-      time: "16:00",
-      status: "pending",
-      seat: "8B",
-      amount: "₦18,500",
-      agent: "Michael Chen",
+      externalBookingId: "EXT-BK-002",
+      customer: {
+        name: "Neema Komba",
+        phone: "+255-713-987-654",
+      },
+      route: {
+        name: "Dodoma - Mwanza",
+        busNumber: "DDM-002-MWZ",
+      },
+      departure: {
+        date: "2024-01-15",
+        time: "16:00",
+      },
+      seatNumbers: "8B",
+      bookingStatus: "pending",
+      paymentStatus: "pending",
+      amount: {
+        total: "38,500",
+        currency: "TZS",
+      },
     },
     {
       id: "BK-003",
-      passenger: "Ahmed Hassan",
-      route: "Lagos - Kano",
-      bus: "LAG-003-KN",
-      date: "2024-01-16",
-      time: "08:00",
-      status: "confirmed",
-      seat: "15C",
-      amount: "₦35,000",
-      agent: "Amara Okafor",
+      externalBookingId: "EXT-BK-003",
+      customer: {
+        name: "Hassan Jafari",
+        phone: "+255-768-234-567",
+      },
+      route: {
+        name: "Dar es Salaam - Arusha",
+        busNumber: "DAR-003-ARU",
+      },
+      departure: {
+        date: "2024-01-16",
+        time: "08:00",
+      },
+      seatNumbers: "15C",
+      bookingStatus: "completed",
+      paymentStatus: "paid",
+      amount: {
+        total: "65,000",
+        currency: "TZS",
+      },
     },
     {
       id: "BK-004",
-      passenger: "Grace Effiong",
-      route: "Port Harcourt - Abuja",
-      bus: "PH-004-ABJ",
-      date: "2024-01-15",
-      time: "19:30",
-      status: "cancelled",
-      seat: "3A",
-      amount: "₦22,000",
-      agent: "David Williams",
+      externalBookingId: "EXT-BK-004",
+      customer: {
+        name: "Grace Mushi",
+        phone: "+255-789-345-678",
+      },
+      route: {
+        name: "Mwanza - Arusha",
+        busNumber: "MWZ-004-ARU",
+      },
+      departure: {
+        date: "2024-01-16",
+        time: "10:15",
+      },
+      seatNumbers: "4D",
+      bookingStatus: "cancelled",
+      paymentStatus: "refunded",
+      amount: {
+        total: "42,000",
+        currency: "TZS",
+      },
     },
   ];
 
   // Simple state management for filtering and selection
   const [filterValue, setFilterValue] = React.useState("");
   const [selectedBookings, setSelectedBookings] = React.useState<string[]>([]);
-// Filter bookings based on search input
+  // Filter bookings based on search input
   const filteredBookings = bookings.filter(
     (booking) =>
-      booking.passenger.toLowerCase().includes(filterValue.toLowerCase()) ||
-      booking.id.toLowerCase().includes(filterValue.toLowerCase()) ||
-      booking.route.toLowerCase().includes(filterValue.toLowerCase()) ||
-      booking.bus.toLowerCase().includes(filterValue.toLowerCase())
+      booking.externalBookingId
+        .toLowerCase()
+        .includes(filterValue.toLowerCase()) ||
+      booking.customer.name.toLowerCase().includes(filterValue.toLowerCase()) ||
+      booking.customer.phone
+        .toLowerCase()
+        .includes(filterValue.toLowerCase()) ||
+      booking.route.name.toLowerCase().includes(filterValue.toLowerCase()) ||
+      booking.route.busNumber.toLowerCase().includes(filterValue.toLowerCase())
   );
 
   // Handle individual booking selection
@@ -133,10 +194,6 @@ export default function BookingsPage() {
               Manage and track all passenger bookings across the network
             </p>
           </div>
-          <Button className="bg-obus-accent hover:bg-obus-accent/90">
-            <Plus className="w-4 h-4 mr-2" />
-            New Booking
-          </Button>
         </div>
 
         {/* Stats Cards */}
@@ -145,7 +202,9 @@ export default function BookingsPage() {
             <div className="text-sm font-medium text-obus-text-secondary dark:text-obus-text-light mb-2">
               Total Bookings
             </div>
-            <div className="text-2xl font-bold text-obus-primary dark:text-white">8,945</div>
+            <div className="text-2xl font-bold text-obus-primary dark:text-white">
+              8,945
+            </div>
             <p className="text-xs text-obus-accent mt-1">+23% this month</p>
           </div>
 
@@ -153,7 +212,9 @@ export default function BookingsPage() {
             <div className="text-sm font-medium text-obus-text-secondary dark:text-obus-text-light mb-2">
               Confirmed
             </div>
-            <div className="text-2xl font-bold text-obus-primary dark:text-white">7,892</div>
+            <div className="text-2xl font-bold text-obus-primary dark:text-white">
+              7,892
+            </div>
             <p className="text-xs text-obus-accent mt-1">
               88.2% confirmation rate
             </p>
@@ -163,7 +224,9 @@ export default function BookingsPage() {
             <div className="text-sm font-medium text-obus-text-secondary dark:text-obus-text-light mb-2">
               Pending
             </div>
-            <div className="text-2xl font-bold text-obus-primary dark:text-white">847</div>
+            <div className="text-2xl font-bold text-obus-primary dark:text-white">
+              847
+            </div>
             <p className="text-xs text-obus-text-secondary dark:text-obus-text-light mt-1">
               Awaiting payment
             </p>
@@ -173,7 +236,9 @@ export default function BookingsPage() {
             <div className="text-sm font-medium text-obus-text-secondary dark:text-obus-text-light mb-2">
               Cancelled
             </div>
-            <div className="text-2xl font-bold text-obus-primary dark:text-white">206</div>
+            <div className="text-2xl font-bold text-obus-primary dark:text-white">
+              206
+            </div>
             <p className="text-xs text-obus-text-secondary dark:text-obus-text-light mt-1">
               2.3% cancellation rate
             </p>
@@ -183,7 +248,9 @@ export default function BookingsPage() {
         {/* Bookings Table */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-obus-primary dark:text-white">All Bookings</h3>
+            <h3 className="text-lg font-semibold text-obus-primary dark:text-white">
+              All Bookings
+            </h3>
             <div className="flex items-center gap-2">
               <Input
                 placeholder="Filter bookings..."
@@ -194,7 +261,7 @@ export default function BookingsPage() {
             </div>
           </div>
 
-          <div className="rounded-md border border-obus-primary/10 bg-white overflow-hidden shadow-sm transition-colors dark:border-white/20 dark:bg-white/5">
+          <div className="rounded-md border border-obus-primary/10 bg-white overflow-hidden shadow-sm transition-colors dark:border-white/20 dark:bg-white/5 overflow-x-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-obus-primary/20 hover:scrollbar-thumb-obus-primary/30 dark:scrollbar-thumb-white/20 dark:hover:scrollbar-thumb-white/30">
             <Table>
               <TableHeader>
                 <TableRow className="hover:bg-transparent border-obus-primary/10 dark:border-white/20">
@@ -206,9 +273,14 @@ export default function BookingsPage() {
                     />
                   </TableHead>
                   <TableHead className="text-obus-text-secondary dark:text-obus-text-light">
-                    Passenger
+                    Booking #
                   </TableHead>
-                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light">Route</TableHead>
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light">
+                    Customer
+                  </TableHead>
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light">
+                    Route
+                  </TableHead>
                   <TableHead className="text-obus-text-secondary dark:text-obus-text-light text-center">
                     Date & Time
                   </TableHead>
@@ -216,13 +288,13 @@ export default function BookingsPage() {
                     Seat
                   </TableHead>
                   <TableHead className="text-obus-text-secondary dark:text-obus-text-light text-center">
-                    Amount
-                  </TableHead>
-                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light text-center">
-                    Agent
-                  </TableHead>
-                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light text-center">
                     Status
+                  </TableHead>
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light text-center">
+                    Payment
+                  </TableHead>
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light text-center">
+                    Amount
                   </TableHead>
                   <TableHead className="text-obus-text-secondary dark:text-obus-text-light">
                     Actions
@@ -242,20 +314,25 @@ export default function BookingsPage() {
                           onCheckedChange={(checked) =>
                             handleBookingSelect(booking.id, !!checked)
                           }
-                          aria-label={`Select ${booking.passenger}`}
+                          aria-label={`Select ${booking.customer.name}`}
                         />
+                      </TableCell>
+                      <TableCell>
+                        <p className="font-mono text-sm font-semibold text-obus-primary dark:text-white">
+                          {booking.externalBookingId}
+                        </p>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 bg-obus-accent rounded-lg flex items-center justify-center text-white font-bold text-sm">
-                            {booking.passenger.charAt(0)}
+                            {booking.customer.name.charAt(0)}
                           </div>
                           <div>
                             <p className="font-medium text-obus-primary dark:text-white">
-                              {booking.passenger}
+                              {booking.customer.name}
                             </p>
                             <p className="text-xs text-obus-text-secondary dark:text-obus-text-light">
-                              {booking.id}
+                              {booking.customer.phone}
                             </p>
                           </div>
                         </div>
@@ -265,10 +342,10 @@ export default function BookingsPage() {
                           <MapPin className="w-4 h-4 text-obus-text-secondary dark:text-obus-text-light" />
                           <div>
                             <p className="font-medium text-obus-primary dark:text-white">
-                              {booking.route}
+                              {booking.route.name}
                             </p>
                             <p className="text-xs text-obus-text-secondary dark:text-obus-text-light">
-                              {booking.bus}
+                              {booking.route.busNumber}
                             </p>
                           </div>
                         </div>
@@ -278,48 +355,74 @@ export default function BookingsPage() {
                           <Calendar className="w-4 h-4 text-obus-text-secondary dark:text-obus-text-light" />
                           <div>
                             <p className="font-semibold text-obus-primary dark:text-white">
-                              {booking.date}
+                              {booking.departure.date}
                             </p>
                             <p className="text-xs text-obus-text-secondary dark:text-obus-text-light">
-                              {booking.time}
+                              {booking.departure.time}
                             </p>
                           </div>
                         </div>
                       </TableCell>
                       <TableCell className="text-center">
                         <p className="font-semibold text-obus-primary dark:text-white">
-                          {booking.seat}
-                        </p>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <p className="font-semibold text-obus-primary dark:text-white">
-                          {booking.amount}
-                        </p>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <p className="font-semibold text-obus-primary dark:text-white">
-                          {booking.agent}
+                          {booking.seatNumbers}
                         </p>
                       </TableCell>
                       <TableCell className="text-center">
                         <Badge
                           variant={
-                            booking.status === "confirmed"
+                            booking.bookingStatus === "confirmed"
                               ? "default"
-                              : booking.status === "pending"
+                              : booking.bookingStatus === "completed"
+                              ? "default"
+                              : booking.bookingStatus === "pending"
                               ? "secondary"
                               : "destructive"
                           }
                           className={
-                            booking.status === "confirmed"
+                            booking.bookingStatus === "confirmed"
                               ? "bg-green-500/20 text-green-400 hover:bg-green-500/20"
-                              : booking.status === "pending"
+                              : booking.bookingStatus === "completed"
+                              ? "bg-blue-500/20 text-blue-400 hover:bg-blue-500/20"
+                              : booking.bookingStatus === "pending"
                               ? "bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/20"
                               : "bg-red-500/20 text-red-400 hover:bg-red-500/20"
                           }
                         >
-                          {booking.status.toUpperCase()}
+                          {booking.bookingStatus.toUpperCase()}
                         </Badge>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Badge
+                          variant={
+                            booking.paymentStatus === "paid"
+                              ? "default"
+                              : booking.paymentStatus === "pending"
+                              ? "secondary"
+                              : booking.paymentStatus === "failed"
+                              ? "destructive"
+                              : "secondary"
+                          }
+                          className={
+                            booking.paymentStatus === "paid"
+                              ? "bg-green-500/20 text-green-400 hover:bg-green-500/20"
+                              : booking.paymentStatus === "pending"
+                              ? "bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/20"
+                              : booking.paymentStatus === "failed"
+                              ? "bg-red-500/20 text-red-400 hover:bg-red-500/20"
+                              : "bg-gray-500/20 text-gray-400 hover:bg-gray-500/20"
+                          }
+                        >
+                          {booking.paymentStatus.toUpperCase()}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <p className="font-semibold text-obus-primary dark:text-white">
+                          TSh {booking.amount.total}
+                        </p>
+                        <p className="text-xs text-obus-text-secondary dark:text-obus-text-light">
+                          {booking.amount.currency}
+                        </p>
                       </TableCell>
                       <TableCell>
                         <DropdownMenu>
@@ -333,11 +436,16 @@ export default function BookingsPage() {
                             align="end"
                             className="border border-obus-primary/10 bg-white text-obus-text-primary dark:border-white/20 dark:bg-obus-primary dark:text-white"
                           >
+                            <Link href={`/bookings/${booking.id}`}>
+                              <DropdownMenuCheckboxItem className="text-obus-text-primary dark:text-white cursor-pointer">
+                                View Details
+                              </DropdownMenuCheckboxItem>
+                            </Link>
                             <DropdownMenuCheckboxItem className="text-obus-text-primary dark:text-white">
-                              View details
+                              Edit Booking
                             </DropdownMenuCheckboxItem>
                             <DropdownMenuCheckboxItem className="text-obus-text-primary dark:text-white">
-                              Edit booking
+                              Cancel Booking
                             </DropdownMenuCheckboxItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -347,7 +455,7 @@ export default function BookingsPage() {
                 ) : (
                   <TableRow>
                     <TableCell
-                      colSpan={9}
+                      colSpan={10}
                       className="h-24 text-center text-obus-text-secondary dark:text-obus-text-light"
                     >
                       No results.
@@ -370,8 +478,3 @@ export default function BookingsPage() {
     </DashboardLayout>
   );
 }
-
-
-
-
-

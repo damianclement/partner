@@ -58,7 +58,7 @@ export default function SettingsPage() {
                 </Label>
                 <Input
                   id="timezone"
-                  defaultValue="Africa/Lagos (WAT)"
+                  defaultValue="Africa/Dar es Salaam (EAT)"
                   className="bg-white border border-obus-primary/10 text-obus-text-primary focus:bg-white focus:border-obus-accent/70 dark:bg-white/10 dark:border-white/20 dark:text-white"
                 />
               </div>
@@ -69,7 +69,7 @@ export default function SettingsPage() {
                 </Label>
                 <Input
                   id="currency"
-                  defaultValue="Tsh"
+                  defaultValue="TZS"
                   className="bg-white border border-obus-primary/10 text-obus-text-primary focus:bg-white focus:border-obus-accent/70 dark:bg-white/10 dark:border-white/20 dark:text-white"
                 />
               </div>

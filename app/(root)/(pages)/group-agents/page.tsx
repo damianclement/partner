@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -22,120 +23,100 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import Link from "next/link";
 
 export type GroupAgent = {
   id: number;
-  groupName: string;
-  leader: string;
-  leaderEmail: string;
+  code: string;
+  name: string;
+  externalSystemId: string;
   partner: string;
-  status: "active" | "pending" | "suspended";
-  memberCount: number;
-  totalBookings: number;
-  groupRevenue: string;
-  avgRating: number;
-  territories: string[];
-  specialties: string[];
-  formedDate: string;
-  performance: "excellent" | "good" | "average" | "needs-improvement";
+  type: "Corporate" | "Agency" | "Individual" | "Franchise";
+  status: "active" | "inactive" | "suspended" | "pending";
+  agentCount: number;
+  busSystemCount: number;
+  created: string;
 };
 
 export default function GroupAgentsPage() {
+  const router = useRouter();
+
   const groupAgents: GroupAgent[] = [
     {
       id: 1,
-      groupName: "Lagos Elite Team",
-      leader: "Sarah Johnson",
-      leaderEmail: "sarah.johnson@abctransport.com",
-      partner: "ABC Transport Co.",
+      code: "GAG001",
+      name: "Dar Corridor Elite",
+      externalSystemId: "EXT-DAR-001",
+      partner: "SafariLink Coaches",
+      type: "Corporate",
       status: "active",
-      memberCount: 8,
-      totalBookings: 2340,
-      groupRevenue: "$89,500",
-      avgRating: 4.7,
-      territories: ["Lagos", "Ikeja", "Victoria Island"],
-      specialties: ["Corporate Bookings", "VIP Services", "Long Distance"],
-      formedDate: "2023-02-15",
-      performance: "excellent",
+      agentCount: 8,
+      busSystemCount: 12,
+      created: "2023-02-15",
     },
     {
       id: 2,
-      groupName: "Abuja Express Group",
-      leader: "Michael Chen",
-      leaderEmail: "m.chen@cityexpress.com",
-      partner: "City Express",
+      code: "GAG002",
+      name: "Dodoma Express Network",
+      externalSystemId: "EXT-DDM-002",
+      partner: "Coastal Express Ltd",
+      type: "Agency",
       status: "active",
-      memberCount: 6,
-      totalBookings: 1890,
-      groupRevenue: "$67,200",
-      avgRating: 4.5,
-      territories: ["Abuja", "Kaduna", "Jos"],
-      specialties: ["Government Contracts", "Airport Transfers"],
-      formedDate: "2023-03-20",
-      performance: "good",
+      agentCount: 6,
+      busSystemCount: 8,
+      created: "2023-03-20",
     },
     {
       id: 3,
-      groupName: "Port Harcourt Warriors",
-      leader: "Amara Okafor",
-      leaderEmail: "amara.okafor@metrotransit.com",
-      partner: "Metro Transit",
-      status: "active",
-      memberCount: 5,
-      totalBookings: 1245,
-      groupRevenue: "$42,100",
-      avgRating: 4.3,
-      territories: ["Port Harcourt", "Yenagoa", "Warri"],
-      specialties: ["Oil & Gas Sector", "Industrial Transport"],
-      formedDate: "2023-04-10",
-      performance: "good",
+      code: "GAG003",
+      name: "Kilimanjaro Summit Group",
+      externalSystemId: "EXT-ARU-003",
+      partner: "Highland Transit",
+      type: "Franchise",
+      status: "pending",
+      agentCount: 5,
+      busSystemCount: 6,
+      created: "2023-04-10",
     },
     {
       id: 4,
-      groupName: "Kano Northern Team",
-      leader: "David Williams",
-      leaderEmail: "d.williams@highwaykings.com",
-      partner: "Highway Kings",
+      code: "GAG004",
+      name: "Lake Victoria Collective",
+      externalSystemId: "EXT-MWZ-004",
+      partner: "LakeZone Shuttles",
+      type: "Individual",
       status: "suspended",
-      memberCount: 4,
-      totalBookings: 567,
-      groupRevenue: "$18,900",
-      avgRating: 3.8,
-      territories: ["Kano", "Katsina"],
-      specialties: ["Regional Routes", "Bulk Transport"],
-      formedDate: "2023-05-05",
-      performance: "needs-improvement",
+      agentCount: 4,
+      busSystemCount: 3,
+      created: "2023-05-05",
     },
     {
       id: 5,
-      groupName: "Premium Service Group",
-      leader: "Grace Effiong",
-      leaderEmail: "grace.effiong@premiumtransport.com",
-      partner: "Premium Transport",
+      code: "GAG005",
+      name: "Zanzibar Premium Alliance",
+      externalSystemId: "EXT-ZNZ-005",
+      partner: "Zanzibar Coastal Lines",
+      type: "Corporate",
       status: "active",
-      memberCount: 7,
-      totalBookings: 1980,
-      groupRevenue: "$76,300",
-      avgRating: 4.6,
-      territories: ["Lagos", "Ibadan", "Ogun"],
-      specialties: ["Luxury Transport", "Event Services", "Wedding Packages"],
-      formedDate: "2023-01-28",
-      performance: "excellent",
+      agentCount: 7,
+      busSystemCount: 10,
+      created: "2023-01-28",
     },
   ];
 
   // Simple state management for filtering and selection
   const [filterValue, setFilterValue] = React.useState("");
   const [selectedGroups, setSelectedGroups] = React.useState<number[]>([]);
-// Filter group agents based on search input
+  // Filter group agents based on search input
   const filteredGroups = groupAgents.filter(
     (group) =>
-      group.groupName.toLowerCase().includes(filterValue.toLowerCase()) ||
-      group.leader.toLowerCase().includes(filterValue.toLowerCase()) ||
+      group.code.toLowerCase().includes(filterValue.toLowerCase()) ||
+      group.name.toLowerCase().includes(filterValue.toLowerCase()) ||
+      group.externalSystemId
+        .toLowerCase()
+        .includes(filterValue.toLowerCase()) ||
       group.partner.toLowerCase().includes(filterValue.toLowerCase()) ||
-      group.specialties.some((specialty) =>
-        specialty.toLowerCase().includes(filterValue.toLowerCase())
-      )
+      group.type.toLowerCase().includes(filterValue.toLowerCase())
   );
 
   // Handle individual group selection
@@ -160,21 +141,6 @@ export default function GroupAgentsPage() {
   const isAllSelected =
     filteredGroups.length > 0 &&
     selectedGroups.length === filteredGroups.length;
-  // Get performance badge styling
-  const getPerformanceBadge = (performance: string) => {
-    switch (performance) {
-      case "excellent":
-        return "bg-green-500/20 text-green-400 hover:bg-green-500/20";
-      case "good":
-        return "bg-blue-500/20 text-blue-400 hover:bg-blue-500/20";
-      case "average":
-        return "bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/20";
-      case "needs-improvement":
-        return "bg-red-500/20 text-red-400 hover:bg-red-500/20";
-      default:
-        return "bg-gray-500/20 text-gray-400 hover:bg-gray-500/20";
-    }
-  };
 
   return (
     <DashboardLayout>
@@ -188,7 +154,10 @@ export default function GroupAgentsPage() {
               operations
             </p>
           </div>
-          <Button className="bg-obus-accent hover:bg-obus-accent/90">
+          <Button
+            className="bg-obus-accent hover:bg-obus-accent/90"
+            onClick={() => router.push("/group-agents/new")}
+          >
             <Plus className="w-4 h-4 mr-2" />
             Create New Group
           </Button>
@@ -200,7 +169,9 @@ export default function GroupAgentsPage() {
             <div className="text-sm font-medium text-obus-text-secondary dark:text-obus-text-light mb-2">
               Total Groups
             </div>
-            <div className="text-2xl font-bold text-obus-primary dark:text-white">5</div>
+            <div className="text-2xl font-bold text-obus-primary dark:text-white">
+              5
+            </div>
             <p className="text-xs text-obus-accent mt-1">+1 this month</p>
           </div>
 
@@ -208,7 +179,9 @@ export default function GroupAgentsPage() {
             <div className="text-sm font-medium text-obus-text-secondary dark:text-obus-text-light mb-2">
               Total Members
             </div>
-            <div className="text-2xl font-bold text-obus-primary dark:text-white">30</div>
+            <div className="text-2xl font-bold text-obus-primary dark:text-white">
+              30
+            </div>
             <p className="text-xs text-obus-accent mt-1">Across all groups</p>
           </div>
 
@@ -216,7 +189,9 @@ export default function GroupAgentsPage() {
             <div className="text-sm font-medium text-obus-text-secondary dark:text-obus-text-light mb-2">
               Group Revenue
             </div>
-            <div className="text-2xl font-bold text-obus-primary dark:text-white">$294K</div>
+            <div className="text-2xl font-bold text-obus-primary dark:text-white">
+              $294K
+            </div>
             <p className="text-xs text-obus-accent mt-1">+22% this month</p>
           </div>
 
@@ -224,7 +199,9 @@ export default function GroupAgentsPage() {
             <div className="text-sm font-medium text-obus-text-secondary dark:text-obus-text-light mb-2">
               Avg. Performance
             </div>
-            <div className="text-2xl font-bold text-obus-primary dark:text-white">4.4</div>
+            <div className="text-2xl font-bold text-obus-primary dark:text-white">
+              4.4
+            </div>
             <p className="text-xs text-obus-accent mt-1">+0.2 this month</p>
           </div>
         </div>
@@ -245,7 +222,7 @@ export default function GroupAgentsPage() {
             </div>
           </div>
 
-          <div className="rounded-md border border-obus-primary/10 bg-white overflow-hidden shadow-sm transition-colors dark:border-white/20 dark:bg-white/5">
+          <div className="rounded-md border border-obus-primary/10 bg-white overflow-hidden shadow-sm transition-colors dark:border-white/20 dark:bg-white/5 overflow-x-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-obus-primary/20 hover:scrollbar-thumb-obus-primary/30 dark:scrollbar-thumb-white/20 dark:hover:scrollbar-thumb-white/30">
             <Table>
               <TableHeader>
                 <TableRow className="hover:bg-transparent border-obus-primary/10 dark:border-white/20">
@@ -257,26 +234,28 @@ export default function GroupAgentsPage() {
                     />
                   </TableHead>
                   <TableHead className="text-obus-text-secondary dark:text-obus-text-light">
-                    Group Name
+                    Code
                   </TableHead>
-                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light">Leader</TableHead>
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light">
+                    Name
+                  </TableHead>
                   <TableHead className="text-obus-text-secondary dark:text-obus-text-light">
                     Partner
                   </TableHead>
-                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light text-center">
-                    Members
-                  </TableHead>
-                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light text-center">
-                    Bookings
-                  </TableHead>
-                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light text-center">
-                    Revenue
-                  </TableHead>
-                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light text-center">
-                    Performance
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light">
+                    Type
                   </TableHead>
                   <TableHead className="text-obus-text-secondary dark:text-obus-text-light text-center">
                     Status
+                  </TableHead>
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light text-center">
+                    Agents
+                  </TableHead>
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light text-center">
+                    Bus Systems
+                  </TableHead>
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light">
+                    Created
                   </TableHead>
                   <TableHead className="text-obus-text-secondary dark:text-obus-text-light">
                     Actions
@@ -296,63 +275,44 @@ export default function GroupAgentsPage() {
                           onCheckedChange={(checked) =>
                             handleGroupSelect(group.id, !!checked)
                           }
-                          aria-label={`Select ${group.groupName}`}
+                          aria-label={`Select ${group.name}`}
                         />
                       </TableCell>
                       <TableCell>
-                        <div>
-                          <p className="font-medium text-obus-primary dark:text-white">
-                            {group.groupName}
-                          </p>
-                          <p className="text-xs text-obus-text-secondary dark:text-obus-text-light">
-                            Formed: {group.formedDate}
-                          </p>
-                        </div>
+                        <p className="font-mono text-sm font-semibold text-obus-primary dark:text-white">
+                          {group.code}
+                        </p>
                       </TableCell>
                       <TableCell>
                         <div>
                           <p className="font-medium text-obus-primary dark:text-white">
-                            {group.leader}
+                            {group.name}
                           </p>
                           <p className="text-xs text-obus-text-secondary dark:text-obus-text-light">
-                            {group.leaderEmail}
+                            ID: {group.externalSystemId}
                           </p>
                         </div>
                       </TableCell>
+                      {/* Partner */}
                       <TableCell>
                         <p className="font-medium text-obus-primary dark:text-white">
                           {group.partner}
                         </p>
                       </TableCell>
-                      <TableCell className="text-center">
-                        <div className="flex items-center justify-center gap-2">
-                          <UserPlus className="w-4 h-4 text-obus-text-secondary dark:text-obus-text-light" />
-                          <p className="font-semibold text-obus-primary dark:text-white">
-                            {group.memberCount}
-                          </p>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <div className="flex items-center justify-center gap-2">
-                          <Target className="w-4 h-4 text-obus-text-secondary dark:text-obus-text-light" />
-                          <p className="font-semibold text-obus-primary dark:text-white">
-                            {group.totalBookings}
-                          </p>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <p className="font-semibold text-obus-primary dark:text-white">
-                          {group.groupRevenue}
-                        </p>
-                        <p className="text-xs text-obus-text-secondary dark:text-obus-text-light">
-                          Avg: {group.avgRating}★
-                        </p>
-                      </TableCell>
-                      <TableCell className="text-center">
+                      <TableCell>
                         <Badge
-                          className={getPerformanceBadge(group.performance)}
+                          variant="outline"
+                          className={
+                            group.type === "Corporate"
+                              ? "bg-blue-500/20 text-blue-400 border-blue-500/30"
+                              : group.type === "Agency"
+                              ? "bg-purple-500/20 text-purple-400 border-purple-500/30"
+                              : group.type === "Franchise"
+                              ? "bg-orange-500/20 text-orange-400 border-orange-500/30"
+                              : "bg-green-500/20 text-green-400 border-green-500/30"
+                          }
                         >
-                          {group.performance.toUpperCase().replace("-", " ")}
+                          {group.type}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-center">
@@ -360,6 +320,8 @@ export default function GroupAgentsPage() {
                           variant={
                             group.status === "active"
                               ? "default"
+                              : group.status === "inactive"
+                              ? "secondary"
                               : group.status === "pending"
                               ? "secondary"
                               : "destructive"
@@ -367,6 +329,8 @@ export default function GroupAgentsPage() {
                           className={
                             group.status === "active"
                               ? "bg-green-500/20 text-green-400 hover:bg-green-500/20"
+                              : group.status === "inactive"
+                              ? "bg-gray-500/20 text-gray-400 hover:bg-gray-500/20"
                               : group.status === "pending"
                               ? "bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/20"
                               : "bg-red-500/20 text-red-400 hover:bg-red-500/20"
@@ -374,6 +338,31 @@ export default function GroupAgentsPage() {
                         >
                           {group.status.toUpperCase()}
                         </Badge>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <div className="flex items-center justify-center gap-2">
+                          <UserPlus className="w-4 h-4 text-obus-text-secondary dark:text-obus-text-light" />
+                          <p className="font-semibold text-obus-primary dark:text-white">
+                            {group.agentCount}
+                          </p>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <div className="flex items-center justify-center gap-2">
+                          <Target className="w-4 h-4 text-obus-text-secondary dark:text-obus-text-light" />
+                          <p className="font-semibold text-obus-primary dark:text-white">
+                            {group.busSystemCount}
+                          </p>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <p className="text-sm text-obus-text-secondary dark:text-obus-text-light">
+                          {new Date(group.created).toLocaleDateString("en-US", {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                          })}
+                        </p>
                       </TableCell>
                       <TableCell>
                         <DropdownMenu>
@@ -387,20 +376,25 @@ export default function GroupAgentsPage() {
                             align="end"
                             className="border border-obus-primary/10 bg-white text-obus-text-primary dark:border-white/20 dark:bg-obus-primary dark:text-white"
                           >
+                            <Link href={`/group-agents/${group.id}`}>
+                              <DropdownMenuCheckboxItem className="text-obus-text-primary dark:text-white cursor-pointer">
+                                View Details
+                              </DropdownMenuCheckboxItem>
+                            </Link>
                             <DropdownMenuCheckboxItem className="text-obus-text-primary dark:text-white">
-                              View details
+                              Edit Group
                             </DropdownMenuCheckboxItem>
                             <DropdownMenuCheckboxItem className="text-obus-text-primary dark:text-white">
-                              Edit group
+                              Manage Bus Systems
                             </DropdownMenuCheckboxItem>
                             <DropdownMenuCheckboxItem className="text-obus-text-primary dark:text-white">
-                              Manage members
+                              Manage Agents
                             </DropdownMenuCheckboxItem>
                             <DropdownMenuCheckboxItem className="text-obus-text-primary dark:text-white">
-                              View performance
+                              Status Actions
                             </DropdownMenuCheckboxItem>
                             <DropdownMenuCheckboxItem className="text-obus-text-primary dark:text-white">
-                              Manage territories
+                              Delete Group
                             </DropdownMenuCheckboxItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -433,8 +427,3 @@ export default function GroupAgentsPage() {
     </DashboardLayout>
   );
 }
-
-
-
-
-

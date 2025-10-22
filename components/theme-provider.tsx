@@ -1,6 +1,13 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 
 type Theme = "light" | "dark";
 
@@ -31,6 +38,14 @@ function applyTheme(theme: Theme) {
   }
 }
 
+function getDocumentTheme(): Theme {
+  if (typeof document === "undefined") {
+    return "light";
+  }
+
+  return document.documentElement.classList.contains("dark") ? "dark" : "light";
+}
+
 export function ThemeProvider({
   children,
   defaultTheme = "light",
@@ -46,8 +61,10 @@ export function ThemeProvider({
       return;
     }
 
-    const storedTheme = window.localStorage.getItem(STORAGE_KEY) as Theme | null;
-    const initialTheme = storedTheme ?? defaultTheme;
+    const storedTheme = window.localStorage.getItem(
+      STORAGE_KEY
+    ) as Theme | null;
+    const initialTheme = storedTheme ?? getDocumentTheme() ?? defaultTheme;
 
     setThemeState(initialTheme);
     applyTheme(initialTheme);
@@ -81,7 +98,9 @@ export function ThemeProvider({
     [isReady, theme, toggleTheme, setTheme]
   );
 
-  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
+  return (
+    <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
+  );
 }
 
 export function useTheme() {

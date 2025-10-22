@@ -4,7 +4,14 @@ import * as React from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Plus, MoreHorizontal, Shield, ShieldCheck, Key, Users } from "lucide-react";
+import {
+  Plus,
+  MoreHorizontal,
+  Shield,
+  ShieldCheck,
+  Key,
+  Users,
+} from "lucide-react";
 // Simple table implementation without external dependencies
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -101,7 +108,7 @@ export default function UserRolesPage() {
   // Simple state management for filtering and selection
   const [filterValue, setFilterValue] = React.useState("");
   const [selectedRoles, setSelectedRoles] = React.useState<number[]>([]);
-// Filter roles based on search input
+  // Filter roles based on search input
   const filteredRoles = roles.filter(
     (role) =>
       role.name.toLowerCase().includes(filterValue.toLowerCase()) ||
@@ -170,7 +177,9 @@ export default function UserRolesPage() {
             <div className="text-sm font-medium text-obus-text-secondary dark:text-obus-text-light mb-2">
               Total Roles
             </div>
-            <div className="text-2xl font-bold text-obus-primary dark:text-white">6</div>
+            <div className="text-2xl font-bold text-obus-primary dark:text-white">
+              6
+            </div>
             <p className="text-xs text-obus-accent mt-1">+1 this month</p>
           </div>
 
@@ -178,7 +187,9 @@ export default function UserRolesPage() {
             <div className="text-sm font-medium text-obus-text-secondary dark:text-obus-text-light mb-2">
               Active Roles
             </div>
-            <div className="text-2xl font-bold text-obus-primary dark:text-white">5</div>
+            <div className="text-2xl font-bold text-obus-primary dark:text-white">
+              5
+            </div>
             <p className="text-xs text-obus-accent mt-1">83% active</p>
           </div>
 
@@ -186,15 +197,21 @@ export default function UserRolesPage() {
             <div className="text-sm font-medium text-obus-text-secondary dark:text-obus-text-light mb-2">
               Admin Roles
             </div>
-            <div className="text-2xl font-bold text-obus-primary dark:text-white">1</div>
-            <p className="text-xs text-obus-text-secondary dark:text-obus-text-light mt-1">System admins</p>
+            <div className="text-2xl font-bold text-obus-primary dark:text-white">
+              1
+            </div>
+            <p className="text-xs text-obus-text-secondary dark:text-obus-text-light mt-1">
+              System admins
+            </p>
           </div>
 
           <div className="rounded-lg border border-obus-primary/10 bg-white p-6 shadow-sm transition-colors dark:border-white/20 dark:bg-white/5">
             <div className="text-sm font-medium text-obus-text-secondary dark:text-obus-text-light mb-2">
               Total Users
             </div>
-            <div className="text-2xl font-bold text-obus-primary dark:text-white">40</div>
+            <div className="text-2xl font-bold text-obus-primary dark:text-white">
+              40
+            </div>
             <p className="text-xs text-obus-accent mt-1">Across all roles</p>
           </div>
         </div>
@@ -202,7 +219,9 @@ export default function UserRolesPage() {
         {/* Roles Table */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-obus-primary dark:text-white">All Roles</h3>
+            <h3 className="text-lg font-semibold text-obus-primary dark:text-white">
+              All Roles
+            </h3>
             <div className="flex items-center gap-2">
               <Input
                 placeholder="Filter roles..."
@@ -213,7 +232,7 @@ export default function UserRolesPage() {
             </div>
           </div>
 
-          <div className="rounded-md border border-obus-primary/10 bg-white overflow-hidden shadow-sm transition-colors dark:border-white/20 dark:bg-white/5">
+          <div className="rounded-md border border-obus-primary/10 bg-white overflow-hidden shadow-sm transition-colors dark:border-white/20 dark:bg-white/5 overflow-x-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-obus-primary/20 hover:scrollbar-thumb-obus-primary/30 dark:scrollbar-thumb-white/20 dark:hover:scrollbar-thumb-white/30">
             <Table>
               <TableHeader>
                 <TableRow className="hover:bg-transparent border-obus-primary/10 dark:border-white/20">
@@ -376,8 +395,3 @@ export default function UserRolesPage() {
     </DashboardLayout>
   );
 }
-
-
-
-
-

@@ -22,71 +22,130 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import Link from "next/link";
 
 export type Agent = {
   id: number;
-  name: string;
-  email: string;
-  partner: string;
-  status: "active" | "pending" | "suspended";
-  role: string;
-  bookings: number;
-  rating: number;
+  agentCode: string;
+  partnerAgentNumber: string;
+  businessName: string;
+  passName: string;
+  contactPerson: {
+    name: string;
+    email: string;
+    phone: string;
+  };
+  agentType: "Individual" | "Corporate" | "Agency";
+  partner: {
+    code: string;
+    businessName: string;
+  };
+  status: "active" | "inactive" | "suspended";
+  registrationDate: string;
 };
 
 export default function AgentsPage() {
   const agents: Agent[] = [
     {
       id: 1,
-      name: "Sarah Johnson",
-      email: "sarah.johnson@abctransport.com",
-      partner: "ABC Transport Co.",
+      agentCode: "AGT001",
+      partnerAgentNumber: "SFC-AG-01",
+      businessName: "Nyota Travel Services",
+      passName: "Nyota Travel",
+      contactPerson: {
+        name: "Neema Mwenda",
+        email: "neema.mwenda@nyotatravel.co.tz",
+        phone: "+255-715-200-345",
+      },
+      agentType: "Individual",
+      partner: {
+        code: "SFC001",
+        businessName: "SafariLink Coaches",
+      },
       status: "active",
-      role: "Senior Agent",
-      bookings: 145,
-      rating: 4.8,
+      registrationDate: "2024-01-15",
     },
     {
       id: 2,
-      name: "Michael Chen",
-      email: "m.chen@cityexpress.com",
-      partner: "City Express",
+      agentCode: "AGT002",
+      partnerAgentNumber: "CEX-AG-02",
+      businessName: "Swahili Coastal Agency",
+      passName: "Swahili Coastal",
+      contactPerson: {
+        name: "Abdallah Said",
+        email: "abdallah.said@swahilicostal.co.tz",
+        phone: "+255-718-456-210",
+      },
+      agentType: "Agency",
+      partner: {
+        code: "CEX002",
+        businessName: "Coastal Express Ltd",
+      },
       status: "active",
-      role: "Agent",
-      bookings: 98,
-      rating: 4.6,
+      registrationDate: "2024-02-20",
     },
     {
       id: 3,
-      name: "Amara Okafor",
-      email: "amara.okafor@metrotransit.com",
-      partner: "Metro Transit",
-      status: "pending",
-      role: "Junior Agent",
-      bookings: 0,
-      rating: 0,
+      agentCode: "AGT003",
+      partnerAgentNumber: "HLT-AG-03",
+      businessName: "Kilimanjaro Transport Solutions",
+      passName: "Kilimanjaro Transport",
+      contactPerson: {
+        name: "Asha Kileo",
+        email: "asha.kileo@kilimanjaro.co.tz",
+        phone: "+255-767-654-320",
+      },
+      agentType: "Corporate",
+      partner: {
+        code: "HLT003",
+        businessName: "Highland Transit",
+      },
+      status: "inactive",
+      registrationDate: "2024-03-10",
     },
     {
       id: 4,
-      name: "David Williams",
-      email: "d.williams@highwaykings.com",
-      partner: "Highway Kings",
+      agentCode: "AGT004",
+      partnerAgentNumber: "LZS-AG-04",
+      businessName: "Victoria Fleet Managers",
+      passName: "Victoria Fleet",
+      contactPerson: {
+        name: "Emmanuel Nnko",
+        email: "emmanuel.nnko@victoriafleet.co.tz",
+        phone: "+255-789-876-540",
+      },
+      agentType: "Individual",
+      partner: {
+        code: "LZS004",
+        businessName: "LakeZone Shuttles",
+      },
       status: "suspended",
-      role: "Senior Agent",
-      bookings: 234,
-      rating: 3.2,
+      registrationDate: "2023-12-05",
     },
   ];
 
   // Simple state management for filtering and selection
   const [filterValue, setFilterValue] = React.useState("");
   const [selectedAgents, setSelectedAgents] = React.useState<number[]>([]);
-// Filter agents based on search input
+  // Filter agents based on search input
   const filteredAgents = agents.filter(
     (agent) =>
-      agent.name.toLowerCase().includes(filterValue.toLowerCase()) ||
-      agent.email.toLowerCase().includes(filterValue.toLowerCase()) ||
-      agent.partner.toLowerCase().includes(filterValue.toLowerCase())
+      agent.agentCode.toLowerCase().includes(filterValue.toLowerCase()) ||
+      agent.partnerAgentNumber
+        .toLowerCase()
+        .includes(filterValue.toLowerCase()) ||
+      agent.businessName.toLowerCase().includes(filterValue.toLowerCase()) ||
+      agent.passName.toLowerCase().includes(filterValue.toLowerCase()) ||
+      agent.contactPerson.name
+        .toLowerCase()
+        .includes(filterValue.toLowerCase()) ||
+      agent.contactPerson.email
+        .toLowerCase()
+        .includes(filterValue.toLowerCase()) ||
+      agent.partner.code.toLowerCase().includes(filterValue.toLowerCase()) ||
+      agent.partner.businessName
+        .toLowerCase()
+        .includes(filterValue.toLowerCase())
   );
 
   // Handle individual agent selection
@@ -134,7 +193,9 @@ export default function AgentsPage() {
             <div className="text-sm font-medium text-obus-text-secondary dark:text-obus-text-light mb-2">
               Total Agents
             </div>
-            <div className="text-2xl font-bold text-obus-primary dark:text-white">1,423</div>
+            <div className="text-2xl font-bold text-obus-primary dark:text-white">
+              1,423
+            </div>
             <p className="text-xs text-obus-accent mt-1">+8% this month</p>
           </div>
 
@@ -142,7 +203,9 @@ export default function AgentsPage() {
             <div className="text-sm font-medium text-obus-text-secondary dark:text-obus-text-light mb-2">
               Active Agents
             </div>
-            <div className="text-2xl font-bold text-obus-primary dark:text-white">1,289</div>
+            <div className="text-2xl font-bold text-obus-primary dark:text-white">
+              1,289
+            </div>
             <p className="text-xs text-obus-accent mt-1">90.5% active rate</p>
           </div>
 
@@ -150,7 +213,9 @@ export default function AgentsPage() {
             <div className="text-sm font-medium text-obus-text-secondary dark:text-obus-text-light mb-2">
               Pending Approval
             </div>
-            <div className="text-2xl font-bold text-obus-primary dark:text-white">87</div>
+            <div className="text-2xl font-bold text-obus-primary dark:text-white">
+              87
+            </div>
             <p className="text-xs text-obus-text-secondary dark:text-obus-text-light mt-1">
               Awaiting verification
             </p>
@@ -160,7 +225,9 @@ export default function AgentsPage() {
             <div className="text-sm font-medium text-obus-text-secondary dark:text-obus-text-light mb-2">
               Avg. Rating
             </div>
-            <div className="text-2xl font-bold text-obus-primary dark:text-white">4.6</div>
+            <div className="text-2xl font-bold text-obus-primary dark:text-white">
+              4.6
+            </div>
             <p className="text-xs text-obus-accent mt-1">+0.2 this month</p>
           </div>
         </div>
@@ -168,7 +235,9 @@ export default function AgentsPage() {
         {/* Agents Table */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-obus-primary dark:text-white">All Agents</h3>
+            <h3 className="text-lg font-semibold text-obus-primary dark:text-white">
+              All Agents
+            </h3>
             <div className="flex items-center gap-2">
               <Input
                 placeholder="Filter agents..."
@@ -179,7 +248,7 @@ export default function AgentsPage() {
             </div>
           </div>
 
-          <div className="rounded-md border border-obus-primary/10 bg-white overflow-hidden shadow-sm transition-colors dark:border-white/20 dark:bg-white/5">
+          <div className="rounded-md border border-obus-primary/10 bg-white overflow-hidden shadow-sm transition-colors dark:border-white/20 dark:bg-white/5 overflow-x-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-obus-primary/20 hover:scrollbar-thumb-obus-primary/30 dark:scrollbar-thumb-white/20 dark:hover:scrollbar-thumb-white/30">
             <Table>
               <TableHeader>
                 <TableRow className="hover:bg-transparent border-obus-primary/10 dark:border-white/20">
@@ -191,22 +260,25 @@ export default function AgentsPage() {
                     />
                   </TableHead>
                   <TableHead className="text-obus-text-secondary dark:text-obus-text-light">
-                    Agent Name
+                    Agent Code
+                  </TableHead>
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light">
+                    Business Name
+                  </TableHead>
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light">
+                    Contact Person
+                  </TableHead>
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light">
+                    Agent Type
                   </TableHead>
                   <TableHead className="text-obus-text-secondary dark:text-obus-text-light">
                     Partner
                   </TableHead>
                   <TableHead className="text-obus-text-secondary dark:text-obus-text-light text-center">
-                    Role
-                  </TableHead>
-                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light text-center">
-                    Bookings
-                  </TableHead>
-                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light text-center">
-                    Rating
-                  </TableHead>
-                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light text-center">
                     Status
+                  </TableHead>
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light">
+                    Registration Date
                   </TableHead>
                   <TableHead className="text-obus-text-secondary dark:text-obus-text-light">
                     Actions
@@ -226,61 +298,97 @@ export default function AgentsPage() {
                           onCheckedChange={(checked) =>
                             handleAgentSelect(agent.id, !!checked)
                           }
-                          aria-label={`Select ${agent.name}`}
+                          aria-label={`Select ${agent.businessName}`}
                         />
                       </TableCell>
                       <TableCell>
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 bg-obus-accent rounded-lg flex items-center justify-center text-white font-bold text-sm">
-                            {agent.name.charAt(0)}
-                          </div>
-                          <div>
-                            <p className="font-medium text-obus-primary dark:text-white">
-                              {agent.name}
-                            </p>
-                            <p className="text-xs text-obus-text-secondary dark:text-obus-text-light">
-                              {agent.email}
-                            </p>
-                          </div>
+                        <div>
+                          <p className="font-mono text-sm font-semibold text-obus-primary dark:text-white">
+                            {agent.agentCode}
+                          </p>
+                          <p className="text-xs text-obus-text-secondary dark:text-obus-text-light">
+                            Partner: {agent.partnerAgentNumber}
+                          </p>
                         </div>
                       </TableCell>
                       <TableCell>
-                        <p className="font-medium text-obus-primary dark:text-white">
-                          {agent.partner}
-                        </p>
+                        <div>
+                          <p className="font-medium text-obus-primary dark:text-white">
+                            {agent.businessName}
+                          </p>
+                          <p className="text-xs text-obus-text-secondary dark:text-obus-text-light">
+                            Pass: {agent.passName}
+                          </p>
+                        </div>
                       </TableCell>
-                      <TableCell className="text-center">
-                        <p className="font-semibold text-obus-primary dark:text-white">{agent.role}</p>
+                      <TableCell>
+                        <div>
+                          <p className="font-medium text-obus-primary dark:text-white text-sm">
+                            {agent.contactPerson.name}
+                          </p>
+                          <p className="text-xs text-obus-text-secondary dark:text-obus-text-light">
+                            {agent.contactPerson.email}
+                          </p>
+                          <p className="text-xs text-obus-text-secondary dark:text-obus-text-light">
+                            {agent.contactPerson.phone}
+                          </p>
+                        </div>
                       </TableCell>
-                      <TableCell className="text-center">
-                        <p className="font-semibold text-obus-primary dark:text-white">
-                          {agent.bookings}
-                        </p>
+                      <TableCell>
+                        <Badge
+                          variant="outline"
+                          className={
+                            agent.agentType === "Corporate"
+                              ? "bg-blue-500/20 text-blue-400 border-blue-500/30"
+                              : agent.agentType === "Agency"
+                              ? "bg-purple-500/20 text-purple-400 border-purple-500/30"
+                              : "bg-green-500/20 text-green-400 border-green-500/30"
+                          }
+                        >
+                          {agent.agentType}
+                        </Badge>
                       </TableCell>
-                      <TableCell className="text-center">
-                        <p className="font-semibold text-obus-primary dark:text-white">
-                          {agent.rating > 0 ? agent.rating : "N/A"}
-                        </p>
+                      <TableCell>
+                        <div>
+                          <p className="font-medium text-obus-primary dark:text-white text-sm">
+                            {agent.partner.code}
+                          </p>
+                          <p className="text-xs text-obus-text-secondary dark:text-obus-text-light">
+                            {agent.partner.businessName}
+                          </p>
+                        </div>
                       </TableCell>
                       <TableCell className="text-center">
                         <Badge
                           variant={
                             agent.status === "active"
                               ? "default"
-                              : agent.status === "pending"
+                              : agent.status === "inactive"
                               ? "secondary"
                               : "destructive"
                           }
                           className={
                             agent.status === "active"
                               ? "bg-green-500/20 text-green-400 hover:bg-green-500/20"
-                              : agent.status === "pending"
-                              ? "bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/20"
+                              : agent.status === "inactive"
+                              ? "bg-gray-500/20 text-gray-400 hover:bg-gray-500/20"
                               : "bg-red-500/20 text-red-400 hover:bg-red-500/20"
                           }
                         >
                           {agent.status.toUpperCase()}
                         </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <p className="text-sm text-obus-text-secondary dark:text-obus-text-light">
+                          {new Date(agent.registrationDate).toLocaleDateString(
+                            "en-US",
+                            {
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                            }
+                          )}
+                        </p>
                       </TableCell>
                       <TableCell>
                         <DropdownMenu>
@@ -294,11 +402,16 @@ export default function AgentsPage() {
                             align="end"
                             className="border border-obus-primary/10 bg-white text-obus-text-primary dark:border-white/20 dark:bg-obus-primary dark:text-white"
                           >
+                            <Link href={`/agents/${agent.id}`}>
+                              <DropdownMenuCheckboxItem className="text-obus-text-primary dark:text-white cursor-pointer">
+                                View Details
+                              </DropdownMenuCheckboxItem>
+                            </Link>
                             <DropdownMenuCheckboxItem className="text-obus-text-primary dark:text-white">
-                              View details
+                              Edit Agent
                             </DropdownMenuCheckboxItem>
                             <DropdownMenuCheckboxItem className="text-obus-text-primary dark:text-white">
-                              Edit agent
+                              Delete Agent
                             </DropdownMenuCheckboxItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -308,7 +421,7 @@ export default function AgentsPage() {
                 ) : (
                   <TableRow>
                     <TableCell
-                      colSpan={8}
+                      colSpan={9}
                       className="h-24 text-center text-obus-text-secondary dark:text-obus-text-light"
                     >
                       No results.
@@ -331,9 +444,3 @@ export default function AgentsPage() {
     </DashboardLayout>
   );
 }
-
-
-
-
-
-

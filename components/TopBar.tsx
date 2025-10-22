@@ -2,7 +2,16 @@
 
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
-import { Search, Bell, ChevronDown, Menu, User, LogOut } from "lucide-react";
+import {
+  Search,
+  Bell,
+  ChevronDown,
+  Menu,
+  User,
+  LogOut,
+  ShieldCheck,
+  Building2,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
@@ -12,6 +21,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { useUser, switchUserRole } from "@/lib/contexts/UserContext";
 
 interface TopBarProps {
   sidebarCollapsed: boolean;
@@ -25,6 +35,7 @@ export function TopBar({
   isMobile = false,
 }: TopBarProps) {
   const [searchQuery, setSearchQuery] = useState("");
+  const { user } = useUser();
 
   return (
     <header
@@ -77,13 +88,23 @@ export function TopBar({
           <DropdownMenuTrigger asChild>
             <button className="flex items-center gap-3 rounded-md p-2 transition-colors hover:bg-obus-primary/5 dark:hover:bg-white/10">
               <div className="w-8 h-8 bg-obus-accent rounded-full flex items-center justify-center text-white font-semibold text-sm">
-                JD
+                {user
+                  ? user.displayName
+                      .split(" ")
+                      .map((n) => n[0])
+                      .join("")
+                      .toUpperCase()
+                  : "U"}
               </div>
               {!isMobile && (
                 <div className="text-sm">
-                  <p className="font-medium text-obus-primary dark:text-white">John Doe</p>
+                  <p className="font-medium text-obus-primary dark:text-white">
+                    {user?.displayName || "User"}
+                  </p>
                   <p className="text-xs text-obus-text-secondary dark:text-obus-text-light">
-                    Administrator
+                    {user?.userType === "admin"
+                      ? "Administrator"
+                      : "Partner User"}
                   </p>
                 </div>
               )}
@@ -94,6 +115,27 @@ export function TopBar({
             align="end"
             className="w-56 border border-obus-primary/10 bg-white text-obus-text-primary shadow-lg dark:border-white/10 dark:bg-obus-primary dark:text-white"
           >
+            <div className="px-3 py-2 text-xs text-obus-text-secondary dark:text-obus-text-light">
+              Current role:{" "}
+              <span className="font-medium">
+                {user?.userType === "admin" ? "Administrator" : "Partner"}
+              </span>
+            </div>
+            <DropdownMenuItem
+              className="cursor-pointer text-obus-text-secondary hover:bg-obus-primary/5 hover:text-obus-primary focus:bg-obus-primary/5 focus:text-obus-primary dark:text-obus-text-light dark:hover:bg-white/10 dark:hover:text-white dark:focus:bg-white/10 dark:focus:text-white"
+              onClick={() => switchUserRole("admin")}
+            >
+              <ShieldCheck className="w-4 h-4 mr-2" />
+              Switch to Admin
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              className="cursor-pointer text-obus-text-secondary hover:bg-obus-primary/5 hover:text-obus-primary focus:bg-obus-primary/5 focus:text-obus-primary dark:text-obus-text-light dark:hover:bg-white/10 dark:hover:text-white dark:focus:bg-white/10 dark:focus:text-white"
+              onClick={() => switchUserRole("partner")}
+            >
+              <Building2 className="w-4 h-4 mr-2" />
+              Switch to Partner
+            </DropdownMenuItem>
+            <DropdownMenuSeparator className="bg-obus-primary/10 dark:bg-white/10" />
             <DropdownMenuItem className="cursor-pointer text-obus-text-secondary hover:bg-obus-primary/5 hover:text-obus-primary focus:bg-obus-primary/5 focus:text-obus-primary dark:text-obus-text-light dark:hover:bg-white/10 dark:hover:text-white dark:focus:bg-white/10 dark:focus:text-white">
               <User className="w-4 h-4 mr-2" />
               Profile

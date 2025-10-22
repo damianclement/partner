@@ -22,99 +22,82 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import Link from "next/link";
 
 export type SuperAgent = {
   id: number;
-  name: string;
-  email: string;
-  partner: string;
-  status: "active" | "pending" | "suspended";
-  tier: "bronze" | "silver" | "gold" | "platinum";
-  bookings: number;
-  revenue: string;
-  rating: number;
-  commission: string;
-  territories: string[];
-  achievements: string[];
-  joinedDate: string;
+  agentNumber: string;
+  businessName: string;
+  contactPerson: string;
+  partner: {
+    name: string;
+    code: string;
+  };
+  status: "active" | "inactive" | "suspended" | "pending";
+  registrationDate: string;
 };
 
 export default function SuperAgentsPage() {
   const superAgents: SuperAgent[] = [
     {
       id: 1,
-      name: "Sarah Johnson",
-      email: "sarah.johnson@abctransport.com",
-      partner: "ABC Transport Co.",
+      agentNumber: "SA-001",
+      businessName: "SafariLink Elite Services",
+      contactPerson: "Juma Mwakyusa",
+      partner: {
+        name: "SafariLink Coaches",
+        code: "SFC001",
+      },
       status: "active",
-      tier: "platinum",
-      bookings: 1245,
-      revenue: "$45,200",
-      rating: 4.9,
-      commission: "$4,520",
-      territories: ["Lagos", "Abuja", "Port Harcourt"],
-      achievements: ["Top Performer", "Customer Excellence", "Revenue Leader"],
-      joinedDate: "2023-01-15",
+      registrationDate: "2023-01-15",
     },
     {
       id: 2,
-      name: "Michael Chen",
-      email: "m.chen@cityexpress.com",
-      partner: "City Express",
+      agentNumber: "SA-002",
+      businessName: "Coastal Premium Express",
+      contactPerson: "Neema Mshana",
+      partner: {
+        name: "Coastal Express Ltd",
+        code: "CEX002",
+      },
       status: "active",
-      tier: "gold",
-      bookings: 892,
-      revenue: "$32,100",
-      rating: 4.7,
-      commission: "$3,210",
-      territories: ["Abuja", "Kano"],
-      achievements: ["Rising Star", "Customer Excellence"],
-      joinedDate: "2023-03-20",
+      registrationDate: "2023-03-20",
     },
     {
       id: 3,
-      name: "Amara Okafor",
-      email: "amara.okafor@metrotransit.com",
-      partner: "Metro Transit",
-      status: "active",
-      tier: "silver",
-      bookings: 567,
-      revenue: "$18,900",
-      rating: 4.5,
-      commission: "$1,890",
-      territories: ["Port Harcourt", "Enugu"],
-      achievements: ["Rising Star"],
-      joinedDate: "2023-06-10",
+      agentNumber: "SA-003",
+      businessName: "Highland Summit Agency",
+      contactPerson: "Asha Kileo",
+      partner: {
+        name: "Highland Transit",
+        code: "HLT003",
+      },
+      status: "pending",
+      registrationDate: "2023-06-10",
     },
     {
       id: 4,
-      name: "David Williams",
-      email: "d.williams@highwaykings.com",
-      partner: "Highway Kings",
+      agentNumber: "SA-004",
+      businessName: "LakeZone Elite Services",
+      contactPerson: "Emmanuel Nnko",
+      partner: {
+        name: "LakeZone Shuttles",
+        code: "LZS004",
+      },
       status: "suspended",
-      tier: "bronze",
-      bookings: 234,
-      revenue: "$8,500",
-      rating: 3.8,
-      commission: "$850",
-      territories: ["Kano"],
-      achievements: [],
-      joinedDate: "2023-08-05",
+      registrationDate: "2023-08-05",
     },
     {
       id: 5,
-      name: "Grace Effiong",
-      email: "grace.effiong@premiumtransport.com",
-      partner: "Premium Transport",
+      agentNumber: "SA-005",
+      businessName: "Zanzibar Coastal Alliance",
+      contactPerson: "Amina Salum",
+      partner: {
+        name: "Zanzibar Coastal Lines",
+        code: "ZCL005",
+      },
       status: "active",
-      tier: "gold",
-      bookings: 756,
-      revenue: "$28,400",
-      rating: 4.8,
-      commission: "$2,840",
-      territories: ["Lagos", "Ibadan"],
-      achievements: ["Customer Excellence", "Revenue Leader"],
-      joinedDate: "2023-02-28",
+      registrationDate: "2023-02-28",
     },
   ];
 
@@ -123,13 +106,14 @@ export default function SuperAgentsPage() {
   const [selectedSuperAgents, setSelectedSuperAgents] = React.useState<
     number[]
   >([]);
-// Filter super agents based on search input
+  // Filter super agents based on search input
   const filteredSuperAgents = superAgents.filter(
     (agent) =>
-      agent.name.toLowerCase().includes(filterValue.toLowerCase()) ||
-      agent.email.toLowerCase().includes(filterValue.toLowerCase()) ||
-      agent.partner.toLowerCase().includes(filterValue.toLowerCase()) ||
-      agent.tier.toLowerCase().includes(filterValue.toLowerCase())
+      agent.agentNumber.toLowerCase().includes(filterValue.toLowerCase()) ||
+      agent.businessName.toLowerCase().includes(filterValue.toLowerCase()) ||
+      agent.contactPerson.toLowerCase().includes(filterValue.toLowerCase()) ||
+      agent.partner.name.toLowerCase().includes(filterValue.toLowerCase()) ||
+      agent.partner.code.toLowerCase().includes(filterValue.toLowerCase())
   );
 
   // Handle individual super agent selection
@@ -154,21 +138,6 @@ export default function SuperAgentsPage() {
   const isAllSelected =
     filteredSuperAgents.length > 0 &&
     selectedSuperAgents.length === filteredSuperAgents.length;
-  // Get tier badge styling
-  const getTierBadge = (tier: string) => {
-    switch (tier) {
-      case "platinum":
-        return "bg-purple-500/20 text-purple-400 hover:bg-purple-500/20";
-      case "gold":
-        return "bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/20";
-      case "silver":
-        return "bg-gray-400/20 text-gray-300 hover:bg-gray-400/20";
-      case "bronze":
-        return "bg-orange-500/20 text-orange-400 hover:bg-orange-500/20";
-      default:
-        return "bg-gray-500/20 text-gray-400 hover:bg-gray-500/20";
-    }
-  };
 
   return (
     <DashboardLayout>
@@ -194,7 +163,9 @@ export default function SuperAgentsPage() {
             <div className="text-sm font-medium text-obus-text-secondary dark:text-obus-text-light mb-2">
               Total Super Agents
             </div>
-            <div className="text-2xl font-bold text-obus-primary dark:text-white">5</div>
+            <div className="text-2xl font-bold text-obus-primary dark:text-white">
+              5
+            </div>
             <p className="text-xs text-obus-accent mt-1">+2 this month</p>
           </div>
 
@@ -202,7 +173,9 @@ export default function SuperAgentsPage() {
             <div className="text-sm font-medium text-obus-text-secondary dark:text-obus-text-light mb-2">
               Platinum Tier
             </div>
-            <div className="text-2xl font-bold text-obus-primary dark:text-white">1</div>
+            <div className="text-2xl font-bold text-obus-primary dark:text-white">
+              1
+            </div>
             <p className="text-xs text-obus-accent mt-1">Top performers</p>
           </div>
 
@@ -210,7 +183,9 @@ export default function SuperAgentsPage() {
             <div className="text-sm font-medium text-obus-text-secondary dark:text-obus-text-light mb-2">
               Total Revenue
             </div>
-            <div className="text-2xl font-bold text-obus-primary dark:text-white">$133.1K</div>
+            <div className="text-2xl font-bold text-obus-primary dark:text-white">
+              $133.1K
+            </div>
             <p className="text-xs text-obus-accent mt-1">+18% this month</p>
           </div>
 
@@ -218,7 +193,9 @@ export default function SuperAgentsPage() {
             <div className="text-sm font-medium text-obus-text-secondary dark:text-obus-text-light mb-2">
               Avg. Rating
             </div>
-            <div className="text-2xl font-bold text-obus-primary dark:text-white">4.5</div>
+            <div className="text-2xl font-bold text-obus-primary dark:text-white">
+              4.5
+            </div>
             <p className="text-xs text-obus-accent mt-1">+0.3 this month</p>
           </div>
         </div>
@@ -239,7 +216,7 @@ export default function SuperAgentsPage() {
             </div>
           </div>
 
-          <div className="rounded-md border border-obus-primary/10 bg-white overflow-hidden shadow-sm transition-colors dark:border-white/20 dark:bg-white/5">
+          <div className="rounded-md border border-obus-primary/10 bg-white overflow-hidden shadow-sm transition-colors dark:border-white/20 dark:bg-white/5 overflow-x-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-obus-primary/20 hover:scrollbar-thumb-obus-primary/30 dark:scrollbar-thumb-white/20 dark:hover:scrollbar-thumb-white/30">
             <Table>
               <TableHeader>
                 <TableRow className="hover:bg-transparent border-obus-primary/10 dark:border-white/20">
@@ -251,25 +228,22 @@ export default function SuperAgentsPage() {
                     />
                   </TableHead>
                   <TableHead className="text-obus-text-secondary dark:text-obus-text-light">
-                    Super Agent
+                    Agent #
                   </TableHead>
                   <TableHead className="text-obus-text-secondary dark:text-obus-text-light">
-                    Partner
+                    Business Name
                   </TableHead>
-                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light text-center">
-                    Tier
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light">
+                    Contact Person
                   </TableHead>
-                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light text-center">
-                    Bookings
-                  </TableHead>
-                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light text-center">
-                    Revenue
-                  </TableHead>
-                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light text-center">
-                    Rating
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light">
+                    Partner Info
                   </TableHead>
                   <TableHead className="text-obus-text-secondary dark:text-obus-text-light text-center">
                     Status
+                  </TableHead>
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light">
+                    Registration Date
                   </TableHead>
                   <TableHead className="text-obus-text-secondary dark:text-obus-text-light">
                     Actions
@@ -289,58 +263,31 @@ export default function SuperAgentsPage() {
                           onCheckedChange={(checked) =>
                             handleSuperAgentSelect(agent.id, !!checked)
                           }
-                          aria-label={`Select ${agent.name}`}
+                          aria-label={`Select ${agent.businessName}`}
                         />
                       </TableCell>
                       <TableCell>
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 bg-obus-accent rounded-lg flex items-center justify-center text-white font-bold text-sm">
-                            {agent.name.charAt(0)}
-                          </div>
-                          <div>
-                            <p className="font-medium text-obus-primary dark:text-white">
-                              {agent.name}
-                            </p>
-                            <p className="text-xs text-obus-text-secondary dark:text-obus-text-light">
-                              {agent.email}
-                            </p>
-                          </div>
-                        </div>
+                        <p className="font-mono text-sm font-semibold text-obus-primary dark:text-white">
+                          {agent.agentNumber}
+                        </p>
                       </TableCell>
                       <TableCell>
                         <p className="font-medium text-obus-primary dark:text-white">
-                          {agent.partner}
+                          {agent.businessName}
                         </p>
                       </TableCell>
-                      <TableCell className="text-center">
-                        <div className="flex items-center justify-center gap-2">
-                          <Star className="w-4 h-4 text-obus-accent" />
-                          <Badge className={getTierBadge(agent.tier)}>
-                            {agent.tier.toUpperCase()}
-                          </Badge>
-                        </div>
+                      <TableCell>
+                        <p className="font-medium text-obus-primary dark:text-white">
+                          {agent.contactPerson}
+                        </p>
                       </TableCell>
-                      <TableCell className="text-center">
-                        <div className="flex items-center justify-center gap-2">
-                          <TrendingUp className="w-4 h-4 text-obus-text-secondary dark:text-obus-text-light" />
-                          <p className="font-semibold text-obus-primary dark:text-white">
-                            {agent.bookings}
+                      <TableCell>
+                        <div>
+                          <p className="font-medium text-obus-primary dark:text-white text-sm">
+                            {agent.partner.name}
                           </p>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <p className="font-semibold text-obus-primary dark:text-white">
-                          {agent.revenue}
-                        </p>
-                        <p className="text-xs text-obus-text-secondary dark:text-obus-text-light">
-                          Comm: {agent.commission}
-                        </p>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <div className="flex items-center justify-center gap-1">
-                          <Star className="w-4 h-4 text-yellow-400" />
-                          <p className="font-semibold text-obus-primary dark:text-white">
-                            {agent.rating}
+                          <p className="text-xs text-obus-text-secondary dark:text-obus-text-light">
+                            Code: {agent.partner.code}
                           </p>
                         </div>
                       </TableCell>
@@ -349,6 +296,8 @@ export default function SuperAgentsPage() {
                           variant={
                             agent.status === "active"
                               ? "default"
+                              : agent.status === "inactive"
+                              ? "secondary"
                               : agent.status === "pending"
                               ? "secondary"
                               : "destructive"
@@ -356,6 +305,8 @@ export default function SuperAgentsPage() {
                           className={
                             agent.status === "active"
                               ? "bg-green-500/20 text-green-400 hover:bg-green-500/20"
+                              : agent.status === "inactive"
+                              ? "bg-gray-500/20 text-gray-400 hover:bg-gray-500/20"
                               : agent.status === "pending"
                               ? "bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/20"
                               : "bg-red-500/20 text-red-400 hover:bg-red-500/20"
@@ -363,6 +314,18 @@ export default function SuperAgentsPage() {
                         >
                           {agent.status.toUpperCase()}
                         </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <p className="text-sm text-obus-text-secondary dark:text-obus-text-light">
+                          {new Date(agent.registrationDate).toLocaleDateString(
+                            "en-US",
+                            {
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                            }
+                          )}
+                        </p>
                       </TableCell>
                       <TableCell>
                         <DropdownMenu>
@@ -376,17 +339,16 @@ export default function SuperAgentsPage() {
                             align="end"
                             className="border border-obus-primary/10 bg-white text-obus-text-primary dark:border-white/20 dark:bg-obus-primary dark:text-white"
                           >
+                            <Link href={`/super-agents/${agent.id}`}>
+                              <DropdownMenuCheckboxItem className="text-obus-text-primary dark:text-white cursor-pointer">
+                                View Details
+                              </DropdownMenuCheckboxItem>
+                            </Link>
                             <DropdownMenuCheckboxItem className="text-obus-text-primary dark:text-white">
-                              View details
+                              Edit Super Agent
                             </DropdownMenuCheckboxItem>
                             <DropdownMenuCheckboxItem className="text-obus-text-primary dark:text-white">
-                              Edit super agent
-                            </DropdownMenuCheckboxItem>
-                            <DropdownMenuCheckboxItem className="text-obus-text-primary dark:text-white">
-                              View achievements
-                            </DropdownMenuCheckboxItem>
-                            <DropdownMenuCheckboxItem className="text-obus-text-primary dark:text-white">
-                              Manage territories
+                              View Agents
                             </DropdownMenuCheckboxItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -396,7 +358,7 @@ export default function SuperAgentsPage() {
                 ) : (
                   <TableRow>
                     <TableCell
-                      colSpan={9}
+                      colSpan={7}
                       className="h-24 text-center text-obus-text-secondary dark:text-obus-text-light"
                     >
                       No results.
@@ -419,8 +381,3 @@ export default function SuperAgentsPage() {
     </DashboardLayout>
   );
 }
-
-
-
-
-

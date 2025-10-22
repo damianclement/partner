@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -32,6 +33,7 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import Link from "next/link";
 
 export type User = {
   id: number;
@@ -53,6 +55,8 @@ export type User = {
 };
 
 export default function UsersPage() {
+  const router = useRouter();
+
   const users: User[] = [
     {
       id: 1,
@@ -204,7 +208,10 @@ export default function UsersPage() {
               Manage system users, roles, and permissions
             </p>
           </div>
-          <Button className="bg-obus-accent hover:bg-obus-accent/90">
+          <Button
+            className="bg-obus-accent hover:bg-obus-accent/90"
+            onClick={() => router.push("/users/new")}
+          >
             <Plus className="w-4 h-4 mr-2" />
             Add New User
           </Button>
@@ -273,8 +280,8 @@ export default function UsersPage() {
             </div>
           </div>
 
-          <div className="rounded-md border border-obus-primary/10 bg-white overflow-hidden shadow-sm transition-colors dark:border-white/20 dark:bg-white/5">
-            <Table>
+          <div className="rounded-md border border-obus-primary/10 bg-white overflow-hidden shadow-sm transition-colors dark:border-white/20 dark:bg-white/5 overflow-x-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-obus-primary/20 hover:scrollbar-thumb-obus-primary/30 dark:scrollbar-thumb-white/20 dark:hover:scrollbar-thumb-white/30">
+            <Table className="min-w-[1200px]">
               <TableHeader>
                 <TableRow className="hover:bg-transparent border-obus-primary/10 dark:border-white/20">
                   <TableHead className="text-obus-text-secondary dark:text-obus-text-light w-12">
@@ -284,37 +291,37 @@ export default function UsersPage() {
                       aria-label="Select all"
                     />
                   </TableHead>
-                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light">
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light min-w-[220px]">
                     User
                   </TableHead>
-                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light">
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light min-w-[140px]">
                     Type
                   </TableHead>
-                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light">
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light min-w-[150px]">
                     Username
                   </TableHead>
-                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light">
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light min-w-[220px]">
                     Email
                   </TableHead>
-                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light">
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light min-w-[150px]">
                     Employee ID
                   </TableHead>
-                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light">
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light min-w-[200px]">
                     Department
                   </TableHead>
-                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light">
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light min-w-[200px]">
                     Position
                   </TableHead>
-                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light">
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light min-w-[220px]">
                     Partner
                   </TableHead>
-                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light text-center">
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light text-center min-w-[140px]">
                     Status
                   </TableHead>
-                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light text-center">
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light text-center min-w-[150px]">
                     Created
                   </TableHead>
-                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light">
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light min-w-[140px]">
                     Actions
                   </TableHead>
                 </TableRow>
@@ -326,7 +333,7 @@ export default function UsersPage() {
                       key={user.id}
                       className="border-obus-primary/10 hover:bg-obus-primary/5 dark:border-white/20 dark:hover:bg-obus-primary/20"
                     >
-                      <TableCell>
+                      <TableCell className="w-12">
                         <Checkbox
                           checked={selectedUsers.includes(user.id)}
                           onCheckedChange={(checked) =>
@@ -335,10 +342,10 @@ export default function UsersPage() {
                           aria-label={`Select ${user.displayName}`}
                         />
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="min-w-[220px]">
                         <div className="flex items-center gap-3">
                           <div className="relative">
-                            <div className="w-10 h-10 bg-gradient-to-br from-obus-accent to-obus-accent/80 rounded-full flex items-center justify-center text-white font-semibold text-sm shadow-md ring-2 ring-obus-accent/20 hover:ring-obus-accent/40 transition-all duration-200">
+                            <div className="w-10 h-10 bg-linear-to-br from-obus-accent to-obus-accent/80 rounded-full flex items-center justify-center text-white font-semibold text-sm shadow-md ring-2 ring-obus-accent/20 hover:ring-obus-accent/40 transition-all duration-200">
                               {user.displayName.charAt(0)}
                             </div>
                             <div
@@ -359,7 +366,7 @@ export default function UsersPage() {
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="min-w-[140px]">
                         <Badge
                           className={
                             user.userType === "admin"
@@ -380,32 +387,32 @@ export default function UsersPage() {
                           )}
                         </Badge>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="min-w-[150px] whitespace-nowrap">
                         <p className="font-medium text-obus-primary dark:text-white">
                           {user.username}
                         </p>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="min-w-[220px] whitespace-nowrap">
                         <p className="font-medium text-obus-primary dark:text-white">
                           {user.email}
                         </p>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="min-w-[150px] whitespace-nowrap">
                         <p className="font-medium text-obus-primary dark:text-white">
                           {user.employeeId}
                         </p>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="min-w-[200px]">
                         <p className="font-medium text-obus-primary dark:text-white">
                           {user.department}
                         </p>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="min-w-[200px]">
                         <p className="font-medium text-obus-primary dark:text-white">
                           {user.position}
                         </p>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="min-w-[220px]">
                         {user.partner ? (
                           <div>
                             <p className="font-medium text-obus-primary dark:text-white">
@@ -421,7 +428,7 @@ export default function UsersPage() {
                           </p>
                         )}
                       </TableCell>
-                      <TableCell className="text-center">
+                      <TableCell className="text-center min-w-[140px]">
                         <Badge
                           variant={
                             user.status === "active" ? "default" : "secondary"
@@ -435,12 +442,12 @@ export default function UsersPage() {
                           {user.status.toUpperCase()}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-center">
+                      <TableCell className="text-center min-w-[150px]">
                         <p className="font-medium text-obus-primary dark:text-white">
                           {user.createdAt}
                         </p>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="min-w-[140px]">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button variant="ghost" className="h-8 w-8 p-0">
@@ -452,10 +459,12 @@ export default function UsersPage() {
                             align="end"
                             className="border border-obus-primary/10 bg-white text-obus-text-primary dark:border-white/20 dark:bg-obus-primary dark:text-white"
                           >
-                            <DropdownMenuCheckboxItem className="text-obus-text-primary dark:text-white flex items-center gap-2">
-                              <Eye className="w-4 h-4" />
-                              View details
-                            </DropdownMenuCheckboxItem>
+                            <Link href={`/users/${user.id}`}>
+                              <DropdownMenuCheckboxItem className="text-obus-text-primary dark:text-white flex items-center gap-2 cursor-pointer">
+                                <Eye className="w-4 h-4" />
+                                View details
+                              </DropdownMenuCheckboxItem>
+                            </Link>
                             <DropdownMenuCheckboxItem className="text-obus-text-primary dark:text-white flex items-center gap-2">
                               <Edit className="w-4 h-4" />
                               Edit user
