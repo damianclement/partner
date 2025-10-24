@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import Link from "next/link";
 import { useAgents } from "@/lib/contexts/AgentsContext";
+import { useUser } from "@/lib/contexts/UserContext";
 
 export default function AgentsPage() {
   const {
@@ -44,6 +45,8 @@ export default function AgentsPage() {
     setPageSize,
     clearError,
   } = useAgents();
+
+  const { isPartner } = useUser();
 
   // Local state for UI interactions
   const [searchValue, setSearchValue] = React.useState("");
@@ -267,9 +270,11 @@ export default function AgentsPage() {
                   <TableHead className="text-obus-text-secondary dark:text-obus-text-light">
                     Agent Type
                   </TableHead>
-                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light">
-                    Partner
-                  </TableHead>
+                  {!isPartner() && (
+                    <TableHead className="text-obus-text-secondary dark:text-obus-text-light">
+                      Partner
+                    </TableHead>
+                  )}
                   <TableHead className="text-obus-text-secondary dark:text-obus-text-light text-center">
                     Status
                   </TableHead>
@@ -285,7 +290,7 @@ export default function AgentsPage() {
                 {isLoading ? (
                   <TableRow>
                     <TableCell
-                      colSpan={9}
+                      colSpan={isPartner() ? 8 : 9}
                       className="h-24 text-center text-obus-text-secondary dark:text-obus-text-light"
                     >
                       <div className="flex items-center justify-center gap-2">
@@ -360,16 +365,18 @@ export default function AgentsPage() {
                           {agent.agentType}
                         </Badge>
                       </TableCell>
-                      <TableCell>
-                        <div>
-                          <p className="font-medium text-obus-primary dark:text-white text-sm">
-                            {agent.partner.code}
-                          </p>
-                          <p className="text-xs text-obus-text-secondary dark:text-obus-text-light">
-                            {agent.partner.businessName}
-                          </p>
-                        </div>
-                      </TableCell>
+                      {!isPartner() && (
+                        <TableCell>
+                          <div>
+                            <p className="font-medium text-obus-primary dark:text-white text-sm">
+                              {agent.partner.code}
+                            </p>
+                            <p className="text-xs text-obus-text-secondary dark:text-obus-text-light">
+                              {agent.partner.businessName}
+                            </p>
+                          </div>
+                        </TableCell>
+                      )}
                       <TableCell className="text-center">
                         <Badge
                           variant={
@@ -435,7 +442,7 @@ export default function AgentsPage() {
                 ) : (
                   <TableRow>
                     <TableCell
-                      colSpan={9}
+                      colSpan={isPartner() ? 8 : 9}
                       className="h-24 text-center text-obus-text-secondary dark:text-obus-text-light"
                     >
                       {searchValue

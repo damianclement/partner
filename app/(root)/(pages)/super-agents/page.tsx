@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import Link from "next/link";
 import { useSuperAgents } from "@/lib/contexts/SuperAgentsContext";
+import { useUser } from "@/lib/contexts/UserContext";
 
 export default function SuperAgentsPage() {
   const {
@@ -42,6 +43,8 @@ export default function SuperAgentsPage() {
     setCurrentPage,
     clearError,
   } = useSuperAgents();
+
+  const { isPartner } = useUser();
 
   // Local state for UI interactions
   const [filterValue, setFilterValue] = useState("");
@@ -251,9 +254,11 @@ export default function SuperAgentsPage() {
                   <TableHead className="text-obus-text-secondary dark:text-obus-text-light">
                     Contact Person
                   </TableHead>
-                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light">
-                    Partner Info
-                  </TableHead>
+                  {!isPartner() && (
+                    <TableHead className="text-obus-text-secondary dark:text-obus-text-light">
+                      Partner Info
+                    </TableHead>
+                  )}
                   <TableHead className="text-obus-text-secondary dark:text-obus-text-light text-center">
                     Status
                   </TableHead>
@@ -269,7 +274,7 @@ export default function SuperAgentsPage() {
                 {isLoading ? (
                   <TableRow>
                     <TableCell
-                      colSpan={8}
+                      colSpan={isPartner() ? 7 : 8}
                       className="h-24 text-center text-obus-text-secondary dark:text-obus-text-light"
                     >
                       <div className="flex items-center justify-center gap-2">
@@ -308,16 +313,18 @@ export default function SuperAgentsPage() {
                           {agent.contactPersonName}
                         </p>
                       </TableCell>
-                      <TableCell>
-                        <div>
-                          <p className="font-medium text-obus-primary dark:text-white text-sm">
-                            {agent.partnerName || "N/A"}
-                          </p>
-                          <p className="text-xs text-obus-text-secondary dark:text-obus-text-light">
-                            Code: {agent.partnerCode || "N/A"}
-                          </p>
-                        </div>
-                      </TableCell>
+                      {!isPartner() && (
+                        <TableCell>
+                          <div>
+                            <p className="font-medium text-obus-primary dark:text-white text-sm">
+                              {agent.partnerName || "N/A"}
+                            </p>
+                            <p className="text-xs text-obus-text-secondary dark:text-obus-text-light">
+                              Code: {agent.partnerCode || "N/A"}
+                            </p>
+                          </div>
+                        </TableCell>
+                      )}
                       <TableCell className="text-center">
                         <Badge
                           variant={
@@ -386,7 +393,7 @@ export default function SuperAgentsPage() {
                 ) : (
                   <TableRow>
                     <TableCell
-                      colSpan={8}
+                      colSpan={isPartner() ? 7 : 8}
                       className="h-24 text-center text-obus-text-secondary dark:text-obus-text-light"
                     >
                       No super agents found.
