@@ -116,7 +116,7 @@ export default function BookingsPage() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <div className="rounded-lg border border-obus-primary/10 bg-white p-6 shadow-sm transition-colors dark:border-white/20 dark:bg-white/5">
             <div className="text-sm font-medium text-obus-text-secondary dark:text-obus-text-light mb-2">
               Total Bookings
@@ -166,46 +166,10 @@ export default function BookingsPage() {
                 : "No pending bookings"}
             </p>
           </div>
-
-          <div className="rounded-lg border border-obus-primary/10 bg-white p-6 shadow-sm transition-colors dark:border-white/20 dark:bg-white/5">
-            <div className="text-sm font-medium text-obus-text-secondary dark:text-obus-text-light mb-2">
-              Cancelled
-            </div>
-            <div className="text-2xl font-bold text-obus-primary dark:text-white">
-              {isLoading ? "..." : calculatedStats.cancelledBookings}
-            </div>
-            <p className="text-xs text-obus-text-secondary dark:text-obus-text-light mt-1">
-              {calculatedStats.totalBookings > 0
-                ? `${(
-                    (calculatedStats.cancelledBookings /
-                      calculatedStats.totalBookings) *
-                    100
-                  ).toFixed(1)}% cancellation rate`
-                : "0% cancellation rate"}
-            </p>
-          </div>
         </div>
 
         {/* Additional Stats Row */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="rounded-lg border border-obus-primary/10 bg-white p-6 shadow-sm transition-colors dark:border-white/20 dark:bg-white/5">
-            <div className="text-sm font-medium text-obus-text-secondary dark:text-obus-text-light mb-2">
-              Completed
-            </div>
-            <div className="text-2xl font-bold text-obus-primary dark:text-white">
-              {isLoading ? "..." : calculatedStats.completedBookings}
-            </div>
-            <p className="text-xs text-obus-accent mt-1">
-              {calculatedStats.totalBookings > 0
-                ? `${(
-                    (calculatedStats.completedBookings /
-                      calculatedStats.totalBookings) *
-                    100
-                  ).toFixed(1)}% completion rate`
-                : "No completed bookings"}
-            </p>
-          </div>
-
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="rounded-lg border border-obus-primary/10 bg-white p-6 shadow-sm transition-colors dark:border-white/20 dark:bg-white/5">
             <div className="text-sm font-medium text-obus-text-secondary dark:text-obus-text-light mb-2">
               Total Revenue
