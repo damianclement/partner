@@ -4,7 +4,21 @@
  */
 
 // Base types
-export type UserType = "SYSTEM_USER" | "PARTNER_USER" | "PARTNER_AGENT";
+export type UserType =
+  | "ROOT_USER"
+  | "SYSTEM_USER"
+  | "PARTNER_USER"
+  | "PARTNER_AGENT";
+
+// User roles from session-config endpoint
+export type UserRole =
+  | "ROOT_ADMIN"
+  | "SYSTEM_ADMIN"
+  | "SYSTEM_SUPPORT"
+  | "PARTNER_ADMIN"
+  | "PARTNER_ONBOARDING_STAFF"
+  | "PARTNER_CUSTOMER_SUPPORT"
+  | "PARTNER_AGENT";
 export type UserStatus =
   | "ACTIVE"
   | "INACTIVE"
@@ -86,6 +100,25 @@ export interface ChangePasswordRequest {
   currentPassword: string;
   newPassword: string;
   confirmPassword: string;
+}
+
+// Session Config types
+export interface EnumItem {
+  value: string;
+  displayName: string;
+  description: string;
+}
+
+export interface AdminConfigResponse {
+  userTypes: EnumItem[];
+  userRoles: EnumItem[];
+}
+
+export interface SessionConfigResponse {
+  status: boolean;
+  statusCode: number;
+  message: string;
+  data: AdminConfigResponse;
 }
 
 // System User types

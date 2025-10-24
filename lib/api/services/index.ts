@@ -7,6 +7,7 @@ export { authService } from "./auth";
 export { partnersService } from "./partners";
 export { agentsService } from "./agents";
 export { systemConfigService } from "./system-config";
+export { sessionConfigService } from "./session-config";
 
 // Stub services (implemented as needed) - uncomment when ready to use
 // export { superAgentsService } from "./super-agents";

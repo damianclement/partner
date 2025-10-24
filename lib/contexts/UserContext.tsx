@@ -1,10 +1,13 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { authService } from "@/lib/api/services";
-import type { AuthResponse } from "@/lib/api/types";
-
-export type UserRole = "admin" | "partner";
+import { authService, sessionConfigService } from "@/lib/api/services";
+import type {
+  AuthResponse,
+  UserType,
+  UserRole,
+  AdminConfigResponse,
+} from "@/lib/api/types";
 
 export interface User {
   id: number;
@@ -15,7 +18,8 @@ export interface User {
   employeeId?: string;
   department?: string;
   position?: string;
-  userType: UserRole;
+  userType: UserType; // Store the actual API UserType
+  userRole: UserRole; // Store the actual API UserRole
   partner?: {
     id: number;
     uid: string;
@@ -38,13 +42,24 @@ interface UserContextType {
   isLoading: boolean;
   isAuthenticated: boolean;
   error: string | null;
+  sessionConfig: AdminConfigResponse | null;
   setUser: (user: User | null) => void;
   login: (username: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
-  hasRole: (role: UserRole) => boolean;
-  hasAnyRole: (roles: UserRole[]) => boolean;
+  hasUserType: (userType: UserType) => boolean;
+  hasAnyUserType: (userTypes: UserType[]) => boolean;
+  hasUserRole: (userRole: UserRole) => boolean;
+  hasAnyUserRole: (userRoles: UserRole[]) => boolean;
   hasPermission: (permission: string) => boolean;
   hasAnyPermission: (permissions: string[]) => boolean;
+  getUserRedirectPath: () => string;
+  isAdmin: () => boolean;
+  isPartner: () => boolean;
+  isAgent: () => boolean;
+  isRootUser: () => boolean;
+  // Legacy methods for backward compatibility
+  hasRole: (role: "admin" | "partner") => boolean;
+  hasAnyRole: (roles: ("admin" | "partner")[]) => boolean;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -53,9 +68,26 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [sessionConfig, setSessionConfig] =
+    useState<AdminConfigResponse | null>(null);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [hasInitialized, setHasInitialized] = useState(false);
+
+  // Load session config only when user is authenticated
+  const loadSessionConfig = async () => {
+    try {
+      const config = await sessionConfigService.getSessionConfig();
+      setSessionConfig(config);
+    } catch (error) {
+      console.error("Failed to load session config:", error);
+      // Continue without session config - it's not critical for basic functionality
+    }
+  };
 
   useEffect(() => {
-    // Load user from stored tokens on app start
+    // Load user from stored tokens on app start (only once)
+    if (hasInitialized) return;
+
     const initializeAuth = async () => {
       try {
         setIsLoading(true);
@@ -74,29 +106,56 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         setError("Authentication failed");
       } finally {
         setIsLoading(false);
+        setHasInitialized(true);
       }
     };
 
     initializeAuth();
-  }, []);
+  }, [hasInitialized]);
 
   const checkCurrentUser = async () => {
+    // Don't check current user if we're in the process of logging out
+    if (isLoggingOut) {
+      return;
+    }
+
     try {
       // In a real implementation, you'd call an endpoint like /admin/v1/users/me
       // to get the current user information based on the stored token
-      // For now, we'll redirect to login if no user data is available
       const accessToken = await authService.getAccessToken();
 
       if (!accessToken) {
-        throw new Error("No access token");
+        // No token means user should be logged out
+        setUser(null);
+        return;
       }
 
-      // TODO: Implement API call to get current user info
-      // For now, we'll clear the user state and let login handle it
+      // For now, we'll check if there's stored user data from a previous login
+      // In production, you would call an API endpoint to get current user info
+      const storedUserData = localStorage.getItem("user-data");
+
+      if (storedUserData) {
+        try {
+          const parsedUser = JSON.parse(storedUserData);
+          setUser(parsedUser);
+          await loadSessionConfig();
+          return;
+        } catch (parseError) {
+          console.error("Failed to parse stored user data:", parseError);
+          localStorage.removeItem("user-data");
+        }
+      }
+
+      // If no stored user data, create a default user based on token
+      // This should only happen if the user was authenticated but we don't have their data
+      console.warn(
+        "No stored user data found, but user has valid token. This should not happen in normal flow."
+      );
       setUser(null);
     } catch (err) {
       console.error("Failed to get current user:", err);
-      await logout();
+      // Don't call logout here to avoid infinite loop
+      setUser(null);
     }
   };
 
@@ -114,7 +173,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         displayName: authResponse.displayName || username,
         username: authResponse.username,
         email: authResponse.email,
-        userType: (authResponse.userType.toLowerCase() as UserRole) || "admin",
+        userType: authResponse.userType as UserType, // Store actual UserType
+        userRole: (authResponse.roles?.[0] as UserRole) || "PARTNER_AGENT", // Primary role
         partner: authResponse.partnerBusinessName
           ? {
               id: authResponse.partnerId,
@@ -135,6 +195,12 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       };
 
       setUser(userData);
+
+      // Store user data in localStorage for persistence
+      localStorage.setItem("user-data", JSON.stringify(userData));
+
+      // Load session config after successful login
+      await loadSessionConfig();
     } catch (err) {
       console.error("Login error:", err);
       setError(err instanceof Error ? err.message : "Login failed");
@@ -146,23 +212,42 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
   const logout = async () => {
     try {
+      setIsLoggingOut(true);
       await authService.logout();
       setUser(null);
       setError(null);
+      setSessionConfig(null); // Clear session config on logout
+      // Clear any stored user data
+      localStorage.removeItem("user-data");
+      localStorage.removeItem("demo-user-type");
     } catch (err) {
       console.error("Logout error:", err);
       // Even if logout fails, clear local state
       setUser(null);
       setError(null);
+      setSessionConfig(null); // Clear session config on logout
+      localStorage.removeItem("user-data");
+      localStorage.removeItem("demo-user-type");
+    } finally {
+      setIsLoggingOut(false);
     }
   };
 
-  const hasRole = (role: UserRole): boolean => {
-    return user?.userType === role;
+  // Enhanced permission checking methods
+  const hasUserType = (userType: UserType): boolean => {
+    return user?.userType === userType;
   };
 
-  const hasAnyRole = (roles: UserRole[]): boolean => {
-    return user ? roles.includes(user.userType) : false;
+  const hasAnyUserType = (userTypes: UserType[]): boolean => {
+    return user ? userTypes.includes(user.userType) : false;
+  };
+
+  const hasUserRole = (userRole: UserRole): boolean => {
+    return user?.userRole === userRole;
+  };
+
+  const hasAnyUserRole = (userRoles: UserRole[]): boolean => {
+    return user ? userRoles.includes(user.userRole) : false;
   };
 
   const hasPermission = (permission: string): boolean => {
@@ -175,18 +260,75 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       : false;
   };
 
+  // Convenience methods for common checks
+  const isAdmin = (): boolean => {
+    return (
+      hasAnyUserType(["ROOT_USER", "SYSTEM_USER"]) ||
+      hasAnyUserRole(["ROOT_ADMIN", "SYSTEM_ADMIN", "SYSTEM_SUPPORT"])
+    );
+  };
+
+  const isPartner = (): boolean => {
+    return (
+      hasAnyUserType(["PARTNER_USER"]) ||
+      hasAnyUserRole([
+        "PARTNER_ADMIN",
+        "PARTNER_ONBOARDING_STAFF",
+        "PARTNER_CUSTOMER_SUPPORT",
+      ])
+    );
+  };
+
+  const isAgent = (): boolean => {
+    return hasUserType("PARTNER_AGENT") || hasUserRole("PARTNER_AGENT");
+  };
+
+  const isRootUser = (): boolean => {
+    return hasUserType("ROOT_USER") || hasUserRole("ROOT_ADMIN");
+  };
+
+  const getUserRedirectPath = (): string => {
+    if (!user) return "/";
+
+    // All users go to the same dashboard page, but the dashboard will render
+    // different content based on their userType and userRole
+    return "/";
+  };
+
+  // Legacy methods for backward compatibility
+  const hasRole = (role: "admin" | "partner"): boolean => {
+    if (role === "admin") return isAdmin();
+    if (role === "partner") return isPartner() || isAgent();
+    return false;
+  };
+
+  const hasAnyRole = (roles: ("admin" | "partner")[]): boolean => {
+    return roles.some((role) => hasRole(role));
+  };
+
   const value: UserContextType = {
     user,
     isLoading,
     isAuthenticated: !!user,
     error,
+    sessionConfig,
     setUser,
     login,
     logout,
-    hasRole,
-    hasAnyRole,
+    hasUserType,
+    hasAnyUserType,
+    hasUserRole,
+    hasAnyUserRole,
     hasPermission,
     hasAnyPermission,
+    getUserRedirectPath,
+    isAdmin,
+    isPartner,
+    isAgent,
+    isRootUser,
+    // Legacy methods
+    hasRole,
+    hasAnyRole,
   };
 
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;
@@ -200,8 +342,8 @@ export function useUser() {
   return context;
 }
 
-// Helper function to switch user roles for demo purposes
-export function switchUserRole(role: UserRole) {
+// Helper function to switch user roles for demo purposes (legacy)
+export function switchUserRole(role: "admin" | "partner") {
   localStorage.setItem("demo-user-type", role);
   window.location.reload();
 }

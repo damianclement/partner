@@ -4,7 +4,8 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { useUser, UserRole } from "@/lib/contexts/UserContext";
+import { useUser } from "@/lib/contexts/UserContext";
+import type { UserType, UserRole } from "@/lib/api/types";
 import {
   BarChart3,
   Users,
@@ -16,6 +17,12 @@ import {
   ChevronDown,
   UserCheck,
   Users2,
+  Shield,
+  Database,
+  Key,
+  FileText,
+  TrendingUp,
+  DollarSign,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -33,9 +40,13 @@ type NavigationItem = {
   dropdownItems?: {
     name: string;
     href: string;
-    allowedRoles?: UserRole[];
+    allowedUserTypes?: UserType[];
+    allowedUserRoles?: UserRole[];
+    allowedRoles?: ("admin" | "partner")[]; // Legacy support
   }[];
-  allowedRoles?: UserRole[];
+  allowedUserTypes?: UserType[];
+  allowedUserRoles?: UserRole[];
+  allowedRoles?: ("admin" | "partner")[]; // Legacy support
 };
 
 const navigationItems: NavigationItem[] = [
@@ -43,48 +54,110 @@ const navigationItems: NavigationItem[] = [
     name: "Dashboard",
     href: "/",
     icon: BarChart3,
-    allowedRoles: ["admin", "partner"],
+    allowedUserTypes: [
+      "ROOT_USER",
+      "SYSTEM_USER",
+      "PARTNER_USER",
+      "PARTNER_AGENT",
+    ],
+  },
+  {
+    name: "System Configuration",
+    href: "/system-config",
+    icon: Settings,
+    allowedUserTypes: ["ROOT_USER", "SYSTEM_USER"],
+    allowedUserRoles: ["ROOT_ADMIN", "SYSTEM_ADMIN", "SYSTEM_SUPPORT"],
   },
   {
     name: "Partner Management",
     href: "/partners",
     icon: Handshake,
-    allowedRoles: ["admin"], // Only admins can manage partners
+    allowedUserTypes: ["ROOT_USER", "SYSTEM_USER"],
+    allowedUserRoles: ["ROOT_ADMIN", "SYSTEM_ADMIN", "SYSTEM_SUPPORT"],
   },
   {
     name: "Agent Management",
     href: "/agents",
     icon: Users,
-    allowedRoles: ["admin", "partner"], // Both can view agents
+    allowedUserTypes: [
+      "ROOT_USER",
+      "SYSTEM_USER",
+      "PARTNER_USER",
+      "PARTNER_AGENT",
+    ],
+    allowedUserRoles: [
+      "ROOT_ADMIN",
+      "SYSTEM_ADMIN",
+      "SYSTEM_SUPPORT",
+      "PARTNER_ADMIN",
+      "PARTNER_AGENT",
+    ],
   },
   {
     name: "Group Agent Management",
     href: "/group-agents",
     icon: Users2,
-    allowedRoles: ["admin", "partner"], // Both can view group agents
+    allowedUserTypes: ["ROOT_USER", "SYSTEM_USER", "PARTNER_USER"],
+    allowedUserRoles: [
+      "ROOT_ADMIN",
+      "SYSTEM_ADMIN",
+      "SYSTEM_SUPPORT",
+      "PARTNER_ADMIN",
+    ],
   },
   {
     name: "Super Agent Management",
     href: "/super-agents",
     icon: UserCheck,
-    allowedRoles: ["admin", "partner"], // Both can view super agents
+    allowedUserTypes: [
+      "ROOT_USER",
+      "SYSTEM_USER",
+      "PARTNER_USER",
+      "PARTNER_AGENT",
+    ],
+    allowedUserRoles: [
+      "ROOT_ADMIN",
+      "SYSTEM_ADMIN",
+      "SYSTEM_SUPPORT",
+      "PARTNER_ADMIN",
+      "PARTNER_AGENT",
+    ],
   },
   {
     name: "User Management",
     href: "/users",
     icon: User,
     hasDropdown: true,
-    allowedRoles: ["admin", "partner"], // Both can access user management
+    allowedUserTypes: ["ROOT_USER", "SYSTEM_USER", "PARTNER_USER"],
+    allowedUserRoles: [
+      "ROOT_ADMIN",
+      "SYSTEM_ADMIN",
+      "SYSTEM_SUPPORT",
+      "PARTNER_ADMIN",
+    ],
     dropdownItems: [
       {
         name: "All Users",
         href: "/users",
-        allowedRoles: ["admin", "partner"], // Both can view users
+        allowedUserTypes: ["ROOT_USER", "SYSTEM_USER", "PARTNER_USER"],
+        allowedUserRoles: [
+          "ROOT_ADMIN",
+          "SYSTEM_ADMIN",
+          "SYSTEM_SUPPORT",
+          "PARTNER_ADMIN",
+        ],
       },
       {
         name: "User Roles",
         href: "/users/roles",
-        allowedRoles: ["admin"], // Only admins can manage roles
+        allowedUserTypes: ["ROOT_USER", "SYSTEM_USER"],
+        allowedUserRoles: ["ROOT_ADMIN", "SYSTEM_ADMIN"],
+      },
+      {
+        name: "Create User",
+        href: "/users/new",
+        allowedUserTypes: ["ROOT_USER", "SYSTEM_USER"],
+        allowedUserRoles: ["ROOT_ADMIN", "SYSTEM_ADMIN"],
       },
     ],
   },
@@ -92,19 +165,117 @@ const navigationItems: NavigationItem[] = [
     name: "Bus Systems",
     href: "/buses",
     icon: Bus,
-    allowedRoles: ["admin"], // Only admins can manage bus systems
+    allowedUserTypes: ["ROOT_USER", "SYSTEM_USER"],
+    allowedUserRoles: ["ROOT_ADMIN", "SYSTEM_ADMIN", "SYSTEM_SUPPORT"],
   },
   {
     name: "Booking Management",
     href: "/bookings",
     icon: Calendar,
-    allowedRoles: ["admin", "partner"], // Both can view bookings
+    allowedUserTypes: [
+      "ROOT_USER",
+      "SYSTEM_USER",
+      "PARTNER_USER",
+      "PARTNER_AGENT",
+    ],
+    allowedUserRoles: [
+      "ROOT_ADMIN",
+      "SYSTEM_ADMIN",
+      "SYSTEM_SUPPORT",
+      "PARTNER_ADMIN",
+      "PARTNER_ONBOARDING_STAFF",
+      "PARTNER_CUSTOMER_SUPPORT",
+      "PARTNER_AGENT",
+    ],
   },
   {
-    name: "Settings",
-    href: "/settings",
-    icon: Settings,
-    allowedRoles: ["admin"], // Only admins can access settings
+    name: "System Administration",
+    href: "/admin",
+    icon: Shield,
+    hasDropdown: true,
+    allowedUserTypes: ["ROOT_USER", "SYSTEM_USER"],
+    allowedUserRoles: ["ROOT_ADMIN", "SYSTEM_ADMIN", "SYSTEM_SUPPORT"],
+    dropdownItems: [
+      {
+        name: "System Settings",
+        href: "/settings",
+        allowedUserTypes: ["ROOT_USER", "SYSTEM_USER"],
+        allowedUserRoles: ["ROOT_ADMIN", "SYSTEM_ADMIN"],
+      },
+      {
+        name: "API Management",
+        href: "/admin/api-keys",
+        allowedUserTypes: ["ROOT_USER", "SYSTEM_USER"],
+        allowedUserRoles: ["ROOT_ADMIN", "SYSTEM_ADMIN"],
+      },
+      {
+        name: "System Logs",
+        href: "/admin/logs",
+        allowedUserTypes: ["ROOT_USER", "SYSTEM_USER"],
+        allowedUserRoles: ["ROOT_ADMIN", "SYSTEM_ADMIN", "SYSTEM_SUPPORT"],
+      },
+      {
+        name: "Database Management",
+        href: "/admin/database",
+        allowedUserTypes: ["ROOT_USER"],
+        allowedUserRoles: ["ROOT_ADMIN"],
+      },
+      {
+        name: "Security Settings",
+        href: "/admin/security",
+        allowedUserTypes: ["ROOT_USER", "SYSTEM_USER"],
+        allowedUserRoles: ["ROOT_ADMIN", "SYSTEM_ADMIN"],
+      },
+    ],
+  },
+  {
+    name: "Reports & Analytics",
+    href: "/reports",
+    icon: TrendingUp,
+    hasDropdown: true,
+    allowedUserTypes: ["ROOT_USER", "SYSTEM_USER", "PARTNER_USER"],
+    allowedUserRoles: [
+      "ROOT_ADMIN",
+      "SYSTEM_ADMIN",
+      "SYSTEM_SUPPORT",
+      "PARTNER_ADMIN",
+    ],
+    dropdownItems: [
+      {
+        name: "System Reports",
+        href: "/reports/system",
+        allowedUserTypes: ["ROOT_USER", "SYSTEM_USER"],
+        allowedUserRoles: ["ROOT_ADMIN", "SYSTEM_ADMIN", "SYSTEM_SUPPORT"],
+      },
+      {
+        name: "Partner Reports",
+        href: "/reports/partners",
+        allowedUserTypes: ["ROOT_USER", "SYSTEM_USER", "PARTNER_USER"],
+        allowedUserRoles: [
+          "ROOT_ADMIN",
+          "SYSTEM_ADMIN",
+          "SYSTEM_SUPPORT",
+          "PARTNER_ADMIN",
+        ],
+      },
+      {
+        name: "Booking Analytics",
+        href: "/reports/bookings",
+        allowedUserTypes: ["ROOT_USER", "SYSTEM_USER", "PARTNER_USER"],
+        allowedUserRoles: [
+          "ROOT_ADMIN",
+          "SYSTEM_ADMIN",
+          "SYSTEM_SUPPORT",
+          "PARTNER_ADMIN",
+        ],
+      },
+      {
+        name: "Financial Reports",
+        href: "/reports/financial",
+        allowedUserTypes: ["ROOT_USER", "SYSTEM_USER"],
+        allowedUserRoles: ["ROOT_ADMIN", "SYSTEM_ADMIN"],
+      },
+    ],
   },
 ];
 
@@ -115,30 +286,68 @@ export function Sidebar({
   onMobileSidebarClose,
 }: SidebarProps) {
   const pathname = usePathname();
-  const { user, hasAnyRole } = useUser();
+  const { user, hasAnyRole, hasAnyUserType, hasAnyUserRole } = useUser();
   const [openDropdowns, setOpenDropdowns] = useState<string[]>([]);
 
-  // Filter navigation items based on user role
+  // Enhanced filtering logic for navigation items
   const filteredNavigationItems = navigationItems.filter((item) => {
-    // If no allowedRoles specified, allow all users
-    if (!item.allowedRoles) return true;
+    if (!user) {
+      return false;
+    }
 
-    // Check if user has any of the allowed roles
-    return hasAnyRole(item.allowedRoles);
+    // Check userType access first
+    if (
+      item.allowedUserTypes &&
+      !item.allowedUserTypes.includes(user.userType)
+    ) {
+      return false;
+    }
+
+    // Check userRole access
+    if (
+      item.allowedUserRoles &&
+      !item.allowedUserRoles.includes(user.userRole)
+    ) {
+      return false;
+    }
+
+    // Legacy role-based filtering for backward compatibility
+    if (item.allowedRoles && !hasAnyRole(item.allowedRoles)) {
+      return false;
+    }
+
+    return true;
   });
 
-  // Filter dropdown items based on user role
+  // Enhanced filtering logic for dropdown items
   const getFilteredDropdownItems = (
     dropdownItems: NavigationItem["dropdownItems"]
   ) => {
-    if (!dropdownItems) return [];
+    if (!dropdownItems || !user) return [];
 
     return dropdownItems.filter((item) => {
-      // If no allowedRoles specified, allow all users
-      if (!item.allowedRoles) return true;
+      // Check userType access first
+      if (
+        item.allowedUserTypes &&
+        !item.allowedUserTypes.includes(user.userType)
+      ) {
+        return false;
+      }
 
-      // Check if user has any of the allowed roles
-      return hasAnyRole(item.allowedRoles);
+      // Check userRole access
+      if (
+        item.allowedUserRoles &&
+        !item.allowedUserRoles.includes(user.userRole)
+      ) {
+        return false;
+      }
+
+      // Legacy role-based filtering for backward compatibility
+      if (item.allowedRoles && !hasAnyRole(item.allowedRoles)) {
+        return false;
+      }
+
+      return true;
     });
   };
 
@@ -203,7 +412,15 @@ export function Sidebar({
                 OBUS
               </h1>
               <p className="text-xs text-obus-text-secondary dark:text-obus-text-light">
-                {user?.userType === "admin" ? "ADMINISTRATOR" : "PARTNER"}
+                {user?.userType === "ROOT_USER"
+                  ? "ROOT USER"
+                  : user?.userType === "SYSTEM_USER"
+                  ? "SYSTEM USER"
+                  : user?.userType === "PARTNER_USER"
+                  ? "PARTNER USER"
+                  : user?.userType === "PARTNER_AGENT"
+                  ? "PARTNER AGENT"
+                  : "USER"}
               </p>
             </div>
           )}
@@ -212,6 +429,16 @@ export function Sidebar({
 
       {/* Navigation */}
       <nav className="flex-1 p-4 space-y-2">
+        {filteredNavigationItems.length === 0 && user && (
+          <div className="text-sm text-obus-text-secondary dark:text-obus-text-light p-2">
+            No navigation items available for your role.
+          </div>
+        )}
+        {filteredNavigationItems.length === 0 && !user && (
+          <div className="text-sm text-obus-text-secondary dark:text-obus-text-light p-2">
+            Loading navigation...
+          </div>
+        )}
         {filteredNavigationItems.map((item) => {
           const isActive = isRouteActive(item);
           const isDropdownOpen = openDropdowns.includes(item.name);
@@ -332,7 +559,15 @@ export function Sidebar({
                 {user?.displayName || "User"}
               </p>
               <p className="text-xs text-obus-text-secondary dark:text-obus-text-light">
-                {user?.userType === "admin" ? "Administrator" : "Partner User"}
+                {user?.userType === "ROOT_USER"
+                  ? "ROOT USER"
+                  : user?.userType === "SYSTEM_USER"
+                  ? "SYSTEM USER"
+                  : user?.userType === "PARTNER_USER"
+                  ? "PARTNER USER"
+                  : user?.userType === "PARTNER_AGENT"
+                  ? "PARTNER AGENT"
+                  : "USER"}
               </p>
             </div>
           )}

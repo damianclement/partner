@@ -2,16 +2,7 @@
 
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
-import {
-  Search,
-  Bell,
-  ChevronDown,
-  Menu,
-  User,
-  LogOut,
-  ShieldCheck,
-  Building2,
-} from "lucide-react";
+import { Search, Bell, ChevronDown, Menu, User, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
@@ -20,8 +11,18 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { useUser, switchUserRole } from "@/lib/contexts/UserContext";
+import { useUser } from "@/lib/contexts/UserContext";
+import { useRouter } from "next/navigation";
 
 interface TopBarProps {
   sidebarCollapsed: boolean;
@@ -35,7 +36,36 @@ export function TopBar({
   isMobile = false,
 }: TopBarProps) {
   const [searchQuery, setSearchQuery] = useState("");
-  const { user } = useUser();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const { user, logout } = useUser();
+  const router = useRouter();
+
+  const handleLogoutClick = () => {
+    setShowLogoutModal(true);
+  };
+
+  const handleLogoutConfirm = async () => {
+    if (isLoggingOut) return; // Prevent multiple clicks
+
+    setIsLoggingOut(true);
+    try {
+      await logout();
+      // Use window.location.href for a hard redirect to ensure the page reloads
+      window.location.href = "/login";
+    } catch (error) {
+      console.error("Logout failed:", error);
+      // Even if logout fails, redirect to login
+      window.location.href = "/login";
+    } finally {
+      setIsLoggingOut(false);
+      setShowLogoutModal(false);
+    }
+  };
+
+  const handleLogoutCancel = () => {
+    setShowLogoutModal(false);
+  };
 
   return (
     <header
@@ -102,9 +132,15 @@ export function TopBar({
                     {user?.displayName || "User"}
                   </p>
                   <p className="text-xs text-obus-text-secondary dark:text-obus-text-light">
-                    {user?.userType === "admin"
-                      ? "Administrator"
-                      : "Partner User"}
+                    {user?.userType === "ROOT_USER"
+                      ? "Root User"
+                      : user?.userType === "SYSTEM_USER"
+                      ? "System User"
+                      : user?.userType === "PARTNER_USER"
+                      ? "Partner User"
+                      : user?.userType === "PARTNER_AGENT"
+                      ? "Partner Agent"
+                      : "User"}
                   </p>
                 </div>
               )}
@@ -118,36 +154,77 @@ export function TopBar({
             <div className="px-3 py-2 text-xs text-obus-text-secondary dark:text-obus-text-light">
               Current role:{" "}
               <span className="font-medium">
-                {user?.userType === "admin" ? "Administrator" : "Partner"}
+                {user?.userType === "ROOT_USER"
+                  ? "Root User"
+                  : user?.userType === "SYSTEM_USER"
+                  ? "System User"
+                  : user?.userType === "PARTNER_USER"
+                  ? "Partner User"
+                  : user?.userType === "PARTNER_AGENT"
+                  ? "Partner Agent"
+                  : "User"}
               </span>
             </div>
-            <DropdownMenuItem
-              className="cursor-pointer text-obus-text-secondary hover:bg-obus-primary/5 hover:text-obus-primary focus:bg-obus-primary/5 focus:text-obus-primary dark:text-obus-text-light dark:hover:bg-white/10 dark:hover:text-white dark:focus:bg-white/10 dark:focus:text-white"
-              onClick={() => switchUserRole("admin")}
-            >
-              <ShieldCheck className="w-4 h-4 mr-2" />
-              Switch to Admin
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              className="cursor-pointer text-obus-text-secondary hover:bg-obus-primary/5 hover:text-obus-primary focus:bg-obus-primary/5 focus:text-obus-primary dark:text-obus-text-light dark:hover:bg-white/10 dark:hover:text-white dark:focus:bg-white/10 dark:focus:text-white"
-              onClick={() => switchUserRole("partner")}
-            >
-              <Building2 className="w-4 h-4 mr-2" />
-              Switch to Partner
-            </DropdownMenuItem>
-            <DropdownMenuSeparator className="bg-obus-primary/10 dark:bg-white/10" />
             <DropdownMenuItem className="cursor-pointer text-obus-text-secondary hover:bg-obus-primary/5 hover:text-obus-primary focus:bg-obus-primary/5 focus:text-obus-primary dark:text-obus-text-light dark:hover:bg-white/10 dark:hover:text-white dark:focus:bg-white/10 dark:focus:text-white">
               <User className="w-4 h-4 mr-2" />
               Profile
             </DropdownMenuItem>
             <DropdownMenuSeparator className="bg-obus-primary/10 dark:bg-white/10" />
-            <DropdownMenuItem className="cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-600/10 hover:text-red-600 hover:bg-red-600/10">
+            <DropdownMenuItem
+              className="cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-600/10 hover:text-red-600 hover:bg-red-600/10"
+              onClick={handleLogoutClick}
+            >
               <LogOut className="w-4 h-4 mr-2" />
               Logout
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+
+      {/* Logout Confirmation Modal */}
+      <Dialog open={showLogoutModal} onOpenChange={setShowLogoutModal}>
+        <DialogContent className="sm:max-w-md bg-white border-obus-primary/20 dark:bg-obus-primary dark:border-white/20">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-obus-text-primary dark:text-white">
+              <div className="w-8 h-8 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
+                <LogOut className="w-4 h-4 text-red-600 dark:text-red-400" />
+              </div>
+              Confirm Logout
+            </DialogTitle>
+            <DialogDescription className="text-obus-text-secondary dark:text-obus-text-light">
+              Are you sure you want to logout? You will need to sign in again to
+              access your account.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex gap-3 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={handleLogoutCancel}
+              disabled={isLoggingOut}
+              className="flex-1 sm:flex-none border-obus-primary/20 text-obus-text-primary hover:bg-obus-primary/5 hover:text-obus-primary dark:border-white/20 dark:text-white dark:hover:bg-white/10"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleLogoutConfirm}
+              disabled={isLoggingOut}
+              className="flex-1 sm:flex-none bg-red-600 hover:bg-red-700 text-white border-0 focus:ring-red-600/20 dark:bg-red-600 dark:hover:bg-red-700"
+            >
+              {isLoggingOut ? (
+                <>
+                  <LogOut className="w-4 h-4 mr-2 animate-spin" />
+                  Logging out...
+                </>
+              ) : (
+                <>
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Logout
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </header>
   );
 }

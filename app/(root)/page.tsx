@@ -10,37 +10,17 @@ import {
   UserCheck,
   Clock,
   Rocket,
+  Shield,
+  Activity,
+  Lock,
 } from "lucide-react";
 import { useUser } from "@/lib/contexts/UserContext";
 import { AuthGuard } from "@/components/AuthGuard";
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { apiKeyManager } from "@/lib/api/client";
 
 export default function Home() {
-  const { user, hasRole, isAuthenticated } = useUser();
-  const router = useRouter();
-
-  // Check if admin user needs API credentials
-  useEffect(() => {
-    if (
-      isAuthenticated &&
-      hasRole("admin") &&
-      !apiKeyManager.hasApiCredentials()
-    ) {
-      router.push("/setup");
-    }
-  }, [isAuthenticated, hasRole, router]);
-
-  // Show setup page for admin users without API credentials
-  if (
-    isAuthenticated &&
-    hasRole("admin") &&
-    !apiKeyManager.hasApiCredentials()
-  ) {
-    return null; // Will redirect to setup
-  }
+  const { user, isAdmin, isPartner, isAgent, isRootUser } = useUser();
 
   // Live time state
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -52,6 +32,139 @@ export default function Home() {
 
     return () => clearInterval(timer);
   }, []);
+
+  // Root User Dashboard Component
+  const RootUserDashboard = () => (
+    <div className="space-y-6">
+      {/* Header Section */}
+      <div className="rounded-lg border border-red-200 bg-red-50 p-6 shadow-sm transition-colors dark:border-red-800 dark:bg-red-900/20">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-red-600">
+              <Shield className="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-red-800 dark:text-red-200">
+                Root User Dashboard
+              </h1>
+              <p className="text-sm text-red-600 dark:text-red-300">
+                Ultimate system administrator with configuration privileges
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-4 text-sm text-red-600 dark:text-red-300">
+            <div className="flex items-center gap-2">
+              <Calendar className="h-4 w-4" />
+              <span>{currentTime.toLocaleDateString()}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Clock className="h-4 w-4" />
+              <span>{currentTime.toLocaleTimeString()}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Statistics Cards Section */}
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+        {[
+          {
+            label: "System Configuration",
+            value: "Active",
+            change: "All Systems",
+            icon: Settings,
+            href: "/system-config",
+            color: "red",
+          },
+          {
+            label: "Root Access Logs",
+            value: "1,247",
+            change: "+12%",
+            icon: Shield,
+            href: "/root-logs",
+            color: "red",
+          },
+          {
+            label: "System Health",
+            value: "99.9%",
+            change: "Optimal",
+            icon: Activity,
+            href: "/system-health",
+            color: "green",
+          },
+          {
+            label: "Security Status",
+            value: "Secure",
+            change: "All Clear",
+            icon: Lock,
+            href: "/security",
+            color: "blue",
+          },
+        ].map((stat) => (
+          <Link key={stat.label} href={stat.href}>
+            <div className="rounded-lg border border-obus-primary/10 bg-white p-6 shadow-sm transition-all hover:shadow-md cursor-pointer dark:border-white/20 dark:bg-white/5">
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-sm font-medium text-obus-text-secondary dark:text-obus-text-light">
+                  {stat.label}
+                </div>
+                <stat.icon className="h-5 w-5 text-obus-primary dark:text-white" />
+              </div>
+              <div className="text-2xl font-bold text-obus-primary dark:text-white">
+                {stat.value}
+              </div>
+              <p className="mt-1 text-xs font-medium text-obus-accent">
+                {stat.change}
+              </p>
+            </div>
+          </Link>
+        ))}
+      </div>
+
+      {/* Quick Actions Section */}
+      <div className="rounded-lg border border-obus-primary/10 bg-white p-6 shadow-sm transition-colors dark:border-white/20 dark:bg-white/5">
+        <h3 className="mb-4 text-lg font-semibold text-obus-primary dark:text-white">
+          Root User Actions
+        </h3>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {[
+            {
+              icon: Settings,
+              label: "System Config",
+              href: "/system-config",
+              color: "red",
+            },
+            {
+              icon: Shield,
+              label: "Security Panel",
+              href: "/security",
+              color: "red",
+            },
+            {
+              icon: Activity,
+              label: "System Health",
+              href: "/system-health",
+              color: "green",
+            },
+            {
+              icon: BarChart3,
+              label: "Root Reports",
+              href: "/root-reports",
+              color: "blue",
+            },
+          ].map((action) => (
+            <Link key={action.label} href={action.href}>
+              <button className="group flex w-full items-center gap-3 rounded-lg bg-obus-primary/5 p-4 text-left font-medium text-obus-text-secondary transition-colors hover:bg-obus-primary/10 hover:text-obus-primary dark:bg-white/5 dark:text-obus-text-light dark:hover:bg-white/10 dark:hover:text-white">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white text-obus-primary transition-colors group-hover:bg-obus-primary group-hover:text-white dark:bg-white/10 dark:text-white dark:group-hover:bg-white/20">
+                  <action.icon className="h-5 w-5" />
+                </div>
+                <span>{action.label}</span>
+              </button>
+            </Link>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
 
   // Partner Dashboard Component
   const PartnerDashboard = () => (
@@ -170,6 +283,139 @@ export default function Home() {
               label: "Super Agents",
               href: "/super-agents",
               color: "blue",
+            },
+          ].map((action) => (
+            <Link key={action.label} href={action.href}>
+              <button className="group flex w-full items-center gap-3 rounded-lg bg-obus-primary/5 p-4 text-left font-medium text-obus-text-secondary transition-colors hover:bg-obus-primary/10 hover:text-obus-primary dark:bg-white/5 dark:text-obus-text-light dark:hover:bg-white/10 dark:hover:text-white">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white text-obus-primary transition-colors group-hover:bg-obus-primary group-hover:text-white dark:bg-white/10 dark:text-white dark:group-hover:bg-white/20">
+                  <action.icon className="h-5 w-5" />
+                </div>
+                <span>{action.label}</span>
+              </button>
+            </Link>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
+  // Agent Dashboard Component
+  const AgentDashboard = () => (
+    <div className="space-y-6">
+      {/* Header Section */}
+      <div className="rounded-lg border border-obus-primary/10 bg-white p-6 shadow-sm transition-colors dark:border-white/20 dark:bg-white/5">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-obus-accent">
+              <UserCheck className="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-obus-primary dark:text-white">
+                Welcome, {user?.displayName || "Agent"}
+              </h1>
+              <p className="text-sm text-obus-text-secondary dark:text-obus-text-light">
+                Agent Dashboard
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-4 text-sm text-obus-text-secondary dark:text-obus-text-light">
+            <div className="flex items-center gap-2">
+              <Calendar className="h-4 w-4" />
+              <span>{currentTime.toLocaleDateString()}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Clock className="h-4 w-4" />
+              <span>{currentTime.toLocaleTimeString()}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Statistics Cards Section */}
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+        {[
+          {
+            label: "My Bookings",
+            value: "45",
+            change: "+12%",
+            icon: Calendar,
+            href: "/bookings",
+            color: "green",
+          },
+          {
+            label: "Pending Tasks",
+            value: "8",
+            change: "-2",
+            icon: Clock,
+            href: "/tasks",
+            color: "orange",
+          },
+          {
+            label: "Completed Today",
+            value: "12",
+            change: "+3",
+            icon: UserCheck,
+            href: "/completed",
+            color: "blue",
+          },
+          {
+            label: "Performance Score",
+            value: "94%",
+            change: "+5%",
+            icon: BarChart3,
+            href: "/performance",
+            color: "purple",
+          },
+        ].map((stat) => (
+          <Link key={stat.label} href={stat.href}>
+            <div className="rounded-lg border border-obus-primary/10 bg-white p-6 shadow-sm transition-all hover:shadow-md cursor-pointer dark:border-white/20 dark:bg-white/5">
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-sm font-medium text-obus-text-secondary dark:text-obus-text-light">
+                  {stat.label}
+                </div>
+                <stat.icon className="h-5 w-5 text-obus-primary dark:text-white" />
+              </div>
+              <div className="text-2xl font-bold text-obus-primary dark:text-white">
+                {stat.value}
+              </div>
+              <p className="mt-1 text-xs font-medium text-obus-accent">
+                {stat.change}
+              </p>
+            </div>
+          </Link>
+        ))}
+      </div>
+
+      {/* Quick Actions Section */}
+      <div className="rounded-lg border border-obus-primary/10 bg-white p-6 shadow-sm transition-colors dark:border-white/20 dark:bg-white/5">
+        <h3 className="mb-4 text-lg font-semibold text-obus-primary dark:text-white">
+          Quick Actions
+        </h3>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {[
+            {
+              icon: Calendar,
+              label: "View Bookings",
+              href: "/bookings",
+              color: "green",
+            },
+            {
+              icon: Clock,
+              label: "My Tasks",
+              href: "/tasks",
+              color: "orange",
+            },
+            {
+              icon: UserCheck,
+              label: "Update Profile",
+              href: "/profile",
+              color: "blue",
+            },
+            {
+              icon: BarChart3,
+              label: "View Reports",
+              href: "/reports",
+              color: "purple",
             },
           ].map((action) => (
             <Link key={action.label} href={action.href}>
@@ -337,15 +583,34 @@ export default function Home() {
     </div>
   );
 
+  // Enhanced dashboard rendering logic
+  const renderDashboard = () => {
+    if (!user) return <AdminDashboard />; // Default fallback
+
+    // Check by userType first, then by userRole
+    if (isRootUser()) {
+      return <RootUserDashboard />;
+    }
+
+    switch (user.userType) {
+      case "SYSTEM_USER":
+        return <AdminDashboard />;
+      case "PARTNER_USER":
+        return <PartnerDashboard />;
+      case "PARTNER_AGENT":
+        return <AgentDashboard />;
+      default:
+        // Fallback to role-based rendering
+        if (isAdmin()) return <AdminDashboard />;
+        if (isPartner()) return <PartnerDashboard />;
+        if (isAgent()) return <AgentDashboard />;
+        return <AdminDashboard />; // Ultimate fallback
+    }
+  };
+
   return (
     <AuthGuard>
-      <DashboardLayout>
-        {user?.userType === "partner" ? (
-          <PartnerDashboard />
-        ) : (
-          <AdminDashboard />
-        )}
-      </DashboardLayout>
+      <DashboardLayout>{renderDashboard()}</DashboardLayout>
     </AuthGuard>
   );
 }
