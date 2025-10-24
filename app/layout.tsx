@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import Script from "next/script";
 import { ThemeProvider } from "@/components/theme-provider";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { UserProvider } from "@/lib/contexts/UserContext";
 import { AgentsProvider } from "@/lib/contexts/AgentsContext";
 import { PartnersProvider } from "@/lib/contexts/PartnersContext";
@@ -62,23 +63,25 @@ export default function RootLayout({
         className={`${inter.variable} min-h-screen font-inter antialiased bg-obus-bg text-obus-text-primary transition-colors duration-300 dark:bg-obus-primary dark:text-white`}
       >
         <ThemeProvider defaultTheme="light">
-          <UserProvider>
-            <AgentsProvider>
-              <PartnersProvider>
-                <SuperAgentsProvider>
-                  <UsersProvider>
-                    <RolesProvider>
-                      <BookingsProvider>
-                        <BusCoreSystemsProvider>
-                          <GroupAgentsProvider>{children}</GroupAgentsProvider>
-                        </BusCoreSystemsProvider>
-                      </BookingsProvider>
-                    </RolesProvider>
-                  </UsersProvider>
-                </SuperAgentsProvider>
-              </PartnersProvider>
-            </AgentsProvider>
-          </UserProvider>
+          <ErrorBoundary>
+            <UserProvider>
+              <AgentsProvider>
+                <PartnersProvider>
+                  <SuperAgentsProvider>
+                    <UsersProvider>
+                      <RolesProvider>
+                        <BookingsProvider>
+                          <BusCoreSystemsProvider>
+                            <GroupAgentsProvider>{children}</GroupAgentsProvider>
+                          </BusCoreSystemsProvider>
+                        </BookingsProvider>
+                      </RolesProvider>
+                    </UsersProvider>
+                  </SuperAgentsProvider>
+                </PartnersProvider>
+              </AgentsProvider>
+            </UserProvider>
+          </ErrorBoundary>
         </ThemeProvider>
       </body>
     </html>
