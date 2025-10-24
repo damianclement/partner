@@ -165,7 +165,10 @@ export function TopBar({
                   : "User"}
               </span>
             </div>
-            <DropdownMenuItem className="cursor-pointer text-obus-text-secondary hover:bg-obus-primary/5 hover:text-obus-primary focus:bg-obus-primary/5 focus:text-obus-primary dark:text-obus-text-light dark:hover:bg-white/10 dark:hover:text-white dark:focus:bg-white/10 dark:focus:text-white">
+            <DropdownMenuItem
+              className="cursor-pointer text-obus-text-secondary hover:bg-obus-primary/5 hover:text-obus-primary focus:bg-obus-primary/5 focus:text-obus-primary dark:text-obus-text-light dark:hover:bg-white/10 dark:hover:text-white dark:focus:bg-white/10 dark:focus:text-white"
+              onClick={() => router.push("/profile")}
+            >
               <User className="w-4 h-4 mr-2" />
               Profile
             </DropdownMenuItem>
