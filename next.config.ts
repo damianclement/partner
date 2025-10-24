@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
     return [
       {
         source: "/api/:path*",
-        destination: "https://obus-partners.otapp.live/api/:path*",
+        destination: "https://obus-partners.otapp.live/:path*",
       },
     ];
   },

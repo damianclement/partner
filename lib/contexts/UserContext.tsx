@@ -79,8 +79,72 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       const config = await sessionConfigService.getSessionConfig();
       setSessionConfig(config);
     } catch (error) {
-      console.error("Failed to load session config:", error);
-      // Continue without session config - it's not critical for basic functionality
+      console.warn(
+        "Session config endpoint not available (non-critical):",
+        error
+      );
+      // Set default session config to prevent UI issues
+      setSessionConfig({
+        userTypes: [
+          {
+            value: "ROOT_USER",
+            displayName: "Root User",
+            description: "Ultimate system administrator",
+          },
+          {
+            value: "SYSTEM_USER",
+            displayName: "System User",
+            description: "OBUS platform employee",
+          },
+          {
+            value: "PARTNER_USER",
+            displayName: "Partner User",
+            description: "Partner organization employee",
+          },
+          {
+            value: "PARTNER_AGENT",
+            displayName: "Partner Agent",
+            description: "Partner super agent",
+          },
+        ],
+        userRoles: [
+          {
+            value: "ROOT_ADMIN",
+            displayName: "Root Administrator",
+            description: "Ultimate platform access",
+          },
+          {
+            value: "SYSTEM_ADMIN",
+            displayName: "System Administrator",
+            description: "Full platform access",
+          },
+          {
+            value: "SYSTEM_SUPPORT",
+            displayName: "System Support",
+            description: "Platform-wide read-only access",
+          },
+          {
+            value: "PARTNER_ADMIN",
+            displayName: "Partner Administrator",
+            description: "Full administrative access within partner",
+          },
+          {
+            value: "PARTNER_ONBOARDING_STAFF",
+            displayName: "Onboarding Staff",
+            description: "Limited access for onboarding",
+          },
+          {
+            value: "PARTNER_CUSTOMER_SUPPORT",
+            displayName: "Customer Support",
+            description: "Read-only access for support",
+          },
+          {
+            value: "PARTNER_AGENT",
+            displayName: "Partner Agent",
+            description: "Agent with portal access",
+          },
+        ],
+      });
     }
   };
 
@@ -138,7 +202,16 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         try {
           const parsedUser = JSON.parse(storedUserData);
           setUser(parsedUser);
-          await loadSessionConfig();
+          // Only load session config if user is authenticated
+          try {
+            await loadSessionConfig();
+          } catch (configError) {
+            console.warn(
+              "Failed to load session config (non-critical):",
+              configError
+            );
+            // Continue without session config - it's not critical for basic functionality
+          }
           return;
         } catch (parseError) {
           console.error("Failed to parse stored user data:", parseError);
@@ -199,8 +272,16 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       // Store user data in localStorage for persistence
       localStorage.setItem("user-data", JSON.stringify(userData));
 
-      // Load session config after successful login
-      await loadSessionConfig();
+      // Load session config after successful login (non-critical)
+      try {
+        await loadSessionConfig();
+      } catch (configError) {
+        console.warn(
+          "Failed to load session config after login (non-critical):",
+          configError
+        );
+        // Continue without session config - it's not critical for basic functionality
+      }
     } catch (err) {
       console.error("Login error:", err);
       setError(err instanceof Error ? err.message : "Login failed");

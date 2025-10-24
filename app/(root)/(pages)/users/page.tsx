@@ -34,146 +34,79 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import Link from "next/link";
-
-export type User = {
-  id: number;
-  displayName: string;
-  fullName: string;
-  username: string;
-  email: string;
-  employeeId: string;
-  department: string;
-  position: string;
-  userType: "admin" | "partner";
-  partner?: {
-    name: string;
-    code: string;
-  };
-  status: "active" | "inactive";
-  createdAt: string;
-  lastLogin: string;
-};
+import { useUsers, type User } from "@/lib/contexts/UsersContext";
+import { useEffect } from "react";
 
 export default function UsersPage() {
   const router = useRouter();
-
-  const users: User[] = [
-    {
-      id: 1,
-      displayName: "John Doe",
-      fullName: "John Michael Doe",
-      username: "jdoe",
-      email: "john.doe@obus.com",
-      employeeId: "EMP001",
-      department: "IT Administration",
-      position: "System Administrator",
-      userType: "admin",
-      status: "active",
-      createdAt: "2024-01-15",
-      lastLogin: "2 hours ago",
-    },
-    {
-      id: 2,
-      displayName: "Jane Smith",
-      fullName: "Jane Elizabeth Smith",
-      username: "jsmith",
-      email: "jane.smith@obus.com",
-      employeeId: "EMP002",
-      department: "Operations",
-      position: "Operations Manager",
-      userType: "admin",
-      status: "active",
-      createdAt: "2024-01-20",
-      lastLogin: "1 day ago",
-    },
-    {
-      id: 3,
-      displayName: "Bob Johnson",
-      fullName: "Robert Johnson",
-      username: "bjohnson",
-      email: "bob.johnson@obus.com",
-      employeeId: "EMP003",
-      department: "Customer Support",
-      position: "Support Specialist",
-      userType: "admin",
-      status: "active",
-      createdAt: "2024-02-01",
-      lastLogin: "3 days ago",
-    },
-    {
-      id: 4,
-      displayName: "Alice Brown",
-      fullName: "Alice Marie Brown",
-      username: "abrown",
-      email: "alice.brown@obus.com",
-      employeeId: "EMP004",
-      department: "Partner Relations",
-      position: "Partner Manager",
-      userType: "partner",
-      partner: {
-        name: "City Transport Ltd",
-        code: "CT001",
-      },
-      status: "inactive",
-      createdAt: "2024-02-10",
-      lastLogin: "2 weeks ago",
-    },
-    {
-      id: 5,
-      displayName: "Mike Wilson",
-      fullName: "Michael James Wilson",
-      username: "mwilson",
-      email: "mike.wilson@citytransport.com",
-      employeeId: "CT002",
-      department: "Operations",
-      position: "Fleet Manager",
-      userType: "partner",
-      partner: {
-        name: "City Transport Ltd",
-        code: "CT001",
-      },
-      status: "active",
-      createdAt: "2024-02-15",
-      lastLogin: "1 hour ago",
-    },
-    {
-      id: 6,
-      displayName: "Sarah Davis",
-      fullName: "Sarah Anne Davis",
-      username: "sdavis",
-      email: "sarah.davis@metrotransit.com",
-      employeeId: "MT001",
-      department: "Customer Service",
-      position: "Customer Service Lead",
-      userType: "partner",
-      partner: {
-        name: "Metro Transit Co",
-        code: "MT001",
-      },
-      status: "active",
-      createdAt: "2024-02-20",
-      lastLogin: "30 minutes ago",
-    },
-  ];
+  const {
+    users,
+    stats,
+    isLoading,
+    isStatsLoading,
+    error,
+    currentPage,
+    pageSize,
+    totalPages,
+    totalItems,
+    loadUsers,
+    setCurrentPage,
+    clearError,
+  } = useUsers();
 
   // Simple state management for filtering and selection
   const [filterValue, setFilterValue] = React.useState("");
   const [selectedUsers, setSelectedUsers] = React.useState<number[]>([]);
+
+  // Debounced search
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (filterValue.trim()) {
+        // For now, we'll use client-side filtering
+        // In the future, we can implement server-side search
+        loadUsers({ page: 0, size: pageSize });
+      } else {
+        loadUsers({ page: 0, size: pageSize });
+      }
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [filterValue, pageSize]); // Removed loadUsers from dependencies to prevent infinite loops
+
   // Filter users based on search input
   const filteredUsers = users.filter(
     (user) =>
-      user.displayName.toLowerCase().includes(filterValue.toLowerCase()) ||
-      user.fullName.toLowerCase().includes(filterValue.toLowerCase()) ||
-      user.username.toLowerCase().includes(filterValue.toLowerCase()) ||
-      user.email.toLowerCase().includes(filterValue.toLowerCase()) ||
-      user.employeeId.toLowerCase().includes(filterValue.toLowerCase()) ||
-      user.department.toLowerCase().includes(filterValue.toLowerCase()) ||
-      user.position.toLowerCase().includes(filterValue.toLowerCase()) ||
-      user.userType.toLowerCase().includes(filterValue.toLowerCase()) ||
-      (user.partner &&
-        user.partner.name.toLowerCase().includes(filterValue.toLowerCase())) ||
-      (user.partner &&
-        user.partner.code.toLowerCase().includes(filterValue.toLowerCase()))
+      (user.displayName?.toLowerCase() || "").includes(
+        filterValue.toLowerCase()
+      ) ||
+      (user.firstName?.toLowerCase() || "").includes(
+        filterValue.toLowerCase()
+      ) ||
+      (user.lastName?.toLowerCase() || "").includes(
+        filterValue.toLowerCase()
+      ) ||
+      (user.username?.toLowerCase() || "").includes(
+        filterValue.toLowerCase()
+      ) ||
+      (user.email?.toLowerCase() || "").includes(filterValue.toLowerCase()) ||
+      (user.employeeId?.toLowerCase() || "").includes(
+        filterValue.toLowerCase()
+      ) ||
+      (user.department?.toLowerCase() || "").includes(
+        filterValue.toLowerCase()
+      ) ||
+      (user.position?.toLowerCase() || "").includes(
+        filterValue.toLowerCase()
+      ) ||
+      (user.userType?.toLowerCase() || "").includes(
+        filterValue.toLowerCase()
+      ) ||
+      (user.partnerName?.toLowerCase() || "").includes(
+        filterValue.toLowerCase()
+      ) ||
+      (user.partnerCode?.toLowerCase() || "").includes(
+        filterValue.toLowerCase()
+      )
   );
 
   // Handle individual user selection
@@ -197,6 +130,12 @@ export default function UsersPage() {
   // Check if all filtered users are selected
   const isAllSelected =
     filteredUsers.length > 0 && selectedUsers.length === filteredUsers.length;
+
+  // Debug: Log users data
+  console.log("Users data:", users, "Loading:", isLoading, "Error:", error);
+  console.log("Filtered users:", filteredUsers);
+  console.log("Users length:", users.length);
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -224,9 +163,16 @@ export default function UsersPage() {
               Total Users
             </div>
             <div className="text-2xl font-bold text-obus-primary dark:text-white">
-              156
+              {isStatsLoading ? (
+                <div className="w-8 h-8 border-2 border-obus-primary/30 border-t-obus-primary rounded-full animate-spin" />
+              ) : (
+                stats?.totalUsers || 0
+              )}
             </div>
-            <p className="text-xs text-obus-accent mt-1">+5 this month</p>
+            <p className="text-xs text-obus-accent mt-1">
+              {stats?.adminUsers || 0} admins, {stats?.partnerUsers || 0}{" "}
+              partners
+            </p>
           </div>
 
           <div className="rounded-lg border border-obus-primary/10 bg-white p-6 shadow-sm transition-colors dark:border-white/20 dark:bg-white/5">
@@ -234,9 +180,15 @@ export default function UsersPage() {
               Active Users
             </div>
             <div className="text-2xl font-bold text-obus-primary dark:text-white">
-              142
+              {isStatsLoading ? (
+                <div className="w-8 h-8 border-2 border-obus-primary/30 border-t-obus-primary rounded-full animate-spin" />
+              ) : (
+                stats?.activeUsers || 0
+              )}
             </div>
-            <p className="text-xs text-obus-accent mt-1">91% active rate</p>
+            <p className="text-xs text-obus-accent mt-1">
+              {stats?.inactiveUsers || 0} inactive
+            </p>
           </div>
 
           <div className="rounded-lg border border-obus-primary/10 bg-white p-6 shadow-sm transition-colors dark:border-white/20 dark:bg-white/5">
@@ -244,7 +196,11 @@ export default function UsersPage() {
               Administrators
             </div>
             <div className="text-2xl font-bold text-obus-primary dark:text-white">
-              3
+              {isStatsLoading ? (
+                <div className="w-8 h-8 border-2 border-obus-primary/30 border-t-obus-primary rounded-full animate-spin" />
+              ) : (
+                stats?.adminUsers || 0
+              )}
             </div>
             <p className="text-xs text-obus-text-secondary dark:text-obus-text-light mt-1">
               System admins
@@ -256,13 +212,38 @@ export default function UsersPage() {
               Pending Invites
             </div>
             <div className="text-2xl font-bold text-obus-primary dark:text-white">
-              8
+              {isStatsLoading ? (
+                <div className="w-8 h-8 border-2 border-obus-primary/30 border-t-obus-primary rounded-full animate-spin" />
+              ) : (
+                stats?.pendingVerificationUsers || 0
+              )}
             </div>
             <p className="text-xs text-obus-text-secondary dark:text-obus-text-light mt-1">
-              Awaiting acceptance
+              Awaiting verification
             </p>
           </div>
         </div>
+
+        {/* Error Display */}
+        {error && (
+          <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-800 dark:border-red-800 dark:bg-red-900/20 dark:text-red-200">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                <span className="text-sm font-medium">Error loading users</span>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clearError}
+                className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-200"
+              >
+                ×
+              </Button>
+            </div>
+            <p className="text-sm mt-1">{error}</p>
+          </div>
+        )}
 
         {/* Users Table */}
         <div className="space-y-4">
@@ -327,7 +308,19 @@ export default function UsersPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredUsers.length ? (
+                {isLoading ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={12}
+                      className="h-24 text-center text-obus-text-secondary dark:text-obus-text-light"
+                    >
+                      <div className="flex items-center justify-center gap-2">
+                        <div className="w-4 h-4 border-2 border-obus-primary/30 border-t-obus-primary rounded-full animate-spin" />
+                        Loading users...
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : filteredUsers.length ? (
                   filteredUsers.map((user) => (
                     <TableRow
                       key={user.id}
@@ -350,9 +343,7 @@ export default function UsersPage() {
                             </div>
                             <div
                               className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white dark:border-obus-primary ${
-                                user.status === "active"
-                                  ? "bg-green-500"
-                                  : "bg-gray-400"
+                                user.enabled ? "bg-green-500" : "bg-gray-400"
                               }`}
                             ></div>
                           </div>
@@ -361,7 +352,7 @@ export default function UsersPage() {
                               {user.displayName}
                             </p>
                             <p className="text-xs text-obus-text-secondary dark:text-obus-text-light">
-                              {user.fullName}
+                              {user.firstName} {user.lastName}
                             </p>
                           </div>
                         </div>
@@ -369,20 +360,34 @@ export default function UsersPage() {
                       <TableCell className="min-w-[140px]">
                         <Badge
                           className={
-                            user.userType === "admin"
+                            user.userType === "ROOT_USER"
+                              ? "bg-purple-500/20 text-purple-400 hover:bg-purple-500/20"
+                              : user.userType === "SYSTEM_USER"
                               ? "bg-red-500/20 text-red-400 hover:bg-red-500/20"
-                              : "bg-blue-500/20 text-blue-400 hover:bg-blue-500/20"
+                              : user.userType === "PARTNER_USER"
+                              ? "bg-blue-500/20 text-blue-400 hover:bg-blue-500/20"
+                              : "bg-green-500/20 text-green-400 hover:bg-green-500/20"
                           }
                         >
-                          {user.userType === "admin" ? (
+                          {user.userType === "ROOT_USER" ? (
+                            <div className="flex items-center gap-1">
+                              <Shield className="w-3 h-3" />
+                              Root Admin
+                            </div>
+                          ) : user.userType === "SYSTEM_USER" ? (
                             <div className="flex items-center gap-1">
                               <ShieldCheck className="w-3 h-3" />
                               Admin
                             </div>
-                          ) : (
+                          ) : user.userType === "PARTNER_USER" ? (
                             <div className="flex items-center gap-1">
                               <Building2 className="w-3 h-3" />
                               Partner
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-1">
+                              <Building2 className="w-3 h-3" />
+                              Agent
                             </div>
                           )}
                         </Badge>
@@ -413,13 +418,13 @@ export default function UsersPage() {
                         </p>
                       </TableCell>
                       <TableCell className="min-w-[220px]">
-                        {user.partner ? (
+                        {user.partnerName ? (
                           <div>
                             <p className="font-medium text-obus-primary dark:text-white">
-                              {user.partner.name}
+                              {user.partnerName}
                             </p>
                             <p className="text-xs text-obus-text-secondary dark:text-obus-text-light">
-                              Code: {user.partner.code}
+                              Code: {user.partnerCode}
                             </p>
                           </div>
                         ) : (
@@ -430,16 +435,14 @@ export default function UsersPage() {
                       </TableCell>
                       <TableCell className="text-center min-w-[140px]">
                         <Badge
-                          variant={
-                            user.status === "active" ? "default" : "secondary"
-                          }
+                          variant={user.enabled ? "default" : "secondary"}
                           className={
-                            user.status === "active"
+                            user.enabled
                               ? "bg-green-500/20 text-green-400 hover:bg-green-500/20"
                               : "bg-gray-500/20 text-gray-400 hover:bg-gray-500/20"
                           }
                         >
-                          {user.status.toUpperCase()}
+                          {user.enabled ? "ACTIVE" : "INACTIVE"}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-center min-w-[150px]">
@@ -470,7 +473,7 @@ export default function UsersPage() {
                               Edit user
                             </DropdownMenuCheckboxItem>
                             <DropdownMenuCheckboxItem className="text-obus-text-primary dark:text-white flex items-center gap-2">
-                              {user.status === "active" ? (
+                              {user.enabled ? (
                                 <ToggleLeft className="w-4 h-4" />
                               ) : (
                                 <ToggleRight className="w-4 h-4" />
@@ -488,7 +491,9 @@ export default function UsersPage() {
                       colSpan={12}
                       className="h-24 text-center text-obus-text-secondary dark:text-obus-text-light"
                     >
-                      No results.
+                      {filterValue.trim()
+                        ? "No users found matching your search."
+                        : "No users found."}
                     </TableCell>
                   </TableRow>
                 )}
@@ -502,6 +507,31 @@ export default function UsersPage() {
                 ? `${selectedUsers.length} of ${filteredUsers.length} users selected`
                 : `Showing ${filteredUsers.length} of ${users.length} users`}
             </div>
+            {totalPages > 1 && (
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(currentPage - 1)}
+                  disabled={currentPage === 0 || isLoading}
+                  className="border-obus-primary/20 text-obus-text-primary hover:bg-obus-primary/5 dark:border-white/20 dark:text-white dark:hover:bg-white/10"
+                >
+                  Previous
+                </Button>
+                <span className="text-sm text-obus-text-secondary dark:text-obus-text-light">
+                  Page {currentPage + 1} of {totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(currentPage + 1)}
+                  disabled={currentPage >= totalPages - 1 || isLoading}
+                  className="border-obus-primary/20 text-obus-text-primary hover:bg-obus-primary/5 dark:border-white/20 dark:text-white dark:hover:bg-white/10"
+                >
+                  Next
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       </div>

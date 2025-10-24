@@ -5,8 +5,7 @@ import { useRouter } from "next/navigation";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Plus, MoreHorizontal } from "lucide-react";
-// Simple table implementation without external dependencies
+import { Plus, MoreHorizontal, Search, Filter, RefreshCw } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -23,158 +22,65 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
-export type Partner = {
-  id: number;
-  businessName: string;
-  legalName: string;
-  code: string;
-  type: "Corporate" | "Individual" | "Agency";
-  tier: "Bronze" | "Silver" | "Gold" | "Platinum";
-  contact: {
-    name: string;
-    email: string;
-    phone: string;
-  };
-  location: {
-    city: string;
-    state: string;
-    country: string;
-  };
-  status: "active" | "inactive";
-  verified: boolean;
-  commission: number;
-  created: string;
-};
+import Link from "next/link";
+import { usePartners } from "@/lib/contexts/PartnersContext";
 
 export default function PartnersPage() {
   const router = useRouter();
 
-  const partners: Partner[] = [
-    {
-      id: 1,
-      businessName: "SafariLink Coaches",
-      legalName: "SafariLink Coaches Limited",
-      code: "SFC001",
-      type: "Corporate",
-      tier: "Gold",
-      contact: {
-        name: "Juma Mwakyusa",
-        email: "juma@safarilink.co.tz",
-        phone: "+255-752-123-456",
-      },
-      location: {
-        city: "Dar es Salaam",
-        state: "Dar es Salaam Region",
-        country: "Tanzania",
-      },
-      status: "active",
-      verified: true,
-      commission: 12.5,
-      created: "2024-01-15",
-    },
-    {
-      id: 2,
-      businessName: "Coastal Express Ltd",
-      legalName: "Coastal Express Services Limited",
-      code: "CEX002",
-      type: "Agency",
-      tier: "Silver",
-      contact: {
-        name: "Neema Mshana",
-        email: "neema@coastalexpress.co.tz",
-        phone: "+255-713-987-654",
-      },
-      location: {
-        city: "Tanga",
-        state: "Tanga Region",
-        country: "Tanzania",
-      },
-      status: "active",
-      verified: true,
-      commission: 10.0,
-      created: "2024-02-20",
-    },
-    {
-      id: 3,
-      businessName: "Highland Transit",
-      legalName: "Highland Transit Solutions",
-      code: "HLT003",
-      type: "Individual",
-      tier: "Bronze",
-      contact: {
-        name: "Asha Kileo",
-        email: "asha@highlandtransit.co.tz",
-        phone: "+255-768-234-567",
-      },
-      location: {
-        city: "Arusha",
-        state: "Arusha Region",
-        country: "Tanzania",
-      },
-      status: "inactive",
-      verified: false,
-      commission: 8.5,
-      created: "2024-03-10",
-    },
-    {
-      id: 4,
-      businessName: "LakeZone Shuttles",
-      legalName: "LakeZone Shuttles Limited",
-      code: "LZS004",
-      type: "Corporate",
-      tier: "Platinum",
-      contact: {
-        name: "Emmanuel Nnko",
-        email: "emmanuel@lakezone.co.tz",
-        phone: "+255-789-345-678",
-      },
-      location: {
-        city: "Mwanza",
-        state: "Mwanza Region",
-        country: "Tanzania",
-      },
-      status: "active",
-      verified: true,
-      commission: 14.0,
-      created: "2024-04-05",
-    },
-    {
-      id: 5,
-      businessName: "Zanzibar Coastal Lines",
-      legalName: "Zanzibar Coastal Lines Limited",
-      code: "ZCL005",
-      type: "Agency",
-      tier: "Gold",
-      contact: {
-        name: "Amina Salum",
-        email: "amina@zancoast.co.tz",
-        phone: "+255-714-456-890",
-      },
-      location: {
-        city: "Zanzibar City",
-        state: "Unguja South Region",
-        country: "Tanzania",
-      },
-      status: "active",
-      verified: true,
-      commission: 11.5,
-      created: "2024-05-12",
-    },
-  ];
+  const {
+    partners,
+    stats,
+    isLoading,
+    isStatsLoading,
+    error,
+    currentPage,
+    pageSize,
+    totalPages,
+    totalItems,
+    filters,
+    loadPartners,
+    searchPartners,
+    setFilters,
+    setCurrentPage,
+    setPageSize,
+    clearError,
+  } = usePartners();
 
-  // Simple state management for filtering and selection
-  const [filterValue, setFilterValue] = React.useState("");
+  // Local state for UI interactions
+  const [searchValue, setSearchValue] = React.useState("");
   const [selectedPartners, setSelectedPartners] = React.useState<number[]>([]);
-  // Filter partners based on search input
-  const filteredPartners = partners.filter(
-    (partner) =>
-      partner.businessName.toLowerCase().includes(filterValue.toLowerCase()) ||
-      partner.legalName.toLowerCase().includes(filterValue.toLowerCase()) ||
-      partner.code.toLowerCase().includes(filterValue.toLowerCase()) ||
-      partner.location.city.toLowerCase().includes(filterValue.toLowerCase()) ||
-      partner.contact.name.toLowerCase().includes(filterValue.toLowerCase())
-  );
+  const [searchTimeout, setSearchTimeout] =
+    React.useState<NodeJS.Timeout | null>(null);
+
+  // Handle search with debouncing
+  const handleSearch = (value: string) => {
+    setSearchValue(value);
+
+    if (searchTimeout) {
+      clearTimeout(searchTimeout);
+    }
+
+    const timeout = setTimeout(() => {
+      if (value.trim()) {
+        searchPartners({
+          searchTerm: value.trim(),
+          page: 0,
+          size: pageSize,
+        });
+      } else {
+        loadPartners();
+      }
+    }, 500);
+
+    setSearchTimeout(timeout);
+  };
+
+  // Handle refresh
+  const handleRefresh = () => {
+    clearError();
+    loadPartners();
+  };
 
   // Handle individual partner selection
   const handlePartnerSelect = (partnerId: number, checked: boolean) => {
@@ -188,16 +94,24 @@ export default function PartnersPage() {
   // Handle select all
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedPartners(filteredPartners.map((partner) => partner.id));
+      setSelectedPartners(partners.map((partner) => partner.id));
     } else {
       setSelectedPartners([]);
     }
   };
 
-  // Check if all filtered partners are selected
+  // Check if all partners are selected
   const isAllSelected =
-    filteredPartners.length > 0 &&
-    selectedPartners.length === filteredPartners.length;
+    partners.length > 0 && selectedPartners.length === partners.length;
+
+  // Cleanup timeout on unmount
+  React.useEffect(() => {
+    return () => {
+      if (searchTimeout) {
+        clearTimeout(searchTimeout);
+      }
+    };
+  }, [searchTimeout]);
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -225,7 +139,11 @@ export default function PartnersPage() {
               Total Partners
             </div>
             <div className="text-2xl font-bold text-obus-primary dark:text-white">
-              247
+              {isStatsLoading ? (
+                <div className="w-8 h-8 border-2 border-obus-primary/30 border-t-obus-primary rounded-full animate-spin" />
+              ) : (
+                stats?.totalPartners?.toLocaleString() || "0"
+              )}
             </div>
             <p className="text-xs text-obus-accent mt-1">+12 this month</p>
           </div>
@@ -235,9 +153,20 @@ export default function PartnersPage() {
               Active Partners
             </div>
             <div className="text-2xl font-bold text-obus-primary dark:text-white">
-              189
+              {isStatsLoading ? (
+                <div className="w-8 h-8 border-2 border-obus-primary/30 border-t-obus-primary rounded-full animate-spin" />
+              ) : (
+                stats?.activePartners?.toLocaleString() || "0"
+              )}
             </div>
-            <p className="text-xs text-obus-accent mt-1">76% of total</p>
+            <p className="text-xs text-obus-accent mt-1">
+              {stats
+                ? `${(
+                    (stats.activePartners / stats.totalPartners) *
+                    100
+                  ).toFixed(1)}% active rate`
+                : "0% active rate"}
+            </p>
           </div>
 
           <div className="rounded-lg border border-obus-primary/10 bg-white p-6 shadow-sm transition-colors dark:border-white/20 dark:bg-white/5">
@@ -245,7 +174,11 @@ export default function PartnersPage() {
               Pending Approval
             </div>
             <div className="text-2xl font-bold text-obus-primary dark:text-white">
-              23
+              {isStatsLoading ? (
+                <div className="w-8 h-8 border-2 border-obus-primary/30 border-t-obus-primary rounded-full animate-spin" />
+              ) : (
+                stats?.pendingApproval?.toLocaleString() || "0"
+              )}
             </div>
             <p className="text-xs text-obus-text-secondary dark:text-obus-text-light mt-1">
               Awaiting review
@@ -254,14 +187,48 @@ export default function PartnersPage() {
 
           <div className="rounded-lg border border-obus-primary/10 bg-white p-6 shadow-sm transition-colors dark:border-white/20 dark:bg-white/5">
             <div className="text-sm font-medium text-obus-text-secondary dark:text-obus-text-light mb-2">
-              Total Revenue
+              Verified Partners
             </div>
             <div className="text-2xl font-bold text-obus-primary dark:text-white">
-              $124.5K
+              {isStatsLoading ? (
+                <div className="w-8 h-8 border-2 border-obus-primary/30 border-t-obus-primary rounded-full animate-spin" />
+              ) : (
+                stats?.verifiedPartners?.toLocaleString() || "0"
+              )}
             </div>
-            <p className="text-xs text-obus-accent mt-1">+15% this month</p>
+            <p className="text-xs text-obus-accent mt-1">
+              {stats
+                ? `${(
+                    (stats.verifiedPartners / stats.totalPartners) *
+                    100
+                  ).toFixed(1)}% verified`
+                : "0% verified"}
+            </p>
           </div>
         </div>
+
+        {/* Error Display */}
+        {error && (
+          <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-800 dark:border-red-800 dark:bg-red-900/20 dark:text-red-200">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                <span className="text-sm font-medium">
+                  Error loading partners
+                </span>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clearError}
+                className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-200"
+              >
+                ×
+              </Button>
+            </div>
+            <p className="text-sm mt-1">{error}</p>
+          </div>
+        )}
 
         {/* Partners Table */}
         <div className="space-y-4">
@@ -270,12 +237,27 @@ export default function PartnersPage() {
               All Partners
             </h3>
             <div className="flex items-center gap-2">
-              <Input
-                placeholder="Filter partners..."
-                value={filterValue}
-                onChange={(event) => setFilterValue(event.target.value)}
-                className="max-w-sm"
-              />
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-obus-text-secondary dark:text-obus-text-light w-4 h-4" />
+                <Input
+                  placeholder="Search partners..."
+                  value={searchValue}
+                  onChange={(event) => handleSearch(event.target.value)}
+                  className="max-w-sm pl-10"
+                />
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleRefresh}
+                disabled={isLoading}
+                className="border-obus-primary/20 text-obus-text-primary hover:bg-obus-primary/5 dark:border-white/20 dark:text-white dark:hover:bg-white/10"
+              >
+                <RefreshCw
+                  className={`w-4 h-4 mr-2 ${isLoading ? "animate-spin" : ""}`}
+                />
+                Refresh
+              </Button>
             </div>
           </div>
 
@@ -323,8 +305,20 @@ export default function PartnersPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredPartners.length ? (
-                  filteredPartners.map((partner) => (
+                {isLoading ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={11}
+                      className="h-24 text-center text-obus-text-secondary dark:text-obus-text-light"
+                    >
+                      <div className="flex items-center justify-center gap-2">
+                        <div className="w-4 h-4 border-2 border-obus-primary/30 border-t-obus-primary rounded-full animate-spin" />
+                        Loading partners...
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : partners.length ? (
+                  partners.map((partner) => (
                     <TableRow
                       key={partner.id}
                       className="border-obus-primary/10 hover:bg-obus-primary/5 dark:border-white/20 dark:hover:bg-obus-primary/20"
@@ -379,10 +373,8 @@ export default function PartnersPage() {
                         <Badge
                           variant="outline"
                           className={
-                            partner.type === "Corporate"
+                            partner.type === "COMPANY"
                               ? "bg-blue-500/20 text-blue-400 border-blue-500/30"
-                              : partner.type === "Agency"
-                              ? "bg-purple-500/20 text-purple-400 border-purple-500/30"
                               : "bg-green-500/20 text-green-400 border-green-500/30"
                           }
                         >
@@ -393,13 +385,15 @@ export default function PartnersPage() {
                         <Badge
                           variant="outline"
                           className={
-                            partner.tier === "Platinum"
+                            partner.tier === "PLATINUM"
                               ? "bg-gray-500/20 text-gray-400 border-gray-500/30"
-                              : partner.tier === "Gold"
+                              : partner.tier === "GOLD"
                               ? "bg-yellow-500/20 text-yellow-400 border-yellow-500/30"
-                              : partner.tier === "Silver"
+                              : partner.tier === "SILVER"
                               ? "bg-gray-400/20 text-gray-300 border-gray-400/30"
-                              : "bg-orange-500/20 text-orange-400 border-orange-500/30"
+                              : partner.tier === "BRONZE"
+                              ? "bg-orange-500/20 text-orange-400 border-orange-500/30"
+                              : "bg-purple-500/20 text-purple-400 border-purple-500/30"
                           }
                         >
                           {partner.tier}
@@ -408,13 +402,13 @@ export default function PartnersPage() {
                       <TableCell>
                         <div>
                           <p className="font-medium text-obus-primary dark:text-white text-sm">
-                            {partner.contact.name}
+                            {partner.contactPerson.name}
                           </p>
                           <p className="text-xs text-obus-text-secondary dark:text-obus-text-light">
-                            {partner.contact.email}
+                            {partner.contactPerson.email}
                           </p>
                           <p className="text-xs text-obus-text-secondary dark:text-obus-text-light">
-                            {partner.contact.phone}
+                            {partner.contactPerson.phone}
                           </p>
                         </div>
                       </TableCell>
@@ -432,17 +426,23 @@ export default function PartnersPage() {
                         <div className="flex flex-col gap-1">
                           <Badge
                             variant={
-                              partner.status === "active"
+                              partner.status === "ACTIVE"
                                 ? "default"
+                                : partner.status === "INACTIVE"
+                                ? "secondary"
                                 : "destructive"
                             }
                             className={
-                              partner.status === "active"
+                              partner.status === "ACTIVE"
                                 ? "bg-green-500/20 text-green-400 hover:bg-green-500/20"
-                                : "bg-red-500/20 text-red-400 hover:bg-red-500/20"
+                                : partner.status === "INACTIVE"
+                                ? "bg-gray-500/20 text-gray-400 hover:bg-gray-500/20"
+                                : partner.status === "SUSPENDED"
+                                ? "bg-red-500/20 text-red-400 hover:bg-red-500/20"
+                                : "bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/20"
                             }
                           >
-                            {partner.status.toUpperCase()}
+                            {partner.status}
                           </Badge>
                           <Badge
                             variant="outline"
@@ -458,12 +458,12 @@ export default function PartnersPage() {
                       </TableCell>
                       <TableCell className="text-center">
                         <p className="font-semibold text-obus-primary dark:text-white">
-                          {partner.commission}%
+                          {partner.commissionRate}%
                         </p>
                       </TableCell>
                       <TableCell>
                         <p className="text-sm text-obus-text-secondary dark:text-obus-text-light">
-                          {new Date(partner.created).toLocaleDateString(
+                          {new Date(partner.createdAt).toLocaleDateString(
                             "en-US",
                             {
                               year: "numeric",
@@ -485,9 +485,11 @@ export default function PartnersPage() {
                             align="end"
                             className="border border-obus-primary/10 bg-white text-obus-text-primary dark:border-white/20 dark:bg-obus-primary dark:text-white"
                           >
-                            <DropdownMenuCheckboxItem className="text-obus-text-primary dark:text-white">
-                              View Details
-                            </DropdownMenuCheckboxItem>
+                            <Link href={`/partners/${partner.uid}`}>
+                              <DropdownMenuCheckboxItem className="text-obus-text-primary dark:text-white cursor-pointer">
+                                View Details
+                              </DropdownMenuCheckboxItem>
+                            </Link>
                             <DropdownMenuCheckboxItem className="text-obus-text-primary dark:text-white">
                               Edit Partner
                             </DropdownMenuCheckboxItem>
@@ -511,7 +513,9 @@ export default function PartnersPage() {
                       colSpan={11}
                       className="h-24 text-center text-obus-text-secondary dark:text-obus-text-light"
                     >
-                      No results.
+                      {searchValue
+                        ? "No partners found matching your search."
+                        : "No partners available."}
                     </TableCell>
                   </TableRow>
                 )}
@@ -522,9 +526,38 @@ export default function PartnersPage() {
           <div className="flex items-center justify-between py-4">
             <div className="text-sm text-obus-text-secondary dark:text-obus-text-light">
               {selectedPartners.length > 0
-                ? `${selectedPartners.length} of ${filteredPartners.length} partners selected`
-                : `Showing ${filteredPartners.length} of ${partners.length} partners`}
+                ? `${selectedPartners.length} of ${partners.length} partners selected`
+                : `Showing ${partners.length} of ${totalItems} partners`}
             </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(currentPage - 1)}
+                  disabled={currentPage === 0 || isLoading}
+                  className="border-obus-primary/20 text-obus-text-primary hover:bg-obus-primary/5 dark:border-white/20 dark:text-white dark:hover:bg-white/10"
+                >
+                  Previous
+                </Button>
+
+                <span className="text-sm text-obus-text-secondary dark:text-obus-text-light">
+                  Page {currentPage + 1} of {totalPages}
+                </span>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(currentPage + 1)}
+                  disabled={currentPage >= totalPages - 1 || isLoading}
+                  className="border-obus-primary/20 text-obus-text-primary hover:bg-obus-primary/5 dark:border-white/20 dark:text-white dark:hover:bg-white/10"
+                >
+                  Next
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       </div>

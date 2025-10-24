@@ -29,6 +29,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { usePartners } from "@/lib/contexts/PartnersContext";
+import type { CreatePartnerRequestDto } from "@/lib/api/types";
 
 interface PartnerFormData {
   // Section 1: Basic Information
@@ -42,8 +44,8 @@ interface PartnerFormData {
   businessAddress: string;
 
   // Section 2: Business Details
-  type: "Corporate" | "Individual" | "Agency" | "";
-  tier: "Bronze" | "Silver" | "Gold" | "Platinum" | "";
+  type: "INDIVIDUAL" | "COMPANY" | "";
+  tier: "BRONZE" | "SILVER" | "GOLD" | "PLATINUM" | "DIAMOND" | "";
   commissionRate: string;
 
   // Section 3: Contact Person Details
@@ -64,6 +66,7 @@ interface PartnerFormData {
 
 export default function NewPartnerPage() {
   const router = useRouter();
+  const { createPartner, error, clearError } = usePartners();
   const [currentSection, setCurrentSection] = React.useState(1);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [formData, setFormData] = React.useState<PartnerFormData>({
@@ -206,16 +209,39 @@ export default function NewPartnerPage() {
 
     setIsSubmitting(true);
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      // Prepare the partner data for API
+      const partnerData: CreatePartnerRequestDto = {
+        businessName: formData.businessName,
+        legalName: formData.legalName,
+        email: formData.email,
+        phoneNumber: formData.phoneNumber,
+        businessRegistrationNumber: formData.businessRegistrationNumber,
+        taxIdentificationNumber: formData.taxIdentificationNumber,
+        businessAddress: formData.businessAddress,
+        city: formData.city,
+        state: formData.state,
+        country: formData.country,
+        postalCode: formData.postalCode,
+        type: formData.type as "INDIVIDUAL" | "COMPANY",
+        contactPersonName: formData.contactPersonName,
+        contactPersonEmail: formData.contactPersonEmail,
+        contactPersonPhone: formData.contactPersonPhone,
+        description: formData.description,
+        notes: formData.notes,
+      };
 
-      // Here you would typically make an API call to save the partner
-      console.log("Partner data:", formData);
+      // Create the partner via API
+      const response = await createPartner(partnerData);
 
-      // Redirect back to partners list
-      router.push("/partners");
+      if (response.status && response.data) {
+        // Redirect back to partners list
+        router.push("/partners");
+      } else {
+        throw new Error(response.message || "Failed to create partner");
+      }
     } catch (error) {
       console.error("Error saving partner:", error);
+      // Error is already handled by the context
     } finally {
       setIsSubmitting(false);
     }
@@ -391,9 +417,8 @@ export default function NewPartnerPage() {
                     <SelectValue placeholder="Select business type" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Corporate">Corporate</SelectItem>
-                    <SelectItem value="Individual">Individual</SelectItem>
-                    <SelectItem value="Agency">Agency</SelectItem>
+                    <SelectItem value="COMPANY">Company</SelectItem>
+                    <SelectItem value="INDIVIDUAL">Individual</SelectItem>
                   </SelectContent>
                 </Select>
                 {errors.type && (
@@ -417,10 +442,11 @@ export default function NewPartnerPage() {
                     <SelectValue placeholder="Select tier" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Bronze">Bronze</SelectItem>
-                    <SelectItem value="Silver">Silver</SelectItem>
-                    <SelectItem value="Gold">Gold</SelectItem>
-                    <SelectItem value="Platinum">Platinum</SelectItem>
+                    <SelectItem value="BRONZE">Bronze</SelectItem>
+                    <SelectItem value="SILVER">Silver</SelectItem>
+                    <SelectItem value="GOLD">Gold</SelectItem>
+                    <SelectItem value="PLATINUM">Platinum</SelectItem>
+                    <SelectItem value="DIAMOND">Diamond</SelectItem>
                   </SelectContent>
                 </Select>
                 {errors.tier && (
@@ -701,6 +727,29 @@ export default function NewPartnerPage() {
             })}
           </div>
         </div>
+
+        {/* Error Display */}
+        {error && (
+          <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-800 dark:border-red-800 dark:bg-red-900/20 dark:text-red-200">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                <span className="text-sm font-medium">
+                  Error creating partner
+                </span>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clearError}
+                className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-200"
+              >
+                ×
+              </Button>
+            </div>
+            <p className="text-sm mt-1">{error}</p>
+          </div>
+        )}
 
         {/* Form Card */}
         <Card className="border border-obus-primary/10 bg-white shadow-sm transition-colors dark:border-white/20 dark:bg-white/5">

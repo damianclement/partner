@@ -29,81 +29,10 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
-export type Role = {
-  id: number;
-  name: string;
-  description: string;
-  permissions: string[];
-  userCount: number;
-  status: "active" | "inactive";
-  createdAt: string;
-  accessLevel: "admin" | "manager" | "staff" | "viewer";
-};
+import { useRoles, type Role } from "@/lib/contexts/RolesContext";
 
 export default function UserRolesPage() {
-  const roles: Role[] = [
-    {
-      id: 1,
-      name: "Super Administrator",
-      description: "Full system access with all permissions",
-      permissions: ["all"],
-      userCount: 2,
-      status: "active",
-      createdAt: "2024-01-01",
-      accessLevel: "admin",
-    },
-    {
-      id: 2,
-      name: "Partner Manager",
-      description: "Manage partners, agents, and bookings",
-      permissions: ["partners", "agents", "bookings", "reports"],
-      userCount: 8,
-      status: "active",
-      createdAt: "2024-01-02",
-      accessLevel: "manager",
-    },
-    {
-      id: 3,
-      name: "Support Staff",
-      description: "Handle customer support and basic operations",
-      permissions: ["bookings", "customers", "tickets"],
-      userCount: 15,
-      status: "active",
-      createdAt: "2024-01-03",
-      accessLevel: "staff",
-    },
-    {
-      id: 4,
-      name: "Finance Manager",
-      description: "Manage financial operations and reports",
-      permissions: ["finance", "reports", "transactions"],
-      userCount: 3,
-      status: "active",
-      createdAt: "2024-01-04",
-      accessLevel: "manager",
-    },
-    {
-      id: 5,
-      name: "Read Only Viewer",
-      description: "View-only access to reports and data",
-      permissions: ["reports", "dashboard"],
-      userCount: 12,
-      status: "active",
-      createdAt: "2024-01-05",
-      accessLevel: "viewer",
-    },
-    {
-      id: 6,
-      name: "Legacy Role",
-      description: "Deprecated role for migration purposes",
-      permissions: ["basic"],
-      userCount: 0,
-      status: "inactive",
-      createdAt: "2023-12-15",
-      accessLevel: "staff",
-    },
-  ];
+  const { roles, stats, isLoading, isStatsLoading, error } = useRoles();
 
   // Simple state management for filtering and selection
   const [filterValue, setFilterValue] = React.useState("");
@@ -111,9 +40,9 @@ export default function UserRolesPage() {
   // Filter roles based on search input
   const filteredRoles = roles.filter(
     (role) =>
-      role.name.toLowerCase().includes(filterValue.toLowerCase()) ||
-      role.description.toLowerCase().includes(filterValue.toLowerCase()) ||
-      role.accessLevel.toLowerCase().includes(filterValue.toLowerCase())
+      role.name?.toLowerCase().includes(filterValue.toLowerCase()) ||
+      role.displayName?.toLowerCase().includes(filterValue.toLowerCase()) ||
+      role.description?.toLowerCase().includes(filterValue.toLowerCase())
   );
 
   // Handle individual role selection
@@ -137,19 +66,35 @@ export default function UserRolesPage() {
   // Check if all filtered roles are selected
   const isAllSelected =
     filteredRoles.length > 0 && selectedRoles.length === filteredRoles.length;
-  // Get access level badge styling
-  const getAccessLevelBadge = (level: string) => {
-    switch (level) {
-      case "admin":
-        return "bg-red-500/20 text-red-400 hover:bg-red-500/20";
-      case "manager":
-        return "bg-blue-500/20 text-blue-400 hover:bg-blue-500/20";
-      case "staff":
-        return "bg-green-500/20 text-green-400 hover:bg-green-500/20";
-      case "viewer":
-        return "bg-gray-500/20 text-gray-400 hover:bg-gray-500/20";
-      default:
-        return "bg-gray-500/20 text-gray-400 hover:bg-gray-500/20";
+  // Get access level badge styling based on role name
+  const getAccessLevelBadge = (roleName: string) => {
+    const name = roleName.toLowerCase();
+    if (name.includes("admin") || name.includes("administrator")) {
+      return "bg-red-500/20 text-red-400 hover:bg-red-500/20";
+    } else if (name.includes("manager")) {
+      return "bg-blue-500/20 text-blue-400 hover:bg-blue-500/20";
+    } else if (name.includes("staff") || name.includes("user")) {
+      return "bg-green-500/20 text-green-400 hover:bg-green-500/20";
+    } else if (name.includes("viewer") || name.includes("read")) {
+      return "bg-gray-500/20 text-gray-400 hover:bg-gray-500/20";
+    } else {
+      return "bg-purple-500/20 text-purple-400 hover:bg-purple-500/20";
+    }
+  };
+
+  // Get access level display name
+  const getAccessLevelDisplay = (roleName: string) => {
+    const name = roleName.toLowerCase();
+    if (name.includes("admin") || name.includes("administrator")) {
+      return "ADMIN";
+    } else if (name.includes("manager")) {
+      return "MANAGER";
+    } else if (name.includes("staff") || name.includes("user")) {
+      return "STAFF";
+    } else if (name.includes("viewer") || name.includes("read")) {
+      return "VIEWER";
+    } else {
+      return "OTHER";
     }
   };
 
@@ -178,9 +123,9 @@ export default function UserRolesPage() {
               Total Roles
             </div>
             <div className="text-2xl font-bold text-obus-primary dark:text-white">
-              6
+              {isStatsLoading ? "..." : stats?.totalRoles || roles.length}
             </div>
-            <p className="text-xs text-obus-accent mt-1">+1 this month</p>
+            <p className="text-xs text-obus-accent mt-1">System roles</p>
           </div>
 
           <div className="rounded-lg border border-obus-primary/10 bg-white p-6 shadow-sm transition-colors dark:border-white/20 dark:bg-white/5">
@@ -188,9 +133,17 @@ export default function UserRolesPage() {
               Active Roles
             </div>
             <div className="text-2xl font-bold text-obus-primary dark:text-white">
-              5
+              {isStatsLoading
+                ? "..."
+                : stats?.activeRoles || roles.filter((r) => r.active).length}
             </div>
-            <p className="text-xs text-obus-accent mt-1">83% active</p>
+            <p className="text-xs text-obus-accent mt-1">
+              {stats?.totalRoles
+                ? `${Math.round(
+                    (stats.activeRoles / stats.totalRoles) * 100
+                  )}% active`
+                : "Active roles"}
+            </p>
           </div>
 
           <div className="rounded-lg border border-obus-primary/10 bg-white p-6 shadow-sm transition-colors dark:border-white/20 dark:bg-white/5">
@@ -198,7 +151,11 @@ export default function UserRolesPage() {
               Admin Roles
             </div>
             <div className="text-2xl font-bold text-obus-primary dark:text-white">
-              1
+              {isStatsLoading
+                ? "..."
+                : stats?.rolesByType?.admin ||
+                  roles.filter((r) => r.name.toLowerCase().includes("admin"))
+                    .length}
             </div>
             <p className="text-xs text-obus-text-secondary dark:text-obus-text-light mt-1">
               System admins
@@ -210,11 +167,21 @@ export default function UserRolesPage() {
               Total Users
             </div>
             <div className="text-2xl font-bold text-obus-primary dark:text-white">
-              40
+              {isStatsLoading
+                ? "..."
+                : stats?.totalUsers ||
+                  roles.reduce((sum, role) => sum + role.userCount, 0)}
             </div>
             <p className="text-xs text-obus-accent mt-1">Across all roles</p>
           </div>
         </div>
+
+        {/* Error Display */}
+        {error && (
+          <div className="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-900/20">
+            <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+          </div>
+        )}
 
         {/* Roles Table */}
         <div className="space-y-4">
@@ -267,7 +234,16 @@ export default function UserRolesPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredRoles.length ? (
+                {isLoading ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={8}
+                      className="h-24 text-center text-obus-text-secondary dark:text-obus-text-light"
+                    >
+                      Loading roles...
+                    </TableCell>
+                  </TableRow>
+                ) : filteredRoles.length ? (
                   filteredRoles.map((role) => (
                     <TableRow
                       key={role.id}
@@ -285,7 +261,7 @@ export default function UserRolesPage() {
                       <TableCell>
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 bg-obus-accent rounded-lg flex items-center justify-center text-white font-bold text-sm">
-                            {role.accessLevel === "admin" ? (
+                            {role.name.toLowerCase().includes("admin") ? (
                               <ShieldCheck className="w-4 h-4" />
                             ) : (
                               <Shield className="w-4 h-4" />
@@ -293,10 +269,11 @@ export default function UserRolesPage() {
                           </div>
                           <div>
                             <p className="font-medium text-obus-primary dark:text-white">
-                              {role.name}
+                              {role.displayName || role.name}
                             </p>
                             <p className="text-xs text-obus-text-secondary dark:text-obus-text-light">
-                              Created: {role.createdAt}
+                              Created:{" "}
+                              {new Date(role.createdAt).toLocaleDateString()}
                             </p>
                           </div>
                         </div>
@@ -307,17 +284,15 @@ export default function UserRolesPage() {
                         </p>
                       </TableCell>
                       <TableCell className="text-center">
-                        <Badge
-                          className={getAccessLevelBadge(role.accessLevel)}
-                        >
-                          {role.accessLevel.toUpperCase()}
+                        <Badge className={getAccessLevelBadge(role.name)}>
+                          {getAccessLevelDisplay(role.name)}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-center">
                         <div className="flex items-center justify-center gap-2">
                           <Key className="w-4 h-4 text-obus-text-secondary dark:text-obus-text-light" />
                           <p className="font-semibold text-obus-primary dark:text-white">
-                            {role.permissions.length}
+                            {role.permissionCount}
                           </p>
                         </div>
                       </TableCell>
@@ -331,16 +306,14 @@ export default function UserRolesPage() {
                       </TableCell>
                       <TableCell className="text-center">
                         <Badge
-                          variant={
-                            role.status === "active" ? "default" : "secondary"
-                          }
+                          variant={role.active ? "default" : "secondary"}
                           className={
-                            role.status === "active"
+                            role.active
                               ? "bg-green-500/20 text-green-400 hover:bg-green-500/20"
                               : "bg-gray-500/20 text-gray-400 hover:bg-gray-500/20"
                           }
                         >
-                          {role.status.toUpperCase()}
+                          {role.active ? "ACTIVE" : "INACTIVE"}
                         </Badge>
                       </TableCell>
                       <TableCell>
@@ -375,7 +348,9 @@ export default function UserRolesPage() {
                       colSpan={8}
                       className="h-24 text-center text-obus-text-secondary dark:text-obus-text-light"
                     >
-                      No results.
+                      {filterValue.trim()
+                        ? "No roles found matching your search."
+                        : "No roles found."}
                     </TableCell>
                   </TableRow>
                 )}

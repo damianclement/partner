@@ -1,119 +1,53 @@
 "use client";
 
 import * as React from "react";
-import { useMemo } from "react";
+import { useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Users, CalendarDays, User2, Building2 } from "lucide-react";
-
-type Agent = {
-  id: number;
-  agentCode: string;
-  partnerAgentNumber: string;
-  businessName: string;
-  passName: string;
-  contactPerson: {
-    name: string;
-    email: string;
-    phone: string;
-  };
-  agentType: "Individual" | "Corporate" | "Agency";
-  partner: {
-    code: string;
-    businessName: string;
-  };
-  status: "active" | "inactive" | "suspended";
-  registrationDate: string;
-};
-
-// Demo data source (should be replaced by API in real app)
-const AGENTS: Agent[] = [
-  {
-    id: 1,
-    agentCode: "AGT001",
-    partnerAgentNumber: "SFC-AG-01",
-    businessName: "Nyota Travel Services",
-    passName: "Nyota Travel",
-    contactPerson: {
-      name: "Neema Mwenda",
-      email: "neema.mwenda@nyotatravel.co.tz",
-      phone: "+255-715-200-345",
-    },
-    agentType: "Individual",
-    partner: {
-      code: "SFC001",
-      businessName: "SafariLink Coaches",
-    },
-    status: "active",
-    registrationDate: "2024-01-15",
-  },
-  {
-    id: 2,
-    agentCode: "AGT002",
-    partnerAgentNumber: "CEX-AG-02",
-    businessName: "Swahili Coastal Agency",
-    passName: "Swahili Coastal",
-    contactPerson: {
-      name: "Abdallah Said",
-      email: "abdallah.said@swahilicostal.co.tz",
-      phone: "+255-718-456-210",
-    },
-    agentType: "Agency",
-    partner: {
-      code: "CEX002",
-      businessName: "Coastal Express Ltd",
-    },
-    status: "active",
-    registrationDate: "2024-02-20",
-  },
-  {
-    id: 3,
-    agentCode: "AGT003",
-    partnerAgentNumber: "HLT-AG-03",
-    businessName: "Kilimanjaro Transport Solutions",
-    passName: "Kilimanjaro Transport",
-    contactPerson: {
-      name: "Asha Kileo",
-      email: "asha.kileo@kilimanjaro.co.tz",
-      phone: "+255-767-654-320",
-    },
-    agentType: "Corporate",
-    partner: {
-      code: "HLT003",
-      businessName: "Highland Transit",
-    },
-    status: "inactive",
-    registrationDate: "2024-03-10",
-  },
-  {
-    id: 4,
-    agentCode: "AGT004",
-    partnerAgentNumber: "LZS-AG-04",
-    businessName: "Victoria Fleet Managers",
-    passName: "Victoria Fleet",
-    contactPerson: {
-      name: "Emmanuel Nnko",
-      email: "emmanuel.nnko@victoriafleet.co.tz",
-      phone: "+255-789-876-540",
-    },
-    agentType: "Individual",
-    partner: {
-      code: "LZS004",
-      businessName: "LakeZone Shuttles",
-    },
-    status: "suspended",
-    registrationDate: "2023-12-05",
-  },
-];
+import {
+  ArrowLeft,
+  Users,
+  CalendarDays,
+  User2,
+  Building2,
+  RefreshCw,
+} from "lucide-react";
+import { useAgents } from "@/lib/contexts/AgentsContext";
 
 export default function AgentDetailPage() {
   const params = useParams<{ id: string }>();
-  const agentId = Number(params?.id);
+  const agentUid = params?.id as string;
 
-  const agent = useMemo(() => AGENTS.find((a) => a.id === agentId), [agentId]);
+  const {
+    currentAgent,
+    isLoading,
+    error,
+    loadAgentByUid,
+    clearError,
+    clearCurrentAgent,
+  } = useAgents();
+
+  // Load agent data when component mounts or agentUid changes
+  useEffect(() => {
+    if (agentUid) {
+      loadAgentByUid(agentUid);
+    }
+
+    // Cleanup when component unmounts
+    return () => {
+      clearCurrentAgent();
+    };
+  }, [agentUid, loadAgentByUid, clearCurrentAgent]);
+
+  const handleRefresh = () => {
+    if (agentUid) {
+      clearError();
+      loadAgentByUid(agentUid);
+    }
+  };
 
   return (
     <DashboardLayout>
@@ -126,14 +60,55 @@ export default function AgentDetailPage() {
               View full profile and activity for this agent
             </p>
           </div>
-          <Link href="/agents">
-            <Button variant="outline">
-              <ArrowLeft className="w-4 h-4 mr-2" /> Back to Agents
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              onClick={handleRefresh}
+              disabled={isLoading}
+              className="border-obus-primary/20 text-obus-text-primary hover:bg-obus-primary/5 dark:border-white/20 dark:text-white dark:hover:bg-white/10"
+            >
+              <RefreshCw
+                className={`w-4 h-4 mr-2 ${isLoading ? "animate-spin" : ""}`}
+              />
+              Refresh
             </Button>
-          </Link>
+            <Link href="/agents">
+              <Button variant="outline">
+                <ArrowLeft className="w-4 h-4 mr-2" /> Back to Agents
+              </Button>
+            </Link>
+          </div>
         </div>
 
-        {!agent ? (
+        {/* Error Display */}
+        {error && (
+          <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-800 dark:border-red-800 dark:bg-red-900/20 dark:text-red-200">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                <span className="text-sm font-medium">Error loading agent</span>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clearError}
+                className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-200"
+              >
+                ×
+              </Button>
+            </div>
+            <p className="text-sm mt-1">{error}</p>
+          </div>
+        )}
+
+        {isLoading ? (
+          <div className="rounded-lg border border-obus-primary/10 bg-white p-6 shadow-sm dark:border-white/20 dark:bg-white/5">
+            <div className="flex items-center justify-center gap-2 text-obus-text-secondary dark:text-obus-text-light">
+              <div className="w-4 h-4 border-2 border-obus-primary/30 border-t-obus-primary rounded-full animate-spin" />
+              Loading agent details...
+            </div>
+          </div>
+        ) : !currentAgent ? (
           <div className="rounded-lg border border-obus-primary/10 bg-white p-6 shadow-sm text-obus-text-secondary dark:border-white/20 dark:bg-white/5 dark:text-obus-text-light">
             Agent not found.
           </div>
@@ -147,29 +122,31 @@ export default function AgentDetailPage() {
                     Agent Code
                   </div>
                   <div className="text-2xl font-bold text-obus-primary dark:text-white">
-                    {agent.agentCode}
+                    {currentAgent.code}
                   </div>
                   <div className="mt-2 text-sm text-obus-text-secondary dark:text-obus-text-light">
-                    Partner Agent #: {agent.partnerAgentNumber}
+                    Partner Agent #: {currentAgent.partnerAgentNumber}
                   </div>
                 </div>
                 <Badge
                   variant={
-                    agent.status === "active"
+                    currentAgent.status === "active"
                       ? "default"
-                      : agent.status === "inactive"
+                      : currentAgent.status === "inactive"
                       ? "secondary"
                       : "destructive"
                   }
                   className={
-                    agent.status === "active"
+                    currentAgent.status === "active"
                       ? "bg-green-500/20 text-green-400 hover:bg-green-500/20"
-                      : agent.status === "inactive"
+                      : currentAgent.status === "inactive"
                       ? "bg-gray-500/20 text-gray-400 hover:bg-gray-500/20"
-                      : "bg-red-500/20 text-red-400 hover:bg-red-500/20"
+                      : currentAgent.status === "suspended"
+                      ? "bg-red-500/20 text-red-400 hover:bg-red-500/20"
+                      : "bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/20"
                   }
                 >
-                  {agent.status.toUpperCase()}
+                  {currentAgent.status.toUpperCase()}
                 </Badge>
               </div>
 
@@ -180,10 +157,10 @@ export default function AgentDetailPage() {
                     <span>Business</span>
                   </div>
                   <div className="text-obus-primary dark:text-white font-medium">
-                    {agent.businessName}
+                    {currentAgent.businessName}
                   </div>
                   <div className="text-sm text-obus-text-secondary dark:text-obus-text-light">
-                    Pass: {agent.passName}
+                    Pass: {currentAgent.passName}
                   </div>
                 </div>
 
@@ -193,10 +170,10 @@ export default function AgentDetailPage() {
                     <span>Partner</span>
                   </div>
                   <div className="text-obus-primary dark:text-white font-medium">
-                    {agent.partner.businessName}
+                    {currentAgent.partner.businessName}
                   </div>
                   <div className="text-sm text-obus-text-secondary dark:text-obus-text-light">
-                    Code: {agent.partner.code}
+                    Code: {currentAgent.partner.code}
                   </div>
                 </div>
 
@@ -206,14 +183,18 @@ export default function AgentDetailPage() {
                     <span>Contact Person</span>
                   </div>
                   <div className="text-obus-primary dark:text-white font-medium">
-                    {agent.contactPerson.name}
+                    {currentAgent.contactPerson.name}
                   </div>
-                  <div className="text-sm text-obus-text-secondary dark:text-obus-text-light">
-                    {agent.contactPerson.email}
-                  </div>
-                  <div className="text-sm text-obus-text-secondary dark:text-obus-text-light">
-                    {agent.contactPerson.phone}
-                  </div>
+                  {currentAgent.contactPerson.email && (
+                    <div className="text-sm text-obus-text-secondary dark:text-obus-text-light">
+                      {currentAgent.contactPerson.email}
+                    </div>
+                  )}
+                  {currentAgent.contactPerson.phone && (
+                    <div className="text-sm text-obus-text-secondary dark:text-obus-text-light">
+                      {currentAgent.contactPerson.phone}
+                    </div>
+                  )}
                 </div>
 
                 <div className="rounded-md border border-obus-primary/10 bg-white p-4 dark:border-white/20 dark:bg-white/0">
@@ -222,13 +203,13 @@ export default function AgentDetailPage() {
                     <span>Registration</span>
                   </div>
                   <div className="text-obus-primary dark:text-white font-medium">
-                    {new Date(agent.registrationDate).toLocaleDateString(
+                    {new Date(currentAgent.registrationDate).toLocaleDateString(
                       "en-US",
                       { year: "numeric", month: "short", day: "numeric" }
                     )}
                   </div>
                   <div className="text-sm text-obus-text-secondary dark:text-obus-text-light">
-                    Type: {agent.agentType}
+                    Type: {currentAgent.agentType}
                   </div>
                 </div>
               </div>

@@ -23,126 +23,29 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import Link from "next/link";
-
-export type Booking = {
-  id: string;
-  externalBookingId: string;
-  customer: {
-    name: string;
-    phone: string;
-  };
-  route: {
-    name: string;
-    busNumber: string;
-  };
-  departure: {
-    date: string;
-    time: string;
-  };
-  seatNumbers: string;
-  bookingStatus: "confirmed" | "pending" | "cancelled" | "completed";
-  paymentStatus: "paid" | "pending" | "failed" | "refunded";
-  amount: {
-    total: string;
-    currency: string;
-  };
-};
+import { useBookings, type Booking } from "@/lib/contexts/BookingsContext";
 
 export default function BookingsPage() {
-  const bookings: Booking[] = [
-    {
-      id: "BK-001",
-      externalBookingId: "EXT-BK-001",
-      customer: {
-        name: "Amina Mwakyusa",
-        phone: "+255-752-123-456",
-      },
-      route: {
-        name: "Dar es Salaam - Dodoma",
-        busNumber: "DAR-001-DDM",
-      },
-      departure: {
-        date: "2024-01-15",
-        time: "14:30",
-      },
-      seatNumbers: "12A",
-      bookingStatus: "confirmed",
-      paymentStatus: "paid",
-      amount: {
-        total: "45,000",
-        currency: "TZS",
-      },
-    },
-    {
-      id: "BK-002",
-      externalBookingId: "EXT-BK-002",
-      customer: {
-        name: "Neema Komba",
-        phone: "+255-713-987-654",
-      },
-      route: {
-        name: "Dodoma - Mwanza",
-        busNumber: "DDM-002-MWZ",
-      },
-      departure: {
-        date: "2024-01-15",
-        time: "16:00",
-      },
-      seatNumbers: "8B",
-      bookingStatus: "pending",
-      paymentStatus: "pending",
-      amount: {
-        total: "38,500",
-        currency: "TZS",
-      },
-    },
-    {
-      id: "BK-003",
-      externalBookingId: "EXT-BK-003",
-      customer: {
-        name: "Hassan Jafari",
-        phone: "+255-768-234-567",
-      },
-      route: {
-        name: "Dar es Salaam - Arusha",
-        busNumber: "DAR-003-ARU",
-      },
-      departure: {
-        date: "2024-01-16",
-        time: "08:00",
-      },
-      seatNumbers: "15C",
-      bookingStatus: "completed",
-      paymentStatus: "paid",
-      amount: {
-        total: "65,000",
-        currency: "TZS",
-      },
-    },
-    {
-      id: "BK-004",
-      externalBookingId: "EXT-BK-004",
-      customer: {
-        name: "Grace Mushi",
-        phone: "+255-789-345-678",
-      },
-      route: {
-        name: "Mwanza - Arusha",
-        busNumber: "MWZ-004-ARU",
-      },
-      departure: {
-        date: "2024-01-16",
-        time: "10:15",
-      },
-      seatNumbers: "4D",
-      bookingStatus: "cancelled",
-      paymentStatus: "refunded",
-      amount: {
-        total: "42,000",
-        currency: "TZS",
-      },
-    },
-  ];
+  const {
+    bookings,
+    stats,
+    isLoading,
+    isStatsLoading,
+    error,
+    currentPage,
+    pageSize,
+    totalPages,
+    totalItems,
+    searchBookings,
+    setCurrentPage,
+    setPageSize,
+    calculateStatsFromBookings,
+  } = useBookings();
+
+  // Calculate statistics from current bookings data
+  const calculatedStats = React.useMemo(() => {
+    return calculateStatsFromBookings();
+  }, [calculateStatsFromBookings]);
 
   // Simple state management for filtering and selection
   const [filterValue, setFilterValue] = React.useState("");
@@ -150,16 +53,20 @@ export default function BookingsPage() {
   // Filter bookings based on search input
   const filteredBookings = bookings.filter(
     (booking) =>
-      booking.externalBookingId
-        .toLowerCase()
-        .includes(filterValue.toLowerCase()) ||
+      booking.uid.toLowerCase().includes(filterValue.toLowerCase()) ||
       booking.customer.name.toLowerCase().includes(filterValue.toLowerCase()) ||
       booking.customer.phone
         .toLowerCase()
         .includes(filterValue.toLowerCase()) ||
       booking.route.name.toLowerCase().includes(filterValue.toLowerCase()) ||
-      booking.route.busNumber.toLowerCase().includes(filterValue.toLowerCase())
+      booking.bus.busNumber.toLowerCase().includes(filterValue.toLowerCase())
   );
+
+  // Handle search input change
+  const handleSearchChange = (value: string) => {
+    setFilterValue(value);
+    searchBookings(value);
+  };
 
   // Handle individual booking selection
   const handleBookingSelect = (bookingId: string, checked: boolean) => {
@@ -173,7 +80,7 @@ export default function BookingsPage() {
   // Handle select all
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedBookings(filteredBookings.map((booking) => booking.id));
+      setSelectedBookings(filteredBookings.map((booking) => booking.uid));
     } else {
       setSelectedBookings([]);
     }
@@ -183,6 +90,18 @@ export default function BookingsPage() {
   const isAllSelected =
     filteredBookings.length > 0 &&
     selectedBookings.length === filteredBookings.length;
+
+  // Function to extract seat identifier from full seat code
+  const extractSeatIdentifier = (seatCode: string): string => {
+    // Extract the last part after the last dash (e.g., "L-0-0-A1" -> "A1")
+    const parts = seatCode.split("-");
+    return parts[parts.length - 1];
+  };
+
+  // Function to format seat numbers for display
+  const formatSeatNumbers = (seatNumbers: string[]): string => {
+    return seatNumbers.map((seat) => extractSeatIdentifier(seat)).join(", ");
+  };
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -203,9 +122,13 @@ export default function BookingsPage() {
               Total Bookings
             </div>
             <div className="text-2xl font-bold text-obus-primary dark:text-white">
-              8,945
+              {isLoading ? "..." : calculatedStats.totalBookings}
             </div>
-            <p className="text-xs text-obus-accent mt-1">+23% this month</p>
+            <p className="text-xs text-obus-accent mt-1">
+              {totalItems > 0
+                ? `${totalItems} total in system`
+                : "No bookings available"}
+            </p>
           </div>
 
           <div className="rounded-lg border border-obus-primary/10 bg-white p-6 shadow-sm transition-colors dark:border-white/20 dark:bg-white/5">
@@ -213,10 +136,16 @@ export default function BookingsPage() {
               Confirmed
             </div>
             <div className="text-2xl font-bold text-obus-primary dark:text-white">
-              7,892
+              {isLoading ? "..." : calculatedStats.confirmedBookings}
             </div>
             <p className="text-xs text-obus-accent mt-1">
-              88.2% confirmation rate
+              {calculatedStats.totalBookings > 0
+                ? `${(
+                    (calculatedStats.confirmedBookings /
+                      calculatedStats.totalBookings) *
+                    100
+                  ).toFixed(1)}% confirmation rate`
+                : "0% confirmation rate"}
             </p>
           </div>
 
@@ -225,10 +154,16 @@ export default function BookingsPage() {
               Pending
             </div>
             <div className="text-2xl font-bold text-obus-primary dark:text-white">
-              847
+              {isLoading ? "..." : calculatedStats.pendingBookings}
             </div>
             <p className="text-xs text-obus-text-secondary dark:text-obus-text-light mt-1">
-              Awaiting payment
+              {calculatedStats.totalBookings > 0
+                ? `${(
+                    (calculatedStats.pendingBookings /
+                      calculatedStats.totalBookings) *
+                    100
+                  ).toFixed(1)}% pending rate`
+                : "No pending bookings"}
             </p>
           </div>
 
@@ -237,11 +172,68 @@ export default function BookingsPage() {
               Cancelled
             </div>
             <div className="text-2xl font-bold text-obus-primary dark:text-white">
-              206
+              {isLoading ? "..." : calculatedStats.cancelledBookings}
             </div>
             <p className="text-xs text-obus-text-secondary dark:text-obus-text-light mt-1">
-              2.3% cancellation rate
+              {calculatedStats.totalBookings > 0
+                ? `${(
+                    (calculatedStats.cancelledBookings /
+                      calculatedStats.totalBookings) *
+                    100
+                  ).toFixed(1)}% cancellation rate`
+                : "0% cancellation rate"}
             </p>
+          </div>
+        </div>
+
+        {/* Additional Stats Row */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="rounded-lg border border-obus-primary/10 bg-white p-6 shadow-sm transition-colors dark:border-white/20 dark:bg-white/5">
+            <div className="text-sm font-medium text-obus-text-secondary dark:text-obus-text-light mb-2">
+              Completed
+            </div>
+            <div className="text-2xl font-bold text-obus-primary dark:text-white">
+              {isLoading ? "..." : calculatedStats.completedBookings}
+            </div>
+            <p className="text-xs text-obus-accent mt-1">
+              {calculatedStats.totalBookings > 0
+                ? `${(
+                    (calculatedStats.completedBookings /
+                      calculatedStats.totalBookings) *
+                    100
+                  ).toFixed(1)}% completion rate`
+                : "No completed bookings"}
+            </p>
+          </div>
+
+          <div className="rounded-lg border border-obus-primary/10 bg-white p-6 shadow-sm transition-colors dark:border-white/20 dark:bg-white/5">
+            <div className="text-sm font-medium text-obus-text-secondary dark:text-obus-text-light mb-2">
+              Total Revenue
+            </div>
+            <div className="text-2xl font-bold text-obus-primary dark:text-white">
+              {isLoading
+                ? "..."
+                : `${
+                    calculatedStats.currency
+                  } ${calculatedStats.totalRevenue.toLocaleString()}`}
+            </div>
+            <p className="text-xs text-obus-accent mt-1">
+              From current page bookings
+            </p>
+          </div>
+
+          <div className="rounded-lg border border-obus-primary/10 bg-white p-6 shadow-sm transition-colors dark:border-white/20 dark:bg-white/5">
+            <div className="text-sm font-medium text-obus-text-secondary dark:text-obus-text-light mb-2">
+              Average Value
+            </div>
+            <div className="text-2xl font-bold text-obus-primary dark:text-white">
+              {isLoading
+                ? "..."
+                : `${
+                    calculatedStats.currency
+                  } ${calculatedStats.averageBookingValue.toLocaleString()}`}
+            </div>
+            <p className="text-xs text-obus-accent mt-1">Per booking</p>
           </div>
         </div>
 
@@ -255,7 +247,7 @@ export default function BookingsPage() {
               <Input
                 placeholder="Filter bookings..."
                 value={filterValue}
-                onChange={(event) => setFilterValue(event.target.value)}
+                onChange={(event) => handleSearchChange(event.target.value)}
                 className="max-w-sm"
               />
             </div>
@@ -302,24 +294,44 @@ export default function BookingsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredBookings.length ? (
+                {isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={10} className="h-24 text-center">
+                      <div className="flex items-center justify-center">
+                        <div className="w-6 h-6 border-2 border-obus-primary border-t-transparent rounded-full animate-spin"></div>
+                        <span className="ml-2 text-obus-text-secondary dark:text-obus-text-light">
+                          Loading bookings...
+                        </span>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : error ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={10}
+                      className="h-24 text-center text-red-500"
+                    >
+                      {error}
+                    </TableCell>
+                  </TableRow>
+                ) : filteredBookings.length ? (
                   filteredBookings.map((booking) => (
                     <TableRow
-                      key={booking.id}
+                      key={booking.uid}
                       className="border-obus-primary/10 hover:bg-obus-primary/5 dark:border-white/20 dark:hover:bg-obus-primary/20"
                     >
                       <TableCell>
                         <Checkbox
-                          checked={selectedBookings.includes(booking.id)}
+                          checked={selectedBookings.includes(booking.uid)}
                           onCheckedChange={(checked) =>
-                            handleBookingSelect(booking.id, !!checked)
+                            handleBookingSelect(booking.uid, !!checked)
                           }
                           aria-label={`Select ${booking.customer.name}`}
                         />
                       </TableCell>
                       <TableCell>
                         <p className="font-mono text-sm font-semibold text-obus-primary dark:text-white">
-                          {booking.externalBookingId}
+                          {booking.uid}
                         </p>
                       </TableCell>
                       <TableCell>
@@ -345,7 +357,7 @@ export default function BookingsPage() {
                               {booking.route.name}
                             </p>
                             <p className="text-xs text-obus-text-secondary dark:text-obus-text-light">
-                              {booking.route.busNumber}
+                              {booking.bus.busNumber}
                             </p>
                           </div>
                         </div>
@@ -355,73 +367,71 @@ export default function BookingsPage() {
                           <Calendar className="w-4 h-4 text-obus-text-secondary dark:text-obus-text-light" />
                           <div>
                             <p className="font-semibold text-obus-primary dark:text-white">
-                              {booking.departure.date}
+                              {booking.departureDate}
                             </p>
                             <p className="text-xs text-obus-text-secondary dark:text-obus-text-light">
-                              {booking.departure.time}
+                              {booking.departureTime}
                             </p>
                           </div>
                         </div>
                       </TableCell>
                       <TableCell className="text-center">
                         <p className="font-semibold text-obus-primary dark:text-white">
-                          {booking.seatNumbers}
+                          {formatSeatNumbers(booking.seatNumbers)}
                         </p>
                       </TableCell>
                       <TableCell className="text-center">
                         <Badge
                           variant={
-                            booking.bookingStatus === "confirmed"
+                            booking.bookingStatus === "CONFIRMED"
                               ? "default"
-                              : booking.bookingStatus === "completed"
+                              : booking.bookingStatus === "COMPLETED"
                               ? "default"
-                              : booking.bookingStatus === "pending"
+                              : booking.bookingStatus === "PENDING"
                               ? "secondary"
                               : "destructive"
                           }
                           className={
-                            booking.bookingStatus === "confirmed"
+                            booking.bookingStatus === "CONFIRMED"
                               ? "bg-green-500/20 text-green-400 hover:bg-green-500/20"
-                              : booking.bookingStatus === "completed"
+                              : booking.bookingStatus === "COMPLETED"
                               ? "bg-blue-500/20 text-blue-400 hover:bg-blue-500/20"
-                              : booking.bookingStatus === "pending"
+                              : booking.bookingStatus === "PENDING"
                               ? "bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/20"
                               : "bg-red-500/20 text-red-400 hover:bg-red-500/20"
                           }
                         >
-                          {booking.bookingStatus.toUpperCase()}
+                          {booking.bookingStatus}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-center">
                         <Badge
                           variant={
-                            booking.paymentStatus === "paid"
+                            booking.paymentStatus === "PAID"
                               ? "default"
-                              : booking.paymentStatus === "pending"
+                              : booking.paymentStatus === "PENDING"
                               ? "secondary"
-                              : booking.paymentStatus === "failed"
+                              : booking.paymentStatus === "FAILED"
                               ? "destructive"
                               : "secondary"
                           }
                           className={
-                            booking.paymentStatus === "paid"
+                            booking.paymentStatus === "PAID"
                               ? "bg-green-500/20 text-green-400 hover:bg-green-500/20"
-                              : booking.paymentStatus === "pending"
+                              : booking.paymentStatus === "PENDING"
                               ? "bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/20"
-                              : booking.paymentStatus === "failed"
+                              : booking.paymentStatus === "FAILED"
                               ? "bg-red-500/20 text-red-400 hover:bg-red-500/20"
                               : "bg-gray-500/20 text-gray-400 hover:bg-gray-500/20"
                           }
                         >
-                          {booking.paymentStatus.toUpperCase()}
+                          {booking.paymentStatus}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-center">
                         <p className="font-semibold text-obus-primary dark:text-white">
-                          TSh {booking.amount.total}
-                        </p>
-                        <p className="text-xs text-obus-text-secondary dark:text-obus-text-light">
-                          {booking.amount.currency}
+                          {booking.currency}{" "}
+                          {booking.totalAmount.toLocaleString()}
                         </p>
                       </TableCell>
                       <TableCell>
@@ -436,17 +446,11 @@ export default function BookingsPage() {
                             align="end"
                             className="border border-obus-primary/10 bg-white text-obus-text-primary dark:border-white/20 dark:bg-obus-primary dark:text-white"
                           >
-                            <Link href={`/bookings/${booking.id}`}>
+                            <Link href={`/bookings/${booking.uid}`}>
                               <DropdownMenuCheckboxItem className="text-obus-text-primary dark:text-white cursor-pointer">
                                 View Details
                               </DropdownMenuCheckboxItem>
                             </Link>
-                            <DropdownMenuCheckboxItem className="text-obus-text-primary dark:text-white">
-                              Edit Booking
-                            </DropdownMenuCheckboxItem>
-                            <DropdownMenuCheckboxItem className="text-obus-text-primary dark:text-white">
-                              Cancel Booking
-                            </DropdownMenuCheckboxItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>
@@ -458,7 +462,9 @@ export default function BookingsPage() {
                       colSpan={10}
                       className="h-24 text-center text-obus-text-secondary dark:text-obus-text-light"
                     >
-                      No results.
+                      {filterValue
+                        ? "No bookings found matching your search."
+                        : "No bookings available."}
                     </TableCell>
                   </TableRow>
                 )}
@@ -470,7 +476,7 @@ export default function BookingsPage() {
             <div className="text-sm text-obus-text-secondary dark:text-obus-text-light">
               {selectedBookings.length > 0
                 ? `${selectedBookings.length} of ${filteredBookings.length} bookings selected`
-                : `Showing ${filteredBookings.length} of ${bookings.length} bookings`}
+                : `Showing ${filteredBookings.length} of ${totalItems} bookings`}
             </div>
           </div>
         </div>

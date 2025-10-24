@@ -153,12 +153,6 @@ const navigationItems: NavigationItem[] = [
         allowedUserTypes: ["ROOT_USER", "SYSTEM_USER"],
         allowedUserRoles: ["ROOT_ADMIN", "SYSTEM_ADMIN"],
       },
-      {
-        name: "Create User",
-        href: "/users/new",
-        allowedUserTypes: ["ROOT_USER", "SYSTEM_USER"],
-        allowedUserRoles: ["ROOT_ADMIN", "SYSTEM_ADMIN"],
-      },
     ],
   },
   {

@@ -5,24 +5,11 @@
 
 // Determine API base URL based on environment
 export const getApiBaseUrl = (): string => {
-  // Check if we're in development environment (both client and server side)
-  const isDevelopment =
-    typeof process !== "undefined" && process.env.NODE_ENV === "development";
-
-  // Also check client-side localhost
-  const isLocalhost =
-    typeof window !== "undefined" && window.location.hostname === "localhost";
-
-  const baseUrl =
-    isDevelopment || isLocalhost
-      ? "http://localhost:3000/api"
-      : "https://obus-partners.otapp.live/api";
+  const baseUrl = "https://obus-partners.otapp.live/api";
 
   // Debug logging
   if (typeof window !== "undefined") {
     console.log("🔧 API Config Debug:", {
-      isDevelopment,
-      isLocalhost,
       hostname: window.location.hostname,
       nodeEnv: process.env.NODE_ENV,
       baseUrl,
@@ -114,6 +101,7 @@ export const API_ENDPOINTS = {
   // Agents
   AGENTS: {
     LIST: "/admin/v1/agents",
+    GET_BY_UID: "/admin/v1/agents/uid/{uid}",
     GET_BY_PARTNER_UID: "/admin/v1/agents/partner/uid/{partnerUid}",
     UPDATE_STATUS: "/admin/v1/agents/uid/{uid}/status",
     RESET_PASSWORD: "/admin/v1/agents/uid/{uid}/reset-password",
@@ -240,5 +228,97 @@ export const API_ENDPOINTS = {
     VALIDATE_KEYS: "/admin/v1/key-rotation/validate-keys",
     ROTATE_PASSWORDS: "/admin/v1/key-rotation/rotate-agent-passwords",
     GET_STATUS: "/admin/v1/key-rotation/status",
+  },
+
+  // Super Agents
+  SUPER_AGENTS: {
+    LIST: "/admin/v1/super-agents",
+    CREATE: "/admin/v1/super-agents",
+    GET_BY_UID: "/admin/v1/super-agents/uid/{uid}",
+    UPDATE_STATUS: "/admin/v1/super-agents/uid/{uid}/status",
+    ASSIGN: "/admin/v1/super-agents/assign",
+    REMOVE: "/admin/v1/super-agents/remove",
+    SEARCH: "/admin/v1/super-agents/search",
+    GET_BY_PARTNER: "/admin/v1/super-agents/partner/uid/{partnerUid}",
+    GET_SUB_AGENTS: "/admin/v1/super-agents/uid/{superAgentUid}/sub-agents",
+    GET_SUB_AGENTS_COUNT:
+      "/admin/v1/super-agents/uid/{superAgentUid}/sub-agents/count",
+    GET_HIERARCHY: "/admin/v1/super-agents/uid/{superAgentUid}/hierarchy",
+    STATISTICS: "/admin/v1/super-agents/statistics",
+  },
+
+  // System Users
+  USERS: {
+    LIST: "/admin/v1/system-users",
+    GET_BY_UID: "/admin/v1/system-users/uid/{uid}",
+    UPDATE: "/admin/v1/system-users/uid/{uid}",
+    DELETE: "/admin/v1/system-users/uid/{uid}",
+    CREATE_ADMIN: "/admin/v1/system-users/admin-users",
+    CREATE_PARTNER: "/admin/v1/system-users/partner-users",
+    STATS_COUNT_BY_TYPE: "/admin/v1/system-users/stats/count-by-user-type",
+    STATS_COUNT_BY_STATUS: "/admin/v1/system-users/stats/count-by-status",
+    STATS_COUNT_BY_DEPARTMENT:
+      "/admin/v1/system-users/stats/count-by-department",
+    SEARCH_BY_TYPE: "/admin/v1/system-users/search/by-user-type",
+    SEARCH_BY_STATUS: "/admin/v1/system-users/search/by-status",
+    SEARCH_BY_DEPARTMENT: "/admin/v1/system-users/search/by-department",
+    VERIFY_PHONE: "/admin/v1/system-users/uid/{uid}/verify-phone",
+    VERIFY_EMAIL: "/admin/v1/system-users/uid/{uid}/verify-email",
+    SUSPEND: "/admin/v1/system-users/uid/{uid}/suspend",
+    DEACTIVATE: "/admin/v1/system-users/uid/{uid}/deactivate",
+    ACTIVATE: "/admin/v1/system-users/uid/{uid}/activate",
+  },
+
+  // Roles
+  ROLES: {
+    LIST: "/admin/v1/roles",
+    GET_BY_UID: "/admin/v1/roles/uid/{roleUid}",
+    GET_BY_NAME: "/admin/v1/roles/name/{roleName}",
+    GET_PERMISSIONS_BY_UID: "/admin/v1/roles/uid/{roleUid}/permissions",
+    GET_PERMISSIONS_BY_NAME: "/admin/v1/roles/name/{roleName}/permissions",
+  },
+
+  // User Role Management
+  USER_ROLES: {
+    GET_USER_ROLES: "/admin/v1/users/uid/{userUid}/roles",
+    ASSIGN_ROLE: "/admin/v1/users/uid/{userUid}/roles",
+    REVOKE_ROLE_BY_UID: "/admin/v1/users/uid/{userUid}/roles/uid/{roleUid}",
+    REVOKE_ROLE_BY_NAME: "/admin/v1/users/uid/{userUid}/roles/name/{roleName}",
+  },
+
+  // Booking Management
+  BOOKINGS: {
+    LIST: "/admin/v1/bookings",
+    GET_BY_UID: "/admin/v1/bookings/uid/{uid}",
+  },
+
+  // Bus Core Systems
+  BUS_CORE_SYSTEMS: {
+    LIST: "/admin/v1/bus-core-systems",
+    GET_BY_ID: "/admin/v1/bus-core-systems/{id}",
+    GET_BY_UID: "/admin/v1/bus-core-systems/uid/{uid}",
+    GET_BY_NAME: "/admin/v1/bus-core-systems/name/{name}",
+    GET_BY_CODE: "/admin/v1/bus-core-systems/code/{code}",
+    GET_DEFAULT: "/admin/v1/bus-core-systems/default",
+    CREATE: "/admin/v1/bus-core-systems",
+    UPDATE: "/admin/v1/bus-core-systems/{uid}",
+    DELETE: "/admin/v1/bus-core-systems/{uid}",
+    SET_DEFAULT: "/admin/v1/bus-core-systems/{uid}/set-default",
+  },
+
+  // Group Agents
+  GROUP_AGENTS: {
+    LIST: "/admin/v1/group-agents",
+    GET_BY_UID: "/admin/v1/group-agents/uid/{uid}",
+    CREATE: "/admin/v1/group-agents",
+    UPDATE: "/admin/v1/group-agents/uid/{uid}",
+    DELETE: "/admin/v1/group-agents/uid/{uid}",
+    SUSPEND: "/admin/v1/group-agents/uid/{uid}/suspend",
+    DEACTIVATE: "/admin/v1/group-agents/uid/{uid}/deactivate",
+    ACTIVATE: "/admin/v1/group-agents/uid/{uid}/activate",
+    SEARCH: "/admin/v1/group-agents/search",
+    STATS: "/admin/v1/group-agents/stats",
+    GET_BY_PARTNER: "/admin/v1/group-agents/partner/{partnerId}",
+    GET_FOR_ASSIGNMENT: "/admin/v1/group-agents/for-assignment",
   },
 } as const;

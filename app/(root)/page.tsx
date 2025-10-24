@@ -18,6 +18,11 @@ import { useUser } from "@/lib/contexts/UserContext";
 import { AuthGuard } from "@/components/AuthGuard";
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { usePartners } from "@/lib/contexts/PartnersContext";
+import { useAgents } from "@/lib/contexts/AgentsContext";
+import { useSuperAgents } from "@/lib/contexts/SuperAgentsContext";
+import { useBookings } from "@/lib/contexts/BookingsContext";
+import { useUsers } from "@/lib/contexts/UsersContext";
 
 export default function Home() {
   const { user, isAdmin, isPartner, isAgent, isRootUser } = useUser();
@@ -167,137 +172,159 @@ export default function Home() {
   );
 
   // Partner Dashboard Component
-  const PartnerDashboard = () => (
-    <div className="space-y-6">
-      {/* Header Section */}
-      <div className="rounded-lg border border-obus-primary/10 bg-white p-6 shadow-sm transition-colors dark:border-white/20 dark:bg-white/5">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-obus-accent">
-              <Rocket className="h-6 w-6 text-white" />
+  const PartnerDashboard = () => {
+    const { partners, isLoading: partnersLoading } = usePartners();
+    const { agents, isLoading: agentsLoading } = useAgents();
+    const { superAgents, isLoading: superAgentsLoading } = useSuperAgents();
+    const {
+      bookings,
+      isLoading: bookingsLoading,
+      calculateStatsFromBookings,
+    } = useBookings();
+    const { users, isLoading: usersLoading } = useUsers();
+
+    // Calculate statistics from actual data
+    const bookingStats = calculateStatsFromBookings();
+    const totalPartners = partners.length;
+    const totalAgents = agents.length;
+    const totalSuperAgents = superAgents.length;
+    const totalUsers = users.length;
+    const totalBookings = bookings.length;
+
+    return (
+      <div className="space-y-6">
+        {/* Header Section */}
+        <div className="rounded-lg border border-obus-primary/10 bg-white p-6 shadow-sm transition-colors dark:border-white/20 dark:bg-white/5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-obus-accent">
+                <Rocket className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-obus-primary dark:text-white">
+                  Welcome, {user?.partner?.name || "Partner"}
+                </h1>
+                <p className="text-sm text-obus-text-secondary dark:text-obus-text-light">
+                  Partner Dashboard
+                </p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-2xl font-bold text-obus-primary dark:text-white">
-                Welcome, {user?.partner?.name || "Partner"}
-              </h1>
-              <p className="text-sm text-obus-text-secondary dark:text-obus-text-light">
-                Partner Dashboard
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-4 text-sm text-obus-text-secondary dark:text-obus-text-light">
-            <div className="flex items-center gap-2">
-              <Calendar className="h-4 w-4" />
-              <span>{currentTime.toLocaleDateString()}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4" />
-              <span>{currentTime.toLocaleTimeString()}</span>
+            <div className="flex items-center gap-4 text-sm text-obus-text-secondary dark:text-obus-text-light">
+              <div className="flex items-center gap-2">
+                <Calendar className="h-4 w-4" />
+                <span>{currentTime.toLocaleDateString()}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4" />
+                <span>{currentTime.toLocaleTimeString()}</span>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Statistics Cards Section */}
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-        {[
-          {
-            label: "Total Users",
-            value: "1,423",
-            change: "+0%",
-            icon: Users,
-            href: "/users",
-            color: "blue",
-          },
-          {
-            label: "Total Bookings",
-            value: "8,945",
-            change: "+0%",
-            icon: Calendar,
-            href: "/bookings",
-            color: "green",
-          },
-          {
-            label: "Total Agents",
-            value: "247",
-            change: "+0%",
-            icon: UserCheck,
-            href: "/agents",
-            color: "purple",
-          },
-          {
-            label: "Total Super Agents",
-            value: "89",
-            change: "+0%",
-            icon: UserCheck,
-            href: "/super-agents",
-            color: "blue",
-          },
-        ].map((stat) => (
-          <Link key={stat.label} href={stat.href}>
-            <div className="rounded-lg border border-obus-primary/10 bg-white p-6 shadow-sm transition-all hover:shadow-md cursor-pointer dark:border-white/20 dark:bg-white/5">
-              <div className="flex items-center justify-between mb-2">
-                <div className="text-sm font-medium text-obus-text-secondary dark:text-obus-text-light">
-                  {stat.label}
-                </div>
-                <stat.icon className="h-5 w-5 text-obus-primary dark:text-white" />
-              </div>
-              <div className="text-2xl font-bold text-obus-primary dark:text-white">
-                {stat.value}
-              </div>
-              <p className="mt-1 text-xs font-medium text-obus-accent">
-                {stat.change}
-              </p>
-            </div>
-          </Link>
-        ))}
-      </div>
-
-      {/* Quick Actions Section */}
-      <div className="rounded-lg border border-obus-primary/10 bg-white p-6 shadow-sm transition-colors dark:border-white/20 dark:bg-white/5">
-        <h3 className="mb-4 text-lg font-semibold text-obus-primary dark:text-white">
-          Quick Actions
-        </h3>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {/* Statistics Cards Section */}
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
           {[
             {
+              label: "Total Users",
+              value: usersLoading ? "..." : totalUsers.toString(),
+              change: "From system",
               icon: Users,
-              label: "Manage Users",
               href: "/users",
               color: "blue",
             },
             {
+              label: "Total Bookings",
+              value: bookingsLoading
+                ? "..."
+                : bookingStats.totalBookings.toString(),
+              change: `${bookingStats.confirmedBookings} confirmed`,
               icon: Calendar,
-              label: "View Bookings",
               href: "/bookings",
               color: "green",
             },
             {
+              label: "Total Agents",
+              value: agentsLoading ? "..." : totalAgents.toString(),
+              change: "Active agents",
               icon: UserCheck,
-              label: "Manage Agents",
               href: "/agents",
               color: "purple",
             },
             {
+              label: "Total Super Agents",
+              value: superAgentsLoading ? "..." : totalSuperAgents.toString(),
+              change: "Active super agents",
               icon: UserCheck,
-              label: "Super Agents",
               href: "/super-agents",
               color: "blue",
             },
-          ].map((action) => (
-            <Link key={action.label} href={action.href}>
-              <button className="group flex w-full items-center gap-3 rounded-lg bg-obus-primary/5 p-4 text-left font-medium text-obus-text-secondary transition-colors hover:bg-obus-primary/10 hover:text-obus-primary dark:bg-white/5 dark:text-obus-text-light dark:hover:bg-white/10 dark:hover:text-white">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white text-obus-primary transition-colors group-hover:bg-obus-primary group-hover:text-white dark:bg-white/10 dark:text-white dark:group-hover:bg-white/20">
-                  <action.icon className="h-5 w-5" />
+          ].map((stat) => (
+            <Link key={stat.label} href={stat.href}>
+              <div className="rounded-lg border border-obus-primary/10 bg-white p-6 shadow-sm transition-all hover:shadow-md cursor-pointer dark:border-white/20 dark:bg-white/5">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="text-sm font-medium text-obus-text-secondary dark:text-obus-text-light">
+                    {stat.label}
+                  </div>
+                  <stat.icon className="h-5 w-5 text-obus-primary dark:text-white" />
                 </div>
-                <span>{action.label}</span>
-              </button>
+                <div className="text-2xl font-bold text-obus-primary dark:text-white">
+                  {stat.value}
+                </div>
+                <p className="mt-1 text-xs font-medium text-obus-accent">
+                  {stat.change}
+                </p>
+              </div>
             </Link>
           ))}
         </div>
+
+        {/* Quick Actions Section */}
+        <div className="rounded-lg border border-obus-primary/10 bg-white p-6 shadow-sm transition-colors dark:border-white/20 dark:bg-white/5">
+          <h3 className="mb-4 text-lg font-semibold text-obus-primary dark:text-white">
+            Quick Actions
+          </h3>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {[
+              {
+                icon: Users,
+                label: "Manage Users",
+                href: "/users",
+                color: "blue",
+              },
+              {
+                icon: Calendar,
+                label: "View Bookings",
+                href: "/bookings",
+                color: "green",
+              },
+              {
+                icon: UserCheck,
+                label: "Manage Agents",
+                href: "/agents",
+                color: "purple",
+              },
+              {
+                icon: UserCheck,
+                label: "Super Agents",
+                href: "/super-agents",
+                color: "blue",
+              },
+            ].map((action) => (
+              <Link key={action.label} href={action.href}>
+                <button className="group flex w-full items-center gap-3 rounded-lg bg-obus-primary/5 p-4 text-left font-medium text-obus-text-secondary transition-colors hover:bg-obus-primary/10 hover:text-obus-primary dark:bg-white/5 dark:text-obus-text-light dark:hover:bg-white/10 dark:hover:text-white">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white text-obus-primary transition-colors group-hover:bg-obus-primary group-hover:text-white dark:bg-white/10 dark:text-white dark:group-hover:bg-white/20">
+                    <action.icon className="h-5 w-5" />
+                  </div>
+                  <span>{action.label}</span>
+                </button>
+              </Link>
+            ))}
+          </div>
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   // Agent Dashboard Component
   const AgentDashboard = () => (

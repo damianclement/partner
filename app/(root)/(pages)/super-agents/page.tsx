@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useEffect, useState } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -23,97 +24,64 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import Link from "next/link";
-
-export type SuperAgent = {
-  id: number;
-  agentNumber: string;
-  businessName: string;
-  contactPerson: string;
-  partner: {
-    name: string;
-    code: string;
-  };
-  status: "active" | "inactive" | "suspended" | "pending";
-  registrationDate: string;
-};
+import { useSuperAgents } from "@/lib/contexts/SuperAgentsContext";
 
 export default function SuperAgentsPage() {
-  const superAgents: SuperAgent[] = [
-    {
-      id: 1,
-      agentNumber: "SA-001",
-      businessName: "SafariLink Elite Services",
-      contactPerson: "Juma Mwakyusa",
-      partner: {
-        name: "SafariLink Coaches",
-        code: "SFC001",
-      },
-      status: "active",
-      registrationDate: "2023-01-15",
-    },
-    {
-      id: 2,
-      agentNumber: "SA-002",
-      businessName: "Coastal Premium Express",
-      contactPerson: "Neema Mshana",
-      partner: {
-        name: "Coastal Express Ltd",
-        code: "CEX002",
-      },
-      status: "active",
-      registrationDate: "2023-03-20",
-    },
-    {
-      id: 3,
-      agentNumber: "SA-003",
-      businessName: "Highland Summit Agency",
-      contactPerson: "Asha Kileo",
-      partner: {
-        name: "Highland Transit",
-        code: "HLT003",
-      },
-      status: "pending",
-      registrationDate: "2023-06-10",
-    },
-    {
-      id: 4,
-      agentNumber: "SA-004",
-      businessName: "LakeZone Elite Services",
-      contactPerson: "Emmanuel Nnko",
-      partner: {
-        name: "LakeZone Shuttles",
-        code: "LZS004",
-      },
-      status: "suspended",
-      registrationDate: "2023-08-05",
-    },
-    {
-      id: 5,
-      agentNumber: "SA-005",
-      businessName: "Zanzibar Coastal Alliance",
-      contactPerson: "Amina Salum",
-      partner: {
-        name: "Zanzibar Coastal Lines",
-        code: "ZCL005",
-      },
-      status: "active",
-      registrationDate: "2023-02-28",
-    },
-  ];
+  const {
+    superAgents,
+    stats,
+    isLoading,
+    isStatsLoading,
+    error,
+    currentPage,
+    pageSize,
+    totalPages,
+    totalItems,
+    loadSuperAgents,
+    searchSuperAgents,
+    setCurrentPage,
+    clearError,
+  } = useSuperAgents();
 
-  // Simple state management for filtering and selection
-  const [filterValue, setFilterValue] = React.useState("");
-  const [selectedSuperAgents, setSelectedSuperAgents] = React.useState<
-    number[]
-  >([]);
-  // Filter super agents based on search input
+  // Local state for UI interactions
+  const [filterValue, setFilterValue] = useState("");
+  const [selectedSuperAgents, setSelectedSuperAgents] = useState<number[]>([]);
+
+  // Debounced search
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (filterValue.trim()) {
+        searchSuperAgents({
+          businessName: filterValue,
+          page: 0,
+          size: pageSize,
+        });
+      } else {
+        loadSuperAgents({ page: 0, size: pageSize });
+      }
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [filterValue, searchSuperAgents, loadSuperAgents, pageSize]);
+
+  // Filter super agents based on search input (client-side filtering for display)
   const filteredSuperAgents = superAgents.filter(
     (agent) =>
-      agent.agentNumber.toLowerCase().includes(filterValue.toLowerCase()) ||
-      agent.businessName.toLowerCase().includes(filterValue.toLowerCase()) ||
-      agent.contactPerson.toLowerCase().includes(filterValue.toLowerCase()) ||
-      agent.partner.name.toLowerCase().includes(filterValue.toLowerCase()) ||
-      agent.partner.code.toLowerCase().includes(filterValue.toLowerCase())
+      (agent.agentNumber?.toLowerCase() || "").includes(
+        filterValue.toLowerCase()
+      ) ||
+      (agent.businessName?.toLowerCase() || "").includes(
+        filterValue.toLowerCase()
+      ) ||
+      (agent.contactPersonName?.toLowerCase() || "").includes(
+        filterValue.toLowerCase()
+      ) ||
+      (agent.partnerName?.toLowerCase() || "").includes(
+        filterValue.toLowerCase()
+      ) ||
+      (agent.partnerCode?.toLowerCase() || "").includes(
+        filterValue.toLowerCase()
+      )
   );
 
   // Handle individual super agent selection
@@ -164,41 +132,88 @@ export default function SuperAgentsPage() {
               Total Super Agents
             </div>
             <div className="text-2xl font-bold text-obus-primary dark:text-white">
-              5
+              {isStatsLoading ? (
+                <div className="w-8 h-8 border-2 border-obus-primary/30 border-t-obus-primary rounded-full animate-spin" />
+              ) : (
+                stats?.totalSuperAgents || 0
+              )}
             </div>
-            <p className="text-xs text-obus-accent mt-1">+2 this month</p>
+            <p className="text-xs text-obus-accent mt-1">
+              {stats?.activeSuperAgents || 0} active
+            </p>
           </div>
 
           <div className="rounded-lg border border-obus-primary/10 bg-white p-6 shadow-sm transition-colors dark:border-white/20 dark:bg-white/5">
             <div className="text-sm font-medium text-obus-text-secondary dark:text-obus-text-light mb-2">
-              Platinum Tier
+              Active Super Agents
             </div>
             <div className="text-2xl font-bold text-obus-primary dark:text-white">
-              1
+              {isStatsLoading ? (
+                <div className="w-8 h-8 border-2 border-obus-primary/30 border-t-obus-primary rounded-full animate-spin" />
+              ) : (
+                stats?.activeSuperAgents || 0
+              )}
             </div>
-            <p className="text-xs text-obus-accent mt-1">Top performers</p>
+            <p className="text-xs text-obus-accent mt-1">
+              {stats?.pendingSuperAgents || 0} pending
+            </p>
           </div>
 
           <div className="rounded-lg border border-obus-primary/10 bg-white p-6 shadow-sm transition-colors dark:border-white/20 dark:bg-white/5">
             <div className="text-sm font-medium text-obus-text-secondary dark:text-obus-text-light mb-2">
-              Total Revenue
+              Total Sub-Agents
             </div>
             <div className="text-2xl font-bold text-obus-primary dark:text-white">
-              $133.1K
+              {isStatsLoading ? (
+                <div className="w-8 h-8 border-2 border-obus-primary/30 border-t-obus-primary rounded-full animate-spin" />
+              ) : (
+                stats?.totalSubAgents || 0
+              )}
             </div>
-            <p className="text-xs text-obus-accent mt-1">+18% this month</p>
+            <p className="text-xs text-obus-accent mt-1">
+              Avg: {stats?.averageSubAgentsPerSuperAgent || 0} per super agent
+            </p>
           </div>
 
           <div className="rounded-lg border border-obus-primary/10 bg-white p-6 shadow-sm transition-colors dark:border-white/20 dark:bg-white/5">
             <div className="text-sm font-medium text-obus-text-secondary dark:text-obus-text-light mb-2">
-              Avg. Rating
+              Top Performers
             </div>
             <div className="text-2xl font-bold text-obus-primary dark:text-white">
-              4.5
+              {isStatsLoading ? (
+                <div className="w-8 h-8 border-2 border-obus-primary/30 border-t-obus-primary rounded-full animate-spin" />
+              ) : (
+                stats?.topPerformingSuperAgents || 0
+              )}
             </div>
-            <p className="text-xs text-obus-accent mt-1">+0.3 this month</p>
+            <p className="text-xs text-obus-accent mt-1">
+              High performance tier
+            </p>
           </div>
         </div>
+
+        {/* Error Display */}
+        {error && (
+          <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-800 dark:border-red-800 dark:bg-red-900/20 dark:text-red-200">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                <span className="text-sm font-medium">
+                  Error loading super agents
+                </span>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clearError}
+                className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-200"
+              >
+                ×
+              </Button>
+            </div>
+            <p className="text-sm mt-1">{error}</p>
+          </div>
+        )}
 
         {/* Super Agents Table */}
         <div className="space-y-4">
@@ -251,7 +266,19 @@ export default function SuperAgentsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredSuperAgents.length ? (
+                {isLoading ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={8}
+                      className="h-24 text-center text-obus-text-secondary dark:text-obus-text-light"
+                    >
+                      <div className="flex items-center justify-center gap-2">
+                        <div className="w-4 h-4 border-2 border-obus-primary/30 border-t-obus-primary rounded-full animate-spin" />
+                        Loading super agents...
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : filteredSuperAgents.length ? (
                   filteredSuperAgents.map((agent) => (
                     <TableRow
                       key={agent.id}
@@ -278,53 +305,54 @@ export default function SuperAgentsPage() {
                       </TableCell>
                       <TableCell>
                         <p className="font-medium text-obus-primary dark:text-white">
-                          {agent.contactPerson}
+                          {agent.contactPersonName}
                         </p>
                       </TableCell>
                       <TableCell>
                         <div>
                           <p className="font-medium text-obus-primary dark:text-white text-sm">
-                            {agent.partner.name}
+                            {agent.partnerName || "N/A"}
                           </p>
                           <p className="text-xs text-obus-text-secondary dark:text-obus-text-light">
-                            Code: {agent.partner.code}
+                            Code: {agent.partnerCode || "N/A"}
                           </p>
                         </div>
                       </TableCell>
                       <TableCell className="text-center">
                         <Badge
                           variant={
-                            agent.status === "active"
+                            agent.status === "ACTIVE"
                               ? "default"
-                              : agent.status === "inactive"
+                              : agent.status === "INACTIVE"
                               ? "secondary"
-                              : agent.status === "pending"
+                              : agent.status === "PENDING_VERIFICATION"
                               ? "secondary"
                               : "destructive"
                           }
                           className={
-                            agent.status === "active"
+                            agent.status === "ACTIVE"
                               ? "bg-green-500/20 text-green-400 hover:bg-green-500/20"
-                              : agent.status === "inactive"
+                              : agent.status === "INACTIVE"
                               ? "bg-gray-500/20 text-gray-400 hover:bg-gray-500/20"
-                              : agent.status === "pending"
+                              : agent.status === "PENDING_VERIFICATION"
                               ? "bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/20"
                               : "bg-red-500/20 text-red-400 hover:bg-red-500/20"
                           }
                         >
-                          {agent.status.toUpperCase()}
+                          {agent.status}
                         </Badge>
                       </TableCell>
                       <TableCell>
                         <p className="text-sm text-obus-text-secondary dark:text-obus-text-light">
-                          {new Date(agent.registrationDate).toLocaleDateString(
-                            "en-US",
-                            {
-                              year: "numeric",
-                              month: "short",
-                              day: "numeric",
-                            }
-                          )}
+                          {agent.registrationDate
+                            ? new Date(
+                                agent.registrationDate
+                              ).toLocaleDateString("en-US", {
+                                year: "numeric",
+                                month: "short",
+                                day: "numeric",
+                              })
+                            : "N/A"}
                         </p>
                       </TableCell>
                       <TableCell>
@@ -339,7 +367,7 @@ export default function SuperAgentsPage() {
                             align="end"
                             className="border border-obus-primary/10 bg-white text-obus-text-primary dark:border-white/20 dark:bg-obus-primary dark:text-white"
                           >
-                            <Link href={`/super-agents/${agent.id}`}>
+                            <Link href={`/super-agents/${agent.uid}`}>
                               <DropdownMenuCheckboxItem className="text-obus-text-primary dark:text-white cursor-pointer">
                                 View Details
                               </DropdownMenuCheckboxItem>
@@ -358,10 +386,10 @@ export default function SuperAgentsPage() {
                 ) : (
                   <TableRow>
                     <TableCell
-                      colSpan={7}
+                      colSpan={8}
                       className="h-24 text-center text-obus-text-secondary dark:text-obus-text-light"
                     >
-                      No results.
+                      No super agents found.
                     </TableCell>
                   </TableRow>
                 )}
@@ -373,8 +401,33 @@ export default function SuperAgentsPage() {
             <div className="text-sm text-obus-text-secondary dark:text-obus-text-light">
               {selectedSuperAgents.length > 0
                 ? `${selectedSuperAgents.length} of ${filteredSuperAgents.length} super agents selected`
-                : `Showing ${filteredSuperAgents.length} of ${superAgents.length} super agents`}
+                : `Showing ${filteredSuperAgents.length} of ${totalItems} super agents`}
             </div>
+            {totalPages > 1 && (
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(currentPage - 1)}
+                  disabled={currentPage === 0 || isLoading}
+                  className="border-obus-primary/20 text-obus-text-primary hover:bg-obus-primary/5 dark:border-white/20 dark:text-white dark:hover:bg-white/10"
+                >
+                  Previous
+                </Button>
+                <span className="text-sm text-obus-text-secondary dark:text-obus-text-light">
+                  Page {currentPage + 1} of {totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(currentPage + 1)}
+                  disabled={currentPage >= totalPages - 1 || isLoading}
+                  className="border-obus-primary/20 text-obus-text-primary hover:bg-obus-primary/5 dark:border-white/20 dark:text-white dark:hover:bg-white/10"
+                >
+                  Next
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       </div>

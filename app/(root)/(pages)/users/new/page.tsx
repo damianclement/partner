@@ -116,7 +116,7 @@ export default function NewUserPage() {
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    // Basic Information validation
+    // Only validate required fields: Username, Email, First Name, Last Name, Display Name, Phone Number
     if (!formData.username.trim()) newErrors.username = "Username is required";
     if (!formData.email.trim()) newErrors.email = "Email is required";
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email))
@@ -126,42 +126,20 @@ export default function NewUserPage() {
     if (!formData.lastName.trim()) newErrors.lastName = "Last name is required";
     if (!formData.displayName.trim())
       newErrors.displayName = "Display name is required";
-    if (!formData.employeeId.trim())
-      newErrors.employeeId = "Employee ID is required";
-
-    // Contact Information validation
     if (!formData.phoneNumber.trim())
       newErrors.phoneNumber = "Phone number is required";
-    if (!formData.personalEmail.trim())
-      newErrors.personalEmail = "Personal email is required";
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.personalEmail))
+
+    // Validate email format for optional email fields if they are filled
+    if (
+      formData.personalEmail.trim() &&
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.personalEmail)
+    )
       newErrors.personalEmail = "Invalid email format";
-    if (!formData.workEmail.trim())
-      newErrors.workEmail = "Work email is required";
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.workEmail))
+    if (
+      formData.workEmail.trim() &&
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.workEmail)
+    )
       newErrors.workEmail = "Invalid email format";
-
-    // Work Information validation
-    if (!formData.department.trim())
-      newErrors.department = "Department is required";
-    if (!formData.position.trim()) newErrors.position = "Position is required";
-    if (!formData.officeLocation.trim())
-      newErrors.officeLocation = "Office location is required";
-    if (!formData.gender) newErrors.gender = "Gender is required";
-
-    // Address Information validation
-    if (!formData.address.trim()) newErrors.address = "Address is required";
-    if (!formData.city.trim()) newErrors.city = "City is required";
-    if (!formData.state.trim()) newErrors.state = "State is required";
-    if (!formData.country.trim()) newErrors.country = "Country is required";
-    if (!formData.postalCode.trim())
-      newErrors.postalCode = "Postal code is required";
-
-    // Emergency Contact validation
-    if (!formData.emergencyContactName.trim())
-      newErrors.emergencyContactName = "Emergency contact name is required";
-    if (!formData.emergencyContactPhone.trim())
-      newErrors.emergencyContactPhone = "Emergency contact phone is required";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -329,7 +307,7 @@ export default function NewUserPage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="employeeId" className="text-sm font-medium">
-                    Employee ID <span className="text-red-500">*</span>
+                    Employee ID
                   </Label>
                   <Input
                     id="employeeId"
@@ -384,7 +362,7 @@ export default function NewUserPage() {
                     htmlFor="personalEmail"
                     className="text-sm font-medium"
                   >
-                    Personal Email <span className="text-red-500">*</span>
+                    Personal Email
                   </Label>
                   <Input
                     id="personalEmail"
@@ -419,7 +397,7 @@ export default function NewUserPage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="workEmail" className="text-sm font-medium">
-                    Work Email <span className="text-red-500">*</span>
+                    Work Email
                   </Label>
                   <Input
                     id="workEmail"
@@ -454,7 +432,7 @@ export default function NewUserPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label htmlFor="department" className="text-sm font-medium">
-                    Department <span className="text-red-500">*</span>
+                    Department
                   </Label>
                   <Input
                     id="department"
@@ -472,7 +450,7 @@ export default function NewUserPage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="position" className="text-sm font-medium">
-                    Position <span className="text-red-500">*</span>
+                    Position
                   </Label>
                   <Input
                     id="position"
@@ -493,7 +471,7 @@ export default function NewUserPage() {
                     htmlFor="officeLocation"
                     className="text-sm font-medium"
                   >
-                    Office Location <span className="text-red-500">*</span>
+                    Office Location
                   </Label>
                   <Input
                     id="officeLocation"
@@ -513,7 +491,7 @@ export default function NewUserPage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="gender" className="text-sm font-medium">
-                    Gender <span className="text-red-500">*</span>
+                    Gender
                   </Label>
                   <Select
                     value={formData.gender}
@@ -555,7 +533,7 @@ export default function NewUserPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2 md:col-span-2">
                   <Label htmlFor="address" className="text-sm font-medium">
-                    Address <span className="text-red-500">*</span>
+                    Address
                   </Label>
                   <Input
                     id="address"
@@ -573,7 +551,7 @@ export default function NewUserPage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="city" className="text-sm font-medium">
-                    City <span className="text-red-500">*</span>
+                    City
                   </Label>
                   <Input
                     id="city"
@@ -589,7 +567,7 @@ export default function NewUserPage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="state" className="text-sm font-medium">
-                    State <span className="text-red-500">*</span>
+                    State
                   </Label>
                   <Input
                     id="state"
@@ -605,7 +583,7 @@ export default function NewUserPage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="country" className="text-sm font-medium">
-                    Country <span className="text-red-500">*</span>
+                    Country
                   </Label>
                   <Input
                     id="country"
@@ -623,7 +601,7 @@ export default function NewUserPage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="postalCode" className="text-sm font-medium">
-                    Postal Code <span className="text-red-500">*</span>
+                    Postal Code
                   </Label>
                   <Input
                     id="postalCode"
@@ -750,8 +728,7 @@ export default function NewUserPage() {
                     htmlFor="emergencyContactName"
                     className="text-sm font-medium"
                   >
-                    Emergency Contact Name{" "}
-                    <span className="text-red-500">*</span>
+                    Emergency Contact Name
                   </Label>
                   <Input
                     id="emergencyContactName"
@@ -776,8 +753,7 @@ export default function NewUserPage() {
                     htmlFor="emergencyContactPhone"
                     className="text-sm font-medium"
                   >
-                    Emergency Contact Phone{" "}
-                    <span className="text-red-500">*</span>
+                    Emergency Contact Phone
                   </Label>
                   <Input
                     id="emergencyContactPhone"

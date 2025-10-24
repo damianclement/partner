@@ -52,7 +52,18 @@ export type PaymentStatus =
   | "FAILED"
   | "REFUNDED"
   | "CANCELLED";
-export type BookingStatus = "CONFIRMED" | "PENDING" | "CANCELLED" | "COMPLETED";
+export type BookingStatus =
+  | "CONFIRMED"
+  | "PENDING"
+  | "CANCELLED"
+  | "COMPLETED"
+  | "NO_SHOW";
+export type BookingSource =
+  | "WEB"
+  | "MOBILE_APP"
+  | "API"
+  | "AGENT"
+  | "CALL_CENTER";
 export type TicketStatus = "ACTIVE" | "USED" | "CANCELLED" | "EXPIRED";
 
 // Authentication types
@@ -126,25 +137,26 @@ export interface SystemUserResponseDto {
   id: number;
   uid: string;
   userId: number;
+  userUid?: string;
   username: string;
   email: string;
   displayName: string;
-  userType: UserType;
+  userType: UserType | "ROOT_USER";
   enabled: boolean;
   accountNonExpired: boolean;
   accountNonLocked: boolean;
   credentialsNonExpired: boolean;
   requirePasswordChange: boolean;
-  partnerId: number;
-  partnerName: string;
-  partnerCode: string;
+  partnerId?: number;
+  partnerName?: string;
+  partnerCode?: string;
   firstName: string;
   lastName: string;
   systemUserDisplayName: string;
   phoneNumber: string;
   personalEmail: string;
-  dateOfBirth: string;
-  gender: Gender;
+  dateOfBirth?: string | null;
+  gender: string;
   employeeId: string;
   department: string;
   position: string;
@@ -158,24 +170,24 @@ export interface SystemUserResponseDto {
   postalCode: string;
   nationalId: string;
   passportNumber: string;
-  status: UserStatus;
+  status?: string;
   preferredLanguage: string;
   timezone: string;
-  profilePictureUrl: string;
+  profilePictureUrl?: string | null;
   emergencyContactName: string;
   emergencyContactPhone: string;
-  registrationDate: string;
-  lastLoginDate: string;
-  passwordChangedDate: string;
+  registrationDate?: string;
+  lastLoginDate?: string | null;
+  passwordChangedDate?: string | null;
   createdAt: string;
-  updatedAt: string;
-  createdBy: string;
-  updatedBy: string;
-  emailVerified: boolean;
-  phoneVerified: boolean;
-  verified: boolean;
-  active: boolean;
-  fullName: string;
+  updatedAt?: string | null;
+  createdBy?: string | null;
+  updatedBy?: string | null;
+  emailVerified?: boolean;
+  phoneVerified?: boolean;
+  verified?: boolean;
+  active?: boolean;
+  fullName?: string;
 }
 
 export interface CreatePartnerUserRequestDto {
@@ -200,7 +212,7 @@ export interface CreatePartnerUserRequestDto {
   postalCode: string;
   nationalId: string;
   passportNumber: string;
-  gender: Gender;
+  gender: string;
   preferredLanguage: string;
   timezone: string;
   emergencyContactName: string;
@@ -228,7 +240,7 @@ export interface CreateAdminUserRequestDto {
   postalCode: string;
   nationalId: string;
   passportNumber: string;
-  gender: Gender;
+  gender: string;
   preferredLanguage: string;
   timezone: string;
   emergencyContactName: string;
@@ -255,7 +267,7 @@ export interface UpdateSystemUserRequestDto {
   postalCode: string;
   nationalId: string;
   passportNumber: string;
-  gender: Gender;
+  gender: string;
   preferredLanguage: string;
   timezone: string;
   profilePictureUrl: string;
@@ -387,6 +399,7 @@ export interface PartnerStatistics {
   totalPartners: number;
   activePartners: number;
   verifiedPartners: number;
+  pendingApproval: number;
   partnersByType: number;
   partnersByTier: number;
 }
@@ -411,7 +424,7 @@ export interface AgentResponseDto {
   firstName: string;
   middleName: string;
   lastName: string;
-  gender: Gender;
+  gender: string;
   nationality: string;
   phoneNo: string;
   email: string;
@@ -463,28 +476,6 @@ export interface UpdateAgentStatusRequestDto {
   notes: string;
 }
 
-export interface CreateSuperAgentRequestDto {
-  partnerId: number;
-  businessName: string;
-  contactPerson: string;
-  phoneNumber: string;
-  msisdn: string;
-  businessEmail: string;
-  businessAddress: string;
-  taxId: string;
-  licenseNumber: string;
-  firstName: string;
-  middleName: string;
-  lastName: string;
-  gender: Gender;
-  nationality: string;
-  phoneNo: string;
-  email: string;
-  personalAddress: string;
-  nidaNo: string;
-  notes: string;
-}
-
 export interface AgentPasswordResetResponseDto {
   agentUid: string;
   agentPassName: string;
@@ -493,6 +484,25 @@ export interface AgentPasswordResetResponseDto {
   emailSent: boolean;
   smsSent: boolean;
   resetAt: string;
+}
+
+// Additional types for agents management
+export interface AgentStats {
+  totalAgents: number;
+  activeAgents: number;
+  pendingApproval: number;
+  averageRating: number;
+}
+
+export interface AgentFilters {
+  status?: AgentStatus;
+  agentType?: AgentType;
+  partnerId?: number;
+  search?: string;
+}
+
+export interface AgentListParams extends PageRequest {
+  filters?: AgentFilters;
 }
 
 // Super Agent types
@@ -669,22 +679,6 @@ export interface RoleWithPermissionsDto {
   updatedAt: string;
 }
 
-export interface AssignRoleRequest {
-  roleName: string;
-  roleId: number;
-  valid: boolean;
-}
-
-export interface UserRolesResponseDto {
-  userUid: string;
-  username: string;
-  userType: string;
-  partnerUid: string;
-  partnerName: string;
-  roles: RoleResponseDto[];
-  totalRoles: number;
-}
-
 export interface UserPermissionsResponseDto {
   userUid: string;
   username: string;
@@ -746,7 +740,7 @@ export interface AdminBookingDetailDto {
 export interface AdminPassengerDetailDto {
   uid: string;
   fullName: string;
-  gender: Gender;
+  gender: string;
   category: string;
   passportNumber: string;
   nationalId: string;
@@ -882,4 +876,433 @@ export interface BulkUpdateTierRequestDto {
 export interface BulkUpdateStatusRequestDto {
   partnerIds: number[];
   status: PartnerStatus;
+}
+
+// Super Agents API Types
+export interface SuperAgentStatistics {
+  totalSuperAgents: number;
+  activeSuperAgents: number;
+  pendingSuperAgents: number;
+  suspendedSuperAgents: number;
+  inactiveSuperAgents: number;
+  totalSubAgents: number;
+  averageSubAgentsPerSuperAgent: number;
+  topPerformingSuperAgents: number;
+}
+
+export interface CreateSuperAgentRequestDto {
+  businessName: string;
+  legalName: string;
+  email: string;
+  phoneNumber: string;
+  businessRegistrationNumber: string;
+  taxIdentificationNumber: string;
+  businessAddress: string;
+  city: string;
+  state: string;
+  country: string;
+  postalCode: string;
+  contactPersonName: string;
+  contactPersonEmail: string;
+  contactPersonPhone: string;
+  description: string;
+  partnerUid: string;
+}
+
+export interface SuperAgentSearchRequestDto {
+  businessName?: string;
+  status?: AgentStatus;
+  partnerUid?: string;
+  page?: number;
+  size?: number;
+  sortBy?: string;
+  sortDir?: "asc" | "desc";
+}
+
+// User Management Types
+
+export interface CreateAdminUserRequestDto {
+  username: string;
+  email: string;
+  displayName: string;
+  firstName: string;
+  lastName: string;
+  phoneNumber: string;
+  personalEmail: string;
+  employeeId: string;
+  department: string;
+  position: string;
+  officeLocation: string;
+  workPhone: string;
+  workEmail: string;
+  address: string;
+  city: string;
+  state: string;
+  country: string;
+  postalCode: string;
+  nationalId: string;
+  passportNumber: string;
+  gender: string;
+  preferredLanguage: string;
+  emergencyContactName: string;
+  emergencyContactPhone: string;
+  timezone: string;
+}
+
+export interface CreatePartnerUserRequestDto {
+  username: string;
+  email: string;
+  displayName: string;
+  partnerId: number;
+  firstName: string;
+  lastName: string;
+  phoneNumber: string;
+  personalEmail: string;
+  employeeId: string;
+  department: string;
+  position: string;
+  officeLocation: string;
+  workPhone: string;
+  workEmail: string;
+  address: string;
+  city: string;
+  state: string;
+  country: string;
+  postalCode: string;
+  nationalId: string;
+  passportNumber: string;
+  gender: string;
+  preferredLanguage: string;
+  emergencyContactName: string;
+  emergencyContactPhone: string;
+  timezone: string;
+}
+
+export interface UpdateSystemUserRequestDto {
+  uid: string;
+  firstName: string;
+  lastName: string;
+  displayName: string;
+  phoneNumber: string;
+  personalEmail: string;
+  employeeId: string;
+  department: string;
+  position: string;
+  officeLocation: string;
+  workPhone: string;
+  workEmail: string;
+  address: string;
+  city: string;
+  state: string;
+  country: string;
+  postalCode: string;
+  nationalId: string;
+  passportNumber: string;
+  gender: string;
+  preferredLanguage: string;
+  emergencyContactName: string;
+  emergencyContactPhone: string;
+  timezone: string;
+}
+
+export interface UserStatistics {
+  totalUsers: number;
+  activeUsers: number;
+  inactiveUsers: number;
+  suspendedUsers: number;
+  pendingVerificationUsers: number;
+  lockedUsers: number;
+  adminUsers: number;
+  partnerUsers: number;
+  partnerAgents: number;
+  totalDepartments: number;
+  averageUsersPerDepartment: number;
+}
+
+// Role types
+export interface RoleResponseDto {
+  id: number;
+  uid: string;
+  name: string;
+  displayName: string;
+  description: string;
+  active: boolean;
+  permissionCount: number;
+  userCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PermissionDto {
+  uid: string;
+  name: string;
+  action: string;
+  resource: string;
+}
+
+export interface RoleWithPermissionsDto {
+  id: number;
+  uid: string;
+  name: string;
+  displayName: string;
+  description: string;
+  active: boolean;
+  permissions: PermissionDto[];
+  totalPermissions: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface UserRolesResponseDto {
+  userUid: string;
+  username: string;
+  userType: string;
+  partnerUid?: string;
+  partnerName?: string;
+  roles: RoleResponseDto[];
+  totalRoles: number;
+}
+
+export interface AssignRoleRequest {
+  roleName?: string;
+  roleId?: number;
+  valid: boolean;
+}
+
+export interface RoleStatistics {
+  totalRoles: number;
+  activeRoles: number;
+  rolesByType: Record<string, number>;
+  totalUsers: number;
+}
+
+// Booking-related interfaces
+export interface CustomerDto {
+  name: string;
+  phone: string;
+  email?: string;
+  idNumber?: string;
+}
+
+export interface RouteDto {
+  name: string;
+  fromLocation: string;
+  toLocation: string;
+  distance?: number;
+  estimatedDuration?: number;
+}
+
+export interface BusDto {
+  id: number;
+  busNumber: string;
+  capacity: number;
+  busType?: string;
+  operator?: string;
+}
+
+export interface SeatDto {
+  seatNumber: string;
+  isAvailable: boolean;
+  seatType?: string;
+  price?: number;
+}
+
+export interface TicketDto {
+  id: number;
+  uid: string;
+  ticketNumber: string;
+  seatNumber: string;
+  passengerName: string;
+  passengerPhone: string;
+  ticketStatus: TicketStatus;
+  price: number;
+  currency: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface BookingStatistics {
+  totalBookings: number;
+  confirmedBookings: number;
+  pendingBookings: number;
+  cancelledBookings: number;
+  completedBookings: number;
+  totalRevenue: number;
+  currency: string;
+  bookingsByStatus: Record<BookingStatus, number>;
+  bookingsBySource: Record<BookingSource, number>;
+  averageBookingValue: number;
+}
+
+export interface BookingFilters {
+  status?: BookingStatus;
+  paymentStatus?: PaymentStatus;
+  partnerUid?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  search?: string;
+}
+
+// Bus Core System types
+export interface BusCoreSystemResponseDto {
+  id: number;
+  uid: string;
+  code: string;
+  name: string;
+  providerName: string;
+  baseUrl: string;
+  description: string;
+  isDefault: boolean;
+  createdAt: string;
+  updatedAt: string;
+  createdBy?: string;
+  updatedBy?: string;
+}
+
+export interface CreateBusCoreSystemRequestDto {
+  code: string;
+  name: string;
+  providerName: string;
+  baseUrl: string;
+  description: string;
+  isDefault: boolean;
+}
+
+export interface UpdateBusCoreSystemRequestDto {
+  code: string;
+  name: string;
+  providerName: string;
+  baseUrl: string;
+  description: string;
+  isDefault: boolean;
+}
+
+export interface BusCoreSystemFilters {
+  search?: string;
+  providerName?: string;
+  isDefault?: boolean;
+}
+
+// Group Agent types
+export interface GroupAgentResponseDto {
+  id: number;
+  uid: string;
+  code: string;
+  name: string;
+  description: string;
+  externalSystemIdentifier: string;
+  type: "STANDARD" | "CORPORATE" | "AGENCY" | "INDIVIDUAL" | "FRANCHISE";
+  status: "ACTIVE" | "INACTIVE" | "SUSPENDED" | "PENDING";
+  contactPerson?: string;
+  contactEmail?: string;
+  contactPhone?: string;
+  businessName?: string;
+  businessAddress?: string;
+  taxId?: string;
+  licenseNumber?: string;
+  createdAt: string;
+  updatedAt: string;
+  activatedAt?: string;
+  lastActivityDate?: string;
+  notes?: string;
+  partnerId: number;
+  partnerUid: string;
+  partnerCode: string;
+  partnerBusinessName: string;
+  agentCount: number;
+  busCoreSystemCount: number;
+  activeBusCoreSystemCount: number;
+  busCoreSystems?: GroupAgentCoreBusSystemSummaryDto[];
+}
+
+export interface GroupAgentCoreBusSystemSummaryDto {
+  id: number;
+  uid: string;
+  externalAgentIdentifier: string;
+  username: string;
+  isActive: boolean;
+  isPrimary: boolean;
+  externalSystemStatus: string;
+  busCoreSystemId: number;
+  busCoreSystemCode: string;
+  busCoreSystemName: string;
+  busCoreSystemProviderName: string;
+  lastAuthenticationDate?: string;
+  lastSyncDate?: string;
+}
+
+export interface CreateGroupAgentRequestDto {
+  partnerId: number;
+  code: string;
+  name: string;
+  description?: string;
+  externalSystemIdentifier: string;
+  type: "STANDARD" | "CORPORATE" | "AGENCY" | "INDIVIDUAL" | "FRANCHISE";
+  contactPerson?: string;
+  contactEmail?: string;
+  contactPhone?: string;
+  businessName?: string;
+  businessAddress?: string;
+  taxId?: string;
+  licenseNumber?: string;
+  notes?: string;
+}
+
+export interface UpdateGroupAgentRequestDto {
+  code: string;
+  name: string;
+  description?: string;
+  externalSystemIdentifier: string;
+  type: "STANDARD" | "CORPORATE" | "AGENCY" | "INDIVIDUAL" | "FRANCHISE";
+  status: "ACTIVE" | "INACTIVE" | "SUSPENDED" | "PENDING";
+  contactPerson?: string;
+  contactEmail?: string;
+  contactPhone?: string;
+  businessName?: string;
+  businessAddress?: string;
+  taxId?: string;
+  licenseNumber?: string;
+  notes?: string;
+}
+
+export interface GroupAgentSearchRequestDto {
+  partnerId?: number;
+  partnerUid?: string;
+  searchTerm?: string;
+  status?: "ACTIVE" | "INACTIVE" | "SUSPENDED" | "PENDING";
+  type?: "STANDARD" | "CORPORATE" | "AGENCY" | "INDIVIDUAL" | "FRANCHISE";
+  createdFrom?: string;
+  createdTo?: string;
+  lastActivityFrom?: string;
+  lastActivityTo?: string;
+  page?: number;
+  size?: number;
+  sortBy?: string;
+  sortDirection?: string;
+  includeBusCoreSystems?: boolean;
+  includeAgentCount?: boolean;
+}
+
+export interface GroupAgentFilters {
+  search?: string;
+  partnerId?: number;
+  partnerUid?: string;
+  status?: "ACTIVE" | "INACTIVE" | "SUSPENDED" | "PENDING";
+  type?: "STANDARD" | "CORPORATE" | "AGENCY" | "INDIVIDUAL" | "FRANCHISE";
+  createdFrom?: string;
+  createdTo?: string;
+}
+
+export interface GroupAgentStatsDto {
+  totalGroupAgents: number;
+  activeGroupAgents: number;
+  inactiveGroupAgents: number;
+  suspendedGroupAgents: number;
+  pendingGroupAgents: number;
+  totalAgents: number;
+  totalBusCoreSystems: number;
+  averageAgentsPerGroup: number;
+  averageBusCoreSystemsPerGroup: number;
+  groupAgentsByStatus: Record<string, number>;
+  groupAgentsByType: Record<string, number>;
 }

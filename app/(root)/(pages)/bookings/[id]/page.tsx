@@ -97,6 +97,13 @@ export default function BookingDetailPage() {
     [bookingId]
   );
 
+  // Function to extract seat identifier from full seat code
+  const extractSeatIdentifier = (seatCode: string): string => {
+    // Extract the last part after the last dash (e.g., "L-0-0-A1" -> "A1")
+    const parts = seatCode.split("-");
+    return parts[parts.length - 1];
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -231,7 +238,7 @@ export default function BookingDetailPage() {
                     TSh {booking.amount.total}
                   </div>
                   <div className="text-sm text-obus-text-secondary dark:text-obus-text-light">
-                    Seat: {booking.seatNumbers}
+                    Seat: {extractSeatIdentifier(booking.seatNumbers)}
                   </div>
                 </div>
               </div>

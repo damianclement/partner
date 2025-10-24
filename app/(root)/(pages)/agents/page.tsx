@@ -4,7 +4,7 @@ import * as React from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Plus, MoreHorizontal } from "lucide-react";
+import { Plus, MoreHorizontal, Search, Filter, RefreshCw } from "lucide-react";
 // Simple table implementation without external dependencies
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -23,130 +23,58 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import Link from "next/link";
-
-export type Agent = {
-  id: number;
-  agentCode: string;
-  partnerAgentNumber: string;
-  businessName: string;
-  passName: string;
-  contactPerson: {
-    name: string;
-    email: string;
-    phone: string;
-  };
-  agentType: "Individual" | "Corporate" | "Agency";
-  partner: {
-    code: string;
-    businessName: string;
-  };
-  status: "active" | "inactive" | "suspended";
-  registrationDate: string;
-};
+import { useAgents } from "@/lib/contexts/AgentsContext";
 
 export default function AgentsPage() {
-  const agents: Agent[] = [
-    {
-      id: 1,
-      agentCode: "AGT001",
-      partnerAgentNumber: "SFC-AG-01",
-      businessName: "Nyota Travel Services",
-      passName: "Nyota Travel",
-      contactPerson: {
-        name: "Neema Mwenda",
-        email: "neema.mwenda@nyotatravel.co.tz",
-        phone: "+255-715-200-345",
-      },
-      agentType: "Individual",
-      partner: {
-        code: "SFC001",
-        businessName: "SafariLink Coaches",
-      },
-      status: "active",
-      registrationDate: "2024-01-15",
-    },
-    {
-      id: 2,
-      agentCode: "AGT002",
-      partnerAgentNumber: "CEX-AG-02",
-      businessName: "Swahili Coastal Agency",
-      passName: "Swahili Coastal",
-      contactPerson: {
-        name: "Abdallah Said",
-        email: "abdallah.said@swahilicostal.co.tz",
-        phone: "+255-718-456-210",
-      },
-      agentType: "Agency",
-      partner: {
-        code: "CEX002",
-        businessName: "Coastal Express Ltd",
-      },
-      status: "active",
-      registrationDate: "2024-02-20",
-    },
-    {
-      id: 3,
-      agentCode: "AGT003",
-      partnerAgentNumber: "HLT-AG-03",
-      businessName: "Kilimanjaro Transport Solutions",
-      passName: "Kilimanjaro Transport",
-      contactPerson: {
-        name: "Asha Kileo",
-        email: "asha.kileo@kilimanjaro.co.tz",
-        phone: "+255-767-654-320",
-      },
-      agentType: "Corporate",
-      partner: {
-        code: "HLT003",
-        businessName: "Highland Transit",
-      },
-      status: "inactive",
-      registrationDate: "2024-03-10",
-    },
-    {
-      id: 4,
-      agentCode: "AGT004",
-      partnerAgentNumber: "LZS-AG-04",
-      businessName: "Victoria Fleet Managers",
-      passName: "Victoria Fleet",
-      contactPerson: {
-        name: "Emmanuel Nnko",
-        email: "emmanuel.nnko@victoriafleet.co.tz",
-        phone: "+255-789-876-540",
-      },
-      agentType: "Individual",
-      partner: {
-        code: "LZS004",
-        businessName: "LakeZone Shuttles",
-      },
-      status: "suspended",
-      registrationDate: "2023-12-05",
-    },
-  ];
+  const {
+    agents,
+    stats,
+    isLoading,
+    isStatsLoading,
+    error,
+    currentPage,
+    pageSize,
+    totalPages,
+    totalItems,
+    filters,
+    loadAgents,
+    searchAgents,
+    setFilters,
+    setPage,
+    setPageSize,
+    clearError,
+  } = useAgents();
 
-  // Simple state management for filtering and selection
-  const [filterValue, setFilterValue] = React.useState("");
+  // Local state for UI interactions
+  const [searchValue, setSearchValue] = React.useState("");
   const [selectedAgents, setSelectedAgents] = React.useState<number[]>([]);
-  // Filter agents based on search input
-  const filteredAgents = agents.filter(
-    (agent) =>
-      agent.agentCode.toLowerCase().includes(filterValue.toLowerCase()) ||
-      agent.partnerAgentNumber
-        .toLowerCase()
-        .includes(filterValue.toLowerCase()) ||
-      agent.businessName.toLowerCase().includes(filterValue.toLowerCase()) ||
-      agent.passName.toLowerCase().includes(filterValue.toLowerCase()) ||
-      agent.contactPerson.name
-        .toLowerCase()
-        .includes(filterValue.toLowerCase()) ||
-      agent.contactPerson.email
-        .toLowerCase()
-        .includes(filterValue.toLowerCase()) ||
-      agent.partner.code.toLowerCase().includes(filterValue.toLowerCase()) ||
-      agent.partner.businessName
-        .toLowerCase()
-        .includes(filterValue.toLowerCase())
-  );
+  const [searchTimeout, setSearchTimeout] =
+    React.useState<NodeJS.Timeout | null>(null);
+
+  // Handle search with debouncing
+  const handleSearch = (value: string) => {
+    setSearchValue(value);
+
+    if (searchTimeout) {
+      clearTimeout(searchTimeout);
+    }
+
+    const timeout = setTimeout(() => {
+      if (value.trim()) {
+        searchAgents(value.trim());
+      } else {
+        loadAgents();
+      }
+    }, 500);
+
+    setSearchTimeout(timeout);
+  };
+
+  // Handle refresh
+  const handleRefresh = () => {
+    clearError();
+    loadAgents();
+  };
 
   // Handle individual agent selection
   const handleAgentSelect = (agentId: number, checked: boolean) => {
@@ -160,16 +88,24 @@ export default function AgentsPage() {
   // Handle select all
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedAgents(filteredAgents.map((agent) => agent.id));
+      setSelectedAgents(agents.map((agent) => agent.id));
     } else {
       setSelectedAgents([]);
     }
   };
 
-  // Check if all filtered agents are selected
+  // Check if all agents are selected
   const isAllSelected =
-    filteredAgents.length > 0 &&
-    selectedAgents.length === filteredAgents.length;
+    agents.length > 0 && selectedAgents.length === agents.length;
+
+  // Cleanup timeout on unmount
+  React.useEffect(() => {
+    return () => {
+      if (searchTimeout) {
+        clearTimeout(searchTimeout);
+      }
+    };
+  }, [searchTimeout]);
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -194,7 +130,11 @@ export default function AgentsPage() {
               Total Agents
             </div>
             <div className="text-2xl font-bold text-obus-primary dark:text-white">
-              1,423
+              {isStatsLoading ? (
+                <div className="w-8 h-8 border-2 border-obus-primary/30 border-t-obus-primary rounded-full animate-spin" />
+              ) : (
+                stats?.totalAgents?.toLocaleString() || "0"
+              )}
             </div>
             <p className="text-xs text-obus-accent mt-1">+8% this month</p>
           </div>
@@ -204,9 +144,19 @@ export default function AgentsPage() {
               Active Agents
             </div>
             <div className="text-2xl font-bold text-obus-primary dark:text-white">
-              1,289
+              {isStatsLoading ? (
+                <div className="w-8 h-8 border-2 border-obus-primary/30 border-t-obus-primary rounded-full animate-spin" />
+              ) : (
+                stats?.activeAgents?.toLocaleString() || "0"
+              )}
             </div>
-            <p className="text-xs text-obus-accent mt-1">90.5% active rate</p>
+            <p className="text-xs text-obus-accent mt-1">
+              {stats
+                ? `${((stats.activeAgents / stats.totalAgents) * 100).toFixed(
+                    1
+                  )}% active rate`
+                : "0% active rate"}
+            </p>
           </div>
 
           <div className="rounded-lg border border-obus-primary/10 bg-white p-6 shadow-sm transition-colors dark:border-white/20 dark:bg-white/5">
@@ -214,7 +164,11 @@ export default function AgentsPage() {
               Pending Approval
             </div>
             <div className="text-2xl font-bold text-obus-primary dark:text-white">
-              87
+              {isStatsLoading ? (
+                <div className="w-8 h-8 border-2 border-obus-primary/30 border-t-obus-primary rounded-full animate-spin" />
+              ) : (
+                stats?.pendingApproval?.toLocaleString() || "0"
+              )}
             </div>
             <p className="text-xs text-obus-text-secondary dark:text-obus-text-light mt-1">
               Awaiting verification
@@ -226,11 +180,38 @@ export default function AgentsPage() {
               Avg. Rating
             </div>
             <div className="text-2xl font-bold text-obus-primary dark:text-white">
-              4.6
+              {isStatsLoading ? (
+                <div className="w-8 h-8 border-2 border-obus-primary/30 border-t-obus-primary rounded-full animate-spin" />
+              ) : (
+                stats?.averageRating?.toFixed(1) || "0.0"
+              )}
             </div>
             <p className="text-xs text-obus-accent mt-1">+0.2 this month</p>
           </div>
         </div>
+
+        {/* Error Display */}
+        {error && (
+          <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-800 dark:border-red-800 dark:bg-red-900/20 dark:text-red-200">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                <span className="text-sm font-medium">
+                  Error loading agents
+                </span>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clearError}
+                className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-200"
+              >
+                ×
+              </Button>
+            </div>
+            <p className="text-sm mt-1">{error}</p>
+          </div>
+        )}
 
         {/* Agents Table */}
         <div className="space-y-4">
@@ -239,12 +220,27 @@ export default function AgentsPage() {
               All Agents
             </h3>
             <div className="flex items-center gap-2">
-              <Input
-                placeholder="Filter agents..."
-                value={filterValue}
-                onChange={(event) => setFilterValue(event.target.value)}
-                className="max-w-sm"
-              />
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-obus-text-secondary dark:text-obus-text-light w-4 h-4" />
+                <Input
+                  placeholder="Search agents..."
+                  value={searchValue}
+                  onChange={(event) => handleSearch(event.target.value)}
+                  className="max-w-sm pl-10"
+                />
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleRefresh}
+                disabled={isLoading}
+                className="border-obus-primary/20 text-obus-text-primary hover:bg-obus-primary/5 dark:border-white/20 dark:text-white dark:hover:bg-white/10"
+              >
+                <RefreshCw
+                  className={`w-4 h-4 mr-2 ${isLoading ? "animate-spin" : ""}`}
+                />
+                Refresh
+              </Button>
             </div>
           </div>
 
@@ -286,8 +282,20 @@ export default function AgentsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredAgents.length ? (
-                  filteredAgents.map((agent) => (
+                {isLoading ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={9}
+                      className="h-24 text-center text-obus-text-secondary dark:text-obus-text-light"
+                    >
+                      <div className="flex items-center justify-center gap-2">
+                        <div className="w-4 h-4 border-2 border-obus-primary/30 border-t-obus-primary rounded-full animate-spin" />
+                        Loading agents...
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : agents.length ? (
+                  agents.map((agent) => (
                     <TableRow
                       key={agent.id}
                       className="border-obus-primary/10 hover:bg-obus-primary/5 dark:border-white/20 dark:hover:bg-obus-primary/20"
@@ -304,7 +312,7 @@ export default function AgentsPage() {
                       <TableCell>
                         <div>
                           <p className="font-mono text-sm font-semibold text-obus-primary dark:text-white">
-                            {agent.agentCode}
+                            {agent.code}
                           </p>
                           <p className="text-xs text-obus-text-secondary dark:text-obus-text-light">
                             Partner: {agent.partnerAgentNumber}
@@ -326,12 +334,16 @@ export default function AgentsPage() {
                           <p className="font-medium text-obus-primary dark:text-white text-sm">
                             {agent.contactPerson.name}
                           </p>
-                          <p className="text-xs text-obus-text-secondary dark:text-obus-text-light">
-                            {agent.contactPerson.email}
-                          </p>
-                          <p className="text-xs text-obus-text-secondary dark:text-obus-text-light">
-                            {agent.contactPerson.phone}
-                          </p>
+                          {agent.contactPerson.email && (
+                            <p className="text-xs text-obus-text-secondary dark:text-obus-text-light">
+                              {agent.contactPerson.email}
+                            </p>
+                          )}
+                          {agent.contactPerson.phone && (
+                            <p className="text-xs text-obus-text-secondary dark:text-obus-text-light">
+                              {agent.contactPerson.phone}
+                            </p>
+                          )}
                         </div>
                       </TableCell>
                       <TableCell>
@@ -372,7 +384,9 @@ export default function AgentsPage() {
                               ? "bg-green-500/20 text-green-400 hover:bg-green-500/20"
                               : agent.status === "inactive"
                               ? "bg-gray-500/20 text-gray-400 hover:bg-gray-500/20"
-                              : "bg-red-500/20 text-red-400 hover:bg-red-500/20"
+                              : agent.status === "suspended"
+                              ? "bg-red-500/20 text-red-400 hover:bg-red-500/20"
+                              : "bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/20"
                           }
                         >
                           {agent.status.toUpperCase()}
@@ -402,7 +416,7 @@ export default function AgentsPage() {
                             align="end"
                             className="border border-obus-primary/10 bg-white text-obus-text-primary dark:border-white/20 dark:bg-obus-primary dark:text-white"
                           >
-                            <Link href={`/agents/${agent.id}`}>
+                            <Link href={`/agents/${agent.uid}`}>
                               <DropdownMenuCheckboxItem className="text-obus-text-primary dark:text-white cursor-pointer">
                                 View Details
                               </DropdownMenuCheckboxItem>
@@ -424,7 +438,9 @@ export default function AgentsPage() {
                       colSpan={9}
                       className="h-24 text-center text-obus-text-secondary dark:text-obus-text-light"
                     >
-                      No results.
+                      {searchValue
+                        ? "No agents found matching your search."
+                        : "No agents available."}
                     </TableCell>
                   </TableRow>
                 )}
@@ -435,9 +451,38 @@ export default function AgentsPage() {
           <div className="flex items-center justify-between py-4">
             <div className="text-sm text-obus-text-secondary dark:text-obus-text-light">
               {selectedAgents.length > 0
-                ? `${selectedAgents.length} of ${filteredAgents.length} agents selected`
-                : `Showing ${filteredAgents.length} of ${agents.length} agents`}
+                ? `${selectedAgents.length} of ${agents.length} agents selected`
+                : `Showing ${agents.length} of ${totalItems} agents`}
             </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage(currentPage - 1)}
+                  disabled={currentPage === 0 || isLoading}
+                  className="border-obus-primary/20 text-obus-text-primary hover:bg-obus-primary/5 dark:border-white/20 dark:text-white dark:hover:bg-white/10"
+                >
+                  Previous
+                </Button>
+
+                <span className="text-sm text-obus-text-secondary dark:text-obus-text-light">
+                  Page {currentPage + 1} of {totalPages}
+                </span>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage(currentPage + 1)}
+                  disabled={currentPage >= totalPages - 1 || isLoading}
+                  className="border-obus-primary/20 text-obus-text-primary hover:bg-obus-primary/5 dark:border-white/20 dark:text-white dark:hover:bg-white/10"
+                >
+                  Next
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       </div>

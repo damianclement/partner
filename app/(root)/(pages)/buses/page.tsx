@@ -4,7 +4,7 @@ import * as React from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Plus, MoreHorizontal, MapPin, Clock } from "lucide-react";
+import { Plus, MoreHorizontal, Server, Globe } from "lucide-react";
 // Simple table implementation without external dependencies
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -22,109 +22,106 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
-export type Bus = {
-  id: number;
-  registration: string;
-  route: string;
-  operator: string;
-  status: "active" | "maintenance" | "inactive";
-  capacity: number;
-  currentLocation: string;
-  nextDeparture: string;
-};
+import {
+  useBusCoreSystems,
+  type BusCoreSystem,
+} from "@/lib/contexts/BusCoreSystemsContext";
 
 export default function BusesPage() {
-  const buses: Bus[] = [
-    {
-      id: 1,
-      registration: "DAR-001-DDM",
-      route: "Dar es Salaam - Dodoma",
-      operator: "SafariLink Coaches",
-      status: "active",
-      capacity: 50,
-      currentLocation: "Dar es Salaam Depot",
-      nextDeparture: "14:30",
-    },
-    {
-      id: 2,
-      registration: "DDM-002-MWZ",
-      route: "Dodoma - Mwanza",
-      operator: "Coastal Express Ltd",
-      status: "active",
-      capacity: 45,
-      currentLocation: "Dodoma Terminal",
-      nextDeparture: "16:00",
-    },
-    {
-      id: 3,
-      registration: "DAR-003-ARU",
-      route: "Dar es Salaam - Arusha",
-      operator: "Highland Transit",
-      status: "maintenance",
-      capacity: 60,
-      currentLocation: "Arusha Workshop",
-      nextDeparture: "Tomorrow 08:00",
-    },
-    {
-      id: 4,
-      registration: "MWZ-004-ARU",
-      route: "Mwanza - Arusha",
-      operator: "LakeZone Shuttles",
-      status: "inactive",
-      capacity: 40,
-      currentLocation: "Mwanza Yard",
-      nextDeparture: "Maintenance",
-    },
-  ];
+  const {
+    busCoreSystems,
+    isLoading,
+    error,
+    currentPage,
+    pageSize,
+    totalPages,
+    totalItems,
+    searchBusCoreSystems,
+    setCurrentPage,
+    setPageSize,
+    calculateStatsFromBusCoreSystems,
+  } = useBusCoreSystems();
+
+  // Calculate statistics from current bus core systems data
+  const calculatedStats = React.useMemo(() => {
+    return calculateStatsFromBusCoreSystems();
+  }, [calculateStatsFromBusCoreSystems]);
+
+  // Debug logging
+  React.useEffect(() => {
+    console.log("BusesPage - busCoreSystems:", busCoreSystems);
+    console.log("BusesPage - isLoading:", isLoading);
+    console.log("BusesPage - error:", error);
+  }, [busCoreSystems, isLoading, error]);
 
   // Simple state management for filtering and selection
   const [filterValue, setFilterValue] = React.useState("");
-  const [selectedBuses, setSelectedBuses] = React.useState<number[]>([]);
-// Filter buses based on search input
-  const filteredBuses = buses.filter(
-    (bus) =>
-      bus.registration.toLowerCase().includes(filterValue.toLowerCase()) ||
-      bus.route.toLowerCase().includes(filterValue.toLowerCase()) ||
-      bus.operator.toLowerCase().includes(filterValue.toLowerCase()) ||
-      bus.currentLocation.toLowerCase().includes(filterValue.toLowerCase())
+  const [selectedBusCoreSystems, setSelectedBusCoreSystems] = React.useState<
+    string[]
+  >([]);
+
+  // Filter bus core systems based on search input
+  const filteredBusCoreSystems = busCoreSystems.filter(
+    (busCoreSystem) =>
+      busCoreSystem.name.toLowerCase().includes(filterValue.toLowerCase()) ||
+      busCoreSystem.code.toLowerCase().includes(filterValue.toLowerCase()) ||
+      busCoreSystem.providerName
+        .toLowerCase()
+        .includes(filterValue.toLowerCase()) ||
+      busCoreSystem.description
+        .toLowerCase()
+        .includes(filterValue.toLowerCase())
   );
 
-  // Handle individual bus selection
-  const handleBusSelect = (busId: number, checked: boolean) => {
+  // Handle search input change
+  const handleSearchChange = (value: string) => {
+    setFilterValue(value);
+    searchBusCoreSystems(value);
+  };
+
+  // Handle individual bus core system selection
+  const handleBusCoreSystemSelect = (
+    busCoreSystemUid: string,
+    checked: boolean
+  ) => {
     if (checked) {
-      setSelectedBuses((prev) => [...prev, busId]);
+      setSelectedBusCoreSystems((prev) => [...prev, busCoreSystemUid]);
     } else {
-      setSelectedBuses((prev) => prev.filter((id) => id !== busId));
+      setSelectedBusCoreSystems((prev) =>
+        prev.filter((uid) => uid !== busCoreSystemUid)
+      );
     }
   };
 
   // Handle select all
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedBuses(filteredBuses.map((bus) => bus.id));
+      setSelectedBusCoreSystems(
+        filteredBusCoreSystems.map((busCoreSystem) => busCoreSystem.uid)
+      );
     } else {
-      setSelectedBuses([]);
+      setSelectedBusCoreSystems([]);
     }
   };
 
-  // Check if all filtered buses are selected
+  // Check if all filtered bus core systems are selected
   const isAllSelected =
-    filteredBuses.length > 0 && selectedBuses.length === filteredBuses.length;
+    filteredBusCoreSystems.length > 0 &&
+    selectedBusCoreSystems.length === filteredBusCoreSystems.length;
   return (
     <DashboardLayout>
       <div className="space-y-6">
         {/* Page Header */}
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-h1">Bus Systems</h1>
+            <h1 className="text-h1">Bus Core Systems</h1>
             <p className="text-caption mt-2">
-              Monitor and manage all bus fleets across the network
+              Monitor and manage all bus core systems and integrations
             </p>
           </div>
           <Button className="bg-obus-accent hover:bg-obus-accent/90">
             <Plus className="w-4 h-4 mr-2" />
-            Add New Bus
+            Add New System
           </Button>
         </div>
 
@@ -132,48 +129,74 @@ export default function BusesPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <div className="rounded-lg border border-obus-primary/10 bg-white p-6 shadow-sm transition-colors dark:border-white/20 dark:bg-white/5">
             <div className="text-sm font-medium text-obus-text-secondary dark:text-obus-text-light mb-2">
-              Total Buses
+              Total Systems
             </div>
-            <div className="text-2xl font-bold text-obus-primary dark:text-white">847</div>
-            <p className="text-xs text-obus-accent mt-1">+23 this month</p>
-          </div>
-
-          <div className="rounded-lg border border-obus-primary/10 bg-white p-6 shadow-sm transition-colors dark:border-white/20 dark:bg-white/5">
-            <div className="text-sm font-medium text-obus-text-secondary dark:text-obus-text-light mb-2">
-              Active Buses
+            <div className="text-2xl font-bold text-obus-primary dark:text-white">
+              {isLoading ? "..." : calculatedStats.totalBusCoreSystems}
             </div>
-            <div className="text-2xl font-bold text-obus-primary dark:text-white">782</div>
-            <p className="text-xs text-obus-accent mt-1">92.3% operational</p>
-          </div>
-
-          <div className="rounded-lg border border-obus-primary/10 bg-white p-6 shadow-sm transition-colors dark:border-white/20 dark:bg-white/5">
-            <div className="text-sm font-medium text-obus-text-secondary dark:text-obus-text-light mb-2">
-              In Maintenance
-            </div>
-            <div className="text-2xl font-bold text-obus-primary dark:text-white">45</div>
-            <p className="text-xs text-obus-text-secondary dark:text-obus-text-light mt-1">
-              Scheduled maintenance
+            <p className="text-xs text-obus-accent mt-1">
+              {totalItems > 0
+                ? `${totalItems} total in system`
+                : "No systems available"}
             </p>
           </div>
 
           <div className="rounded-lg border border-obus-primary/10 bg-white p-6 shadow-sm transition-colors dark:border-white/20 dark:bg-white/5">
             <div className="text-sm font-medium text-obus-text-secondary dark:text-obus-text-light mb-2">
-              Total Routes
+              Default Systems
             </div>
-            <div className="text-2xl font-bold text-obus-primary dark:text-white">156</div>
-            <p className="text-xs text-obus-accent mt-1">+8 new routes</p>
+            <div className="text-2xl font-bold text-obus-primary dark:text-white">
+              {isLoading ? "..." : calculatedStats.defaultBusCoreSystems}
+            </div>
+            <p className="text-xs text-obus-accent mt-1">
+              {calculatedStats.totalBusCoreSystems > 0
+                ? `${(
+                    (calculatedStats.defaultBusCoreSystems /
+                      calculatedStats.totalBusCoreSystems) *
+                    100
+                  ).toFixed(1)}% are default`
+                : "No default systems"}
+            </p>
+          </div>
+
+          <div className="rounded-lg border border-obus-primary/10 bg-white p-6 shadow-sm transition-colors dark:border-white/20 dark:bg-white/5">
+            <div className="text-sm font-medium text-obus-text-secondary dark:text-obus-text-light mb-2">
+              Providers
+            </div>
+            <div className="text-2xl font-bold text-obus-primary dark:text-white">
+              {isLoading ? "..." : calculatedStats.providers.length}
+            </div>
+            <p className="text-xs text-obus-text-secondary dark:text-obus-text-light mt-1">
+              Unique providers
+            </p>
+          </div>
+
+          <div className="rounded-lg border border-obus-primary/10 bg-white p-6 shadow-sm transition-colors dark:border-white/20 dark:bg-white/5">
+            <div className="text-sm font-medium text-obus-text-secondary dark:text-obus-text-light mb-2">
+              Avg per Provider
+            </div>
+            <div className="text-2xl font-bold text-obus-primary dark:text-white">
+              {isLoading
+                ? "..."
+                : calculatedStats.averageSystemsPerProvider.toFixed(1)}
+            </div>
+            <p className="text-xs text-obus-accent mt-1">
+              Systems per provider
+            </p>
           </div>
         </div>
 
-        {/* Buses Table */}
+        {/* Bus Core Systems Table */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-obus-primary dark:text-white">All Buses</h3>
+            <h3 className="text-lg font-semibold text-obus-primary dark:text-white">
+              All Bus Core Systems
+            </h3>
             <div className="flex items-center gap-2">
               <Input
-                placeholder="Filter buses..."
+                placeholder="Filter systems..."
                 value={filterValue}
-                onChange={(event) => setFilterValue(event.target.value)}
+                onChange={(event) => handleSearchChange(event.target.value)}
                 className="max-w-sm"
               />
             </div>
@@ -191,23 +214,22 @@ export default function BusesPage() {
                     />
                   </TableHead>
                   <TableHead className="text-obus-text-secondary dark:text-obus-text-light">
-                    Bus Registration
+                    System Name
                   </TableHead>
-                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light">Route</TableHead>
                   <TableHead className="text-obus-text-secondary dark:text-obus-text-light">
-                    Operator
+                    Code
+                  </TableHead>
+                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light">
+                    Provider
                   </TableHead>
                   <TableHead className="text-obus-text-secondary dark:text-obus-text-light text-center">
-                    Capacity
+                    Base URL
                   </TableHead>
                   <TableHead className="text-obus-text-secondary dark:text-obus-text-light text-center">
-                    Location
+                    Description
                   </TableHead>
                   <TableHead className="text-obus-text-secondary dark:text-obus-text-light text-center">
-                    Next Departure
-                  </TableHead>
-                  <TableHead className="text-obus-text-secondary dark:text-obus-text-light text-center">
-                    Status
+                    Default
                   </TableHead>
                   <TableHead className="text-obus-text-secondary dark:text-obus-text-light">
                     Actions
@@ -215,81 +237,96 @@ export default function BusesPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredBuses.length ? (
-                  filteredBuses.map((bus) => (
+                {isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={8} className="h-24 text-center">
+                      <div className="flex items-center justify-center">
+                        <div className="w-6 h-6 border-2 border-obus-primary border-t-transparent rounded-full animate-spin"></div>
+                        <span className="ml-2 text-obus-text-secondary dark:text-obus-text-light">
+                          Loading bus core systems...
+                        </span>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : error ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={8}
+                      className="h-24 text-center text-red-500"
+                    >
+                      {error}
+                    </TableCell>
+                  </TableRow>
+                ) : filteredBusCoreSystems.length ? (
+                  filteredBusCoreSystems.map((busCoreSystem) => (
                     <TableRow
-                      key={bus.id}
+                      key={busCoreSystem.uid}
                       className="border-obus-primary/10 hover:bg-obus-primary/5 dark:border-white/20 dark:hover:bg-obus-primary/20"
                     >
                       <TableCell>
                         <Checkbox
-                          checked={selectedBuses.includes(bus.id)}
+                          checked={selectedBusCoreSystems.includes(
+                            busCoreSystem.uid
+                          )}
                           onCheckedChange={(checked) =>
-                            handleBusSelect(bus.id, !!checked)
+                            handleBusCoreSystemSelect(
+                              busCoreSystem.uid,
+                              !!checked
+                            )
                           }
-                          aria-label={`Select ${bus.registration}`}
+                          aria-label={`Select ${busCoreSystem.name}`}
                         />
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 bg-obus-accent rounded-lg flex items-center justify-center text-white font-bold text-sm">
-                            {bus.registration.substring(0, 3)}
+                            <Server className="w-4 h-4" />
                           </div>
                           <div>
                             <p className="font-medium text-obus-primary dark:text-white">
-                              {bus.registration}
+                              {busCoreSystem.name}
                             </p>
-                            <p className="text-xs text-obus-text-secondary dark:text-obus-text-light">
-                              Bus ID: {bus.id}
-                            </p>
+                            {/* <p className="text-xs text-obus-text-secondary dark:text-obus-text-light">
+                              UID: {busCoreSystem.uid}
+                            </p> */}
                           </div>
                         </div>
                       </TableCell>
                       <TableCell>
-                        <div className="flex items-center gap-2">
-                          <MapPin className="w-4 h-4 text-obus-text-secondary dark:text-obus-text-light" />
-                          <p className="font-medium text-obus-primary dark:text-white">{bus.route}</p>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <p className="font-medium text-obus-primary dark:text-white">{bus.operator}</p>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <p className="font-semibold text-obus-primary dark:text-white">
-                          {bus.capacity}
+                        <p className="font-medium text-obus-primary dark:text-white">
+                          {busCoreSystem.code}
                         </p>
                       </TableCell>
-                      <TableCell className="text-center">
-                        <p className="font-semibold text-obus-primary dark:text-white">
-                          {bus.currentLocation}
+                      <TableCell>
+                        <p className="font-medium text-obus-primary dark:text-white">
+                          {busCoreSystem.providerName}
                         </p>
                       </TableCell>
                       <TableCell className="text-center">
                         <div className="flex items-center justify-center gap-2">
-                          <Clock className="w-4 h-4 text-obus-text-secondary dark:text-obus-text-light" />
-                          <p className="font-semibold text-obus-primary dark:text-white">
-                            {bus.nextDeparture}
+                          <Globe className="w-4 h-4 text-obus-text-secondary dark:text-obus-text-light" />
+                          <p className="font-semibold text-obus-primary dark:text-white text-xs">
+                            {busCoreSystem.baseUrl}
                           </p>
                         </div>
                       </TableCell>
                       <TableCell className="text-center">
+                        <p className="font-semibold text-obus-primary dark:text-white text-xs">
+                          {busCoreSystem.description}
+                        </p>
+                      </TableCell>
+                      <TableCell className="text-center">
                         <Badge
                           variant={
-                            bus.status === "active"
-                              ? "default"
-                              : bus.status === "maintenance"
-                              ? "secondary"
-                              : "outline"
+                            busCoreSystem.isDefault ? "default" : "outline"
                           }
                           className={
-                            bus.status === "active"
+                            busCoreSystem.isDefault
                               ? "bg-green-500/20 text-green-400 hover:bg-green-500/20"
-                              : bus.status === "maintenance"
-                              ? "bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/20"
                               : "bg-gray-500/20 text-gray-400 hover:bg-gray-500/20"
                           }
                         >
-                          {bus.status.toUpperCase()}
+                          {busCoreSystem.isDefault ? "DEFAULT" : "NORMAL"}
                         </Badge>
                       </TableCell>
                       <TableCell>
@@ -308,7 +345,7 @@ export default function BusesPage() {
                               View details
                             </DropdownMenuCheckboxItem>
                             <DropdownMenuCheckboxItem className="text-obus-text-primary dark:text-white">
-                              Edit bus
+                              Edit system
                             </DropdownMenuCheckboxItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -318,10 +355,12 @@ export default function BusesPage() {
                 ) : (
                   <TableRow>
                     <TableCell
-                      colSpan={9}
+                      colSpan={8}
                       className="h-24 text-center text-obus-text-secondary dark:text-obus-text-light"
                     >
-                      No results.
+                      {filterValue
+                        ? "No bus core systems found matching your search."
+                        : "No bus core systems available."}
                     </TableCell>
                   </TableRow>
                 )}
@@ -331,9 +370,9 @@ export default function BusesPage() {
 
           <div className="flex items-center justify-between py-4">
             <div className="text-sm text-obus-text-secondary dark:text-obus-text-light">
-              {selectedBuses.length > 0
-                ? `${selectedBuses.length} of ${filteredBuses.length} buses selected`
-                : `Showing ${filteredBuses.length} of ${buses.length} buses`}
+              {selectedBusCoreSystems.length > 0
+                ? `${selectedBusCoreSystems.length} of ${filteredBusCoreSystems.length} systems selected`
+                : `Showing ${filteredBusCoreSystems.length} of ${totalItems} systems`}
             </div>
           </div>
         </div>
@@ -341,8 +380,3 @@ export default function BusesPage() {
     </DashboardLayout>
   );
 }
-
-
-
-
-

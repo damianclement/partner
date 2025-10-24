@@ -24,114 +24,70 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import Link from "next/link";
-
-export type GroupAgent = {
-  id: number;
-  code: string;
-  name: string;
-  externalSystemId: string;
-  partner: string;
-  type: "Corporate" | "Agency" | "Individual" | "Franchise";
-  status: "active" | "inactive" | "suspended" | "pending";
-  agentCount: number;
-  busSystemCount: number;
-  created: string;
-};
+import {
+  useGroupAgents,
+  type GroupAgent,
+} from "@/lib/contexts/GroupAgentsContext";
 
 export default function GroupAgentsPage() {
   const router = useRouter();
 
-  const groupAgents: GroupAgent[] = [
-    {
-      id: 1,
-      code: "GAG001",
-      name: "Dar Corridor Elite",
-      externalSystemId: "EXT-DAR-001",
-      partner: "SafariLink Coaches",
-      type: "Corporate",
-      status: "active",
-      agentCount: 8,
-      busSystemCount: 12,
-      created: "2023-02-15",
-    },
-    {
-      id: 2,
-      code: "GAG002",
-      name: "Dodoma Express Network",
-      externalSystemId: "EXT-DDM-002",
-      partner: "Coastal Express Ltd",
-      type: "Agency",
-      status: "active",
-      agentCount: 6,
-      busSystemCount: 8,
-      created: "2023-03-20",
-    },
-    {
-      id: 3,
-      code: "GAG003",
-      name: "Kilimanjaro Summit Group",
-      externalSystemId: "EXT-ARU-003",
-      partner: "Highland Transit",
-      type: "Franchise",
-      status: "pending",
-      agentCount: 5,
-      busSystemCount: 6,
-      created: "2023-04-10",
-    },
-    {
-      id: 4,
-      code: "GAG004",
-      name: "Lake Victoria Collective",
-      externalSystemId: "EXT-MWZ-004",
-      partner: "LakeZone Shuttles",
-      type: "Individual",
-      status: "suspended",
-      agentCount: 4,
-      busSystemCount: 3,
-      created: "2023-05-05",
-    },
-    {
-      id: 5,
-      code: "GAG005",
-      name: "Zanzibar Premium Alliance",
-      externalSystemId: "EXT-ZNZ-005",
-      partner: "Zanzibar Coastal Lines",
-      type: "Corporate",
-      status: "active",
-      agentCount: 7,
-      busSystemCount: 10,
-      created: "2023-01-28",
-    },
-  ];
+  const {
+    groupAgents,
+    isLoading,
+    error,
+    currentPage,
+    pageSize,
+    totalPages,
+    totalItems,
+    searchGroupAgents,
+    setCurrentPage,
+    setPageSize,
+    calculateStatsFromGroupAgents,
+  } = useGroupAgents();
+
+  // Calculate statistics from current group agents data
+  const calculatedStats = React.useMemo(() => {
+    return calculateStatsFromGroupAgents();
+  }, [calculateStatsFromGroupAgents]);
 
   // Simple state management for filtering and selection
   const [filterValue, setFilterValue] = React.useState("");
-  const [selectedGroups, setSelectedGroups] = React.useState<number[]>([]);
+  const [selectedGroups, setSelectedGroups] = React.useState<string[]>([]);
+
+  // Handle search input change
+  const handleSearchChange = (value: string) => {
+    setFilterValue(value);
+    searchGroupAgents(value);
+  };
+
   // Filter group agents based on search input
   const filteredGroups = groupAgents.filter(
     (group) =>
       group.code.toLowerCase().includes(filterValue.toLowerCase()) ||
       group.name.toLowerCase().includes(filterValue.toLowerCase()) ||
-      group.externalSystemId
+      group.externalSystemIdentifier
         .toLowerCase()
         .includes(filterValue.toLowerCase()) ||
-      group.partner.toLowerCase().includes(filterValue.toLowerCase()) ||
+      group.partnerBusinessName
+        .toLowerCase()
+        .includes(filterValue.toLowerCase()) ||
       group.type.toLowerCase().includes(filterValue.toLowerCase())
   );
 
   // Handle individual group selection
-  const handleGroupSelect = (groupId: number, checked: boolean) => {
+  const handleGroupSelect = (groupUid: string, checked: boolean) => {
     if (checked) {
-      setSelectedGroups((prev) => [...prev, groupId]);
+      setSelectedGroups((prev) => [...prev, groupUid]);
     } else {
-      setSelectedGroups((prev) => prev.filter((id) => id !== groupId));
+      setSelectedGroups((prev) => prev.filter((uid) => uid !== groupUid));
     }
   };
 
   // Handle select all
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedGroups(filteredGroups.map((group) => group.id));
+      setSelectedGroups(filteredGroups.map((group) => group.uid));
     } else {
       setSelectedGroups([]);
     }
@@ -170,39 +126,63 @@ export default function GroupAgentsPage() {
               Total Groups
             </div>
             <div className="text-2xl font-bold text-obus-primary dark:text-white">
-              5
+              {isLoading ? "..." : calculatedStats.totalGroupAgents}
             </div>
-            <p className="text-xs text-obus-accent mt-1">+1 this month</p>
+            <p className="text-xs text-obus-accent mt-1">
+              {totalItems > 0
+                ? `${totalItems} total in system`
+                : "No groups available"}
+            </p>
           </div>
 
           <div className="rounded-lg border border-obus-primary/10 bg-white p-6 shadow-sm transition-colors dark:border-white/20 dark:bg-white/5">
             <div className="text-sm font-medium text-obus-text-secondary dark:text-obus-text-light mb-2">
-              Total Members
+              Active Groups
             </div>
             <div className="text-2xl font-bold text-obus-primary dark:text-white">
-              30
+              {isLoading ? "..." : calculatedStats.activeGroupAgents}
             </div>
-            <p className="text-xs text-obus-accent mt-1">Across all groups</p>
+            <p className="text-xs text-obus-accent mt-1">
+              {calculatedStats.totalGroupAgents > 0
+                ? `${(
+                    (calculatedStats.activeGroupAgents /
+                      calculatedStats.totalGroupAgents) *
+                    100
+                  ).toFixed(1)}% active`
+                : "No active groups"}
+            </p>
           </div>
 
           <div className="rounded-lg border border-obus-primary/10 bg-white p-6 shadow-sm transition-colors dark:border-white/20 dark:bg-white/5">
             <div className="text-sm font-medium text-obus-text-secondary dark:text-obus-text-light mb-2">
-              Group Revenue
+              Total Agents
             </div>
             <div className="text-2xl font-bold text-obus-primary dark:text-white">
-              $294K
+              {isLoading ? "..." : calculatedStats.totalAgents}
             </div>
-            <p className="text-xs text-obus-accent mt-1">+22% this month</p>
+            <p className="text-xs text-obus-accent mt-1">
+              {calculatedStats.averageAgentsPerGroup > 0
+                ? `Avg ${calculatedStats.averageAgentsPerGroup.toFixed(
+                    1
+                  )} per group`
+                : "No agents"}
+            </p>
           </div>
 
           <div className="rounded-lg border border-obus-primary/10 bg-white p-6 shadow-sm transition-colors dark:border-white/20 dark:bg-white/5">
             <div className="text-sm font-medium text-obus-text-secondary dark:text-obus-text-light mb-2">
-              Avg. Performance
+              Bus Systems
             </div>
             <div className="text-2xl font-bold text-obus-primary dark:text-white">
-              4.4
+              {isLoading ? "..." : calculatedStats.totalBusCoreSystems}
             </div>
-            <p className="text-xs text-obus-accent mt-1">+0.2 this month</p>
+            <p className="text-xs text-obus-accent mt-1">
+              {calculatedStats.averageBusCoreSystemsPerGroup > 0
+                ? `Avg ${calculatedStats.averageBusCoreSystemsPerGroup.toFixed(
+                    1
+                  )} per group`
+                : "No bus systems"}
+            </p>
           </div>
         </div>
 
@@ -216,7 +196,7 @@ export default function GroupAgentsPage() {
               <Input
                 placeholder="Filter groups..."
                 value={filterValue}
-                onChange={(event) => setFilterValue(event.target.value)}
+                onChange={(event) => handleSearchChange(event.target.value)}
                 className="max-w-sm"
               />
             </div>
@@ -263,17 +243,37 @@ export default function GroupAgentsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredGroups.length ? (
+                {isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={10} className="h-24 text-center">
+                      <div className="flex items-center justify-center">
+                        <div className="w-6 h-6 border-2 border-obus-primary border-t-transparent rounded-full animate-spin"></div>
+                        <span className="ml-2 text-obus-text-secondary dark:text-obus-text-light">
+                          Loading group agents...
+                        </span>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : error ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={10}
+                      className="h-24 text-center text-red-500"
+                    >
+                      {error}
+                    </TableCell>
+                  </TableRow>
+                ) : filteredGroups.length ? (
                   filteredGroups.map((group) => (
                     <TableRow
-                      key={group.id}
+                      key={group.uid}
                       className="border-obus-primary/10 hover:bg-obus-primary/5 dark:border-white/20 dark:hover:bg-obus-primary/20"
                     >
                       <TableCell>
                         <Checkbox
-                          checked={selectedGroups.includes(group.id)}
+                          checked={selectedGroups.includes(group.uid)}
                           onCheckedChange={(checked) =>
-                            handleGroupSelect(group.id, !!checked)
+                            handleGroupSelect(group.uid, !!checked)
                           }
                           aria-label={`Select ${group.name}`}
                         />
@@ -289,27 +289,29 @@ export default function GroupAgentsPage() {
                             {group.name}
                           </p>
                           <p className="text-xs text-obus-text-secondary dark:text-obus-text-light">
-                            ID: {group.externalSystemId}
+                            ID: {group.externalSystemIdentifier}
                           </p>
                         </div>
                       </TableCell>
                       {/* Partner */}
                       <TableCell>
                         <p className="font-medium text-obus-primary dark:text-white">
-                          {group.partner}
+                          {group.partnerBusinessName}
                         </p>
                       </TableCell>
                       <TableCell>
                         <Badge
                           variant="outline"
                           className={
-                            group.type === "Corporate"
+                            group.type === "CORPORATE"
                               ? "bg-blue-500/20 text-blue-400 border-blue-500/30"
-                              : group.type === "Agency"
+                              : group.type === "AGENCY"
                               ? "bg-purple-500/20 text-purple-400 border-purple-500/30"
-                              : group.type === "Franchise"
+                              : group.type === "FRANCHISE"
                               ? "bg-orange-500/20 text-orange-400 border-orange-500/30"
-                              : "bg-green-500/20 text-green-400 border-green-500/30"
+                              : group.type === "INDIVIDUAL"
+                              ? "bg-green-500/20 text-green-400 border-green-500/30"
+                              : "bg-gray-500/20 text-gray-400 border-gray-500/30"
                           }
                         >
                           {group.type}
@@ -318,20 +320,20 @@ export default function GroupAgentsPage() {
                       <TableCell className="text-center">
                         <Badge
                           variant={
-                            group.status === "active"
+                            group.status === "ACTIVE"
                               ? "default"
-                              : group.status === "inactive"
+                              : group.status === "INACTIVE"
                               ? "secondary"
-                              : group.status === "pending"
+                              : group.status === "PENDING"
                               ? "secondary"
                               : "destructive"
                           }
                           className={
-                            group.status === "active"
+                            group.status === "ACTIVE"
                               ? "bg-green-500/20 text-green-400 hover:bg-green-500/20"
-                              : group.status === "inactive"
+                              : group.status === "INACTIVE"
                               ? "bg-gray-500/20 text-gray-400 hover:bg-gray-500/20"
-                              : group.status === "pending"
+                              : group.status === "PENDING"
                               ? "bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/20"
                               : "bg-red-500/20 text-red-400 hover:bg-red-500/20"
                           }
@@ -351,17 +353,20 @@ export default function GroupAgentsPage() {
                         <div className="flex items-center justify-center gap-2">
                           <Target className="w-4 h-4 text-obus-text-secondary dark:text-obus-text-light" />
                           <p className="font-semibold text-obus-primary dark:text-white">
-                            {group.busSystemCount}
+                            {group.busCoreSystemCount}
                           </p>
                         </div>
                       </TableCell>
                       <TableCell>
                         <p className="text-sm text-obus-text-secondary dark:text-obus-text-light">
-                          {new Date(group.created).toLocaleDateString("en-US", {
-                            year: "numeric",
-                            month: "short",
-                            day: "numeric",
-                          })}
+                          {new Date(group.createdAt).toLocaleDateString(
+                            "en-US",
+                            {
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                            }
+                          )}
                         </p>
                       </TableCell>
                       <TableCell>
@@ -407,7 +412,9 @@ export default function GroupAgentsPage() {
                       colSpan={10}
                       className="h-24 text-center text-obus-text-secondary dark:text-obus-text-light"
                     >
-                      No results.
+                      {filterValue
+                        ? "No group agents found matching your search."
+                        : "No group agents available."}
                     </TableCell>
                   </TableRow>
                 )}
@@ -419,7 +426,7 @@ export default function GroupAgentsPage() {
             <div className="text-sm text-obus-text-secondary dark:text-obus-text-light">
               {selectedGroups.length > 0
                 ? `${selectedGroups.length} of ${filteredGroups.length} groups selected`
-                : `Showing ${filteredGroups.length} of ${groupAgents.length} groups`}
+                : `Showing ${filteredGroups.length} of ${totalItems} groups`}
             </div>
           </div>
         </div>

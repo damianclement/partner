@@ -1,84 +1,53 @@
 "use client";
 
 import * as React from "react";
-import { useMemo } from "react";
+import { useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Star, User2, Building2, CalendarDays } from "lucide-react";
-
-type SuperAgent = {
-  id: number;
-  agentNumber: string;
-  businessName: string;
-  contactPerson: string;
-  partner: {
-    name: string;
-    code: string;
-  };
-  status: "active" | "inactive" | "suspended" | "pending";
-  registrationDate: string;
-};
-
-// Demo data source (replace with API in real app)
-const SUPER_AGENTS: SuperAgent[] = [
-  {
-    id: 1,
-    agentNumber: "SA-001",
-    businessName: "SafariLink Elite Services",
-    contactPerson: "Juma Mwakyusa",
-    partner: { name: "SafariLink Coaches", code: "SFC001" },
-    status: "active",
-    registrationDate: "2023-01-15",
-  },
-  {
-    id: 2,
-    agentNumber: "SA-002",
-    businessName: "Coastal Premium Express",
-    contactPerson: "Neema Mshana",
-    partner: { name: "Coastal Express Ltd", code: "CEX002" },
-    status: "active",
-    registrationDate: "2023-03-20",
-  },
-  {
-    id: 3,
-    agentNumber: "SA-003",
-    businessName: "Highland Summit Agency",
-    contactPerson: "Asha Kileo",
-    partner: { name: "Highland Transit", code: "HLT003" },
-    status: "pending",
-    registrationDate: "2023-06-10",
-  },
-  {
-    id: 4,
-    agentNumber: "SA-004",
-    businessName: "LakeZone Elite Services",
-    contactPerson: "Emmanuel Nnko",
-    partner: { name: "LakeZone Shuttles", code: "LZS004" },
-    status: "suspended",
-    registrationDate: "2023-08-05",
-  },
-  {
-    id: 5,
-    agentNumber: "SA-005",
-    businessName: "Zanzibar Coastal Alliance",
-    contactPerson: "Amina Salum",
-    partner: { name: "Zanzibar Coastal Lines", code: "ZCL005" },
-    status: "active",
-    registrationDate: "2023-02-28",
-  },
-];
+import {
+  ArrowLeft,
+  Star,
+  User2,
+  Building2,
+  CalendarDays,
+  RefreshCw,
+} from "lucide-react";
+import { useSuperAgents } from "@/lib/contexts/SuperAgentsContext";
 
 export default function SuperAgentDetailPage() {
   const params = useParams<{ id: string }>();
-  const superAgentId = Number(params?.id);
+  const superAgentUid = params?.id as string;
 
-  const superAgent = useMemo(
-    () => SUPER_AGENTS.find((sa) => sa.id === superAgentId),
-    [superAgentId]
-  );
+  const {
+    currentSuperAgent,
+    isLoading,
+    error,
+    loadSuperAgentByUid,
+    clearError,
+    clearCurrentSuperAgent,
+  } = useSuperAgents();
+
+  // Load super agent data when component mounts or superAgentUid changes
+  useEffect(() => {
+    if (superAgentUid) {
+      loadSuperAgentByUid(superAgentUid);
+    }
+
+    // Cleanup when component unmounts
+    return () => {
+      clearCurrentSuperAgent();
+    };
+  }, [superAgentUid, loadSuperAgentByUid, clearCurrentSuperAgent]);
+
+  const handleRefresh = () => {
+    if (superAgentUid) {
+      clearError();
+      loadSuperAgentByUid(superAgentUid);
+    }
+  };
 
   return (
     <DashboardLayout>
@@ -91,14 +60,57 @@ export default function SuperAgentDetailPage() {
               Full profile and partner linkage
             </p>
           </div>
-          <Link href="/super-agents">
-            <Button variant="outline">
-              <ArrowLeft className="w-4 h-4 mr-2" /> Back to Super Agents
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              onClick={handleRefresh}
+              disabled={isLoading}
+              className="border-obus-primary/20 text-obus-text-primary hover:bg-obus-primary/5 dark:border-white/20 dark:text-white dark:hover:bg-white/10"
+            >
+              <RefreshCw
+                className={`w-4 h-4 mr-2 ${isLoading ? "animate-spin" : ""}`}
+              />
+              Refresh
             </Button>
-          </Link>
+            <Link href="/super-agents">
+              <Button variant="outline">
+                <ArrowLeft className="w-4 h-4 mr-2" /> Back to Super Agents
+              </Button>
+            </Link>
+          </div>
         </div>
 
-        {!superAgent ? (
+        {/* Error Display */}
+        {error && (
+          <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-800 dark:border-red-800 dark:bg-red-900/20 dark:text-red-200">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                <span className="text-sm font-medium">
+                  Error loading super agent
+                </span>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clearError}
+                className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-200"
+              >
+                ×
+              </Button>
+            </div>
+            <p className="text-sm mt-1">{error}</p>
+          </div>
+        )}
+
+        {isLoading ? (
+          <div className="rounded-lg border border-obus-primary/10 bg-white p-6 shadow-sm dark:border-white/20 dark:bg-white/5">
+            <div className="flex items-center justify-center gap-2 text-obus-text-secondary dark:text-obus-text-light">
+              <div className="w-4 h-4 border-2 border-obus-primary/30 border-t-obus-primary rounded-full animate-spin" />
+              Loading super agent details...
+            </div>
+          </div>
+        ) : !currentSuperAgent ? (
           <div className="rounded-lg border border-obus-primary/10 bg-white p-6 shadow-sm text-obus-text-secondary dark:border-white/20 dark:bg-white/5 dark:text-obus-text-light">
             Super agent not found.
           </div>
@@ -112,33 +124,33 @@ export default function SuperAgentDetailPage() {
                     Agent #
                   </div>
                   <div className="text-2xl font-bold text-obus-primary dark:text-white">
-                    {superAgent.agentNumber}
+                    {currentSuperAgent.agentNumber}
                   </div>
                   <div className="mt-2 text-sm text-obus-text-secondary dark:text-obus-text-light">
-                    Business: {superAgent.businessName}
+                    Business: {currentSuperAgent.businessName}
                   </div>
                 </div>
                 <Badge
                   variant={
-                    superAgent.status === "active"
+                    currentSuperAgent.status === "ACTIVE"
                       ? "default"
-                      : superAgent.status === "inactive"
+                      : currentSuperAgent.status === "INACTIVE"
                       ? "secondary"
-                      : superAgent.status === "pending"
+                      : currentSuperAgent.status === "PENDING_VERIFICATION"
                       ? "secondary"
                       : "destructive"
                   }
                   className={
-                    superAgent.status === "active"
+                    currentSuperAgent.status === "ACTIVE"
                       ? "bg-green-500/20 text-green-400 hover:bg-green-500/20"
-                      : superAgent.status === "inactive"
+                      : currentSuperAgent.status === "INACTIVE"
                       ? "bg-gray-500/20 text-gray-400 hover:bg-gray-500/20"
-                      : superAgent.status === "pending"
+                      : currentSuperAgent.status === "PENDING_VERIFICATION"
                       ? "bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/20"
                       : "bg-red-500/20 text-red-400 hover:bg-red-500/20"
                   }
                 >
-                  {superAgent.status.toUpperCase()}
+                  {currentSuperAgent.status}
                 </Badge>
               </div>
 
@@ -149,8 +161,18 @@ export default function SuperAgentDetailPage() {
                     <span>Contact Person</span>
                   </div>
                   <div className="text-obus-primary dark:text-white font-medium">
-                    {superAgent.contactPerson}
+                    {currentSuperAgent.contactPersonName}
                   </div>
+                  {currentSuperAgent.contactPersonEmail && (
+                    <div className="text-sm text-obus-text-secondary dark:text-obus-text-light">
+                      {currentSuperAgent.contactPersonEmail}
+                    </div>
+                  )}
+                  {currentSuperAgent.contactPersonPhone && (
+                    <div className="text-sm text-obus-text-secondary dark:text-obus-text-light">
+                      {currentSuperAgent.contactPersonPhone}
+                    </div>
+                  )}
                 </div>
 
                 <div className="rounded-md border border-obus-primary/10 bg-white p-4 dark:border-white/20 dark:bg-white/0">
@@ -159,10 +181,10 @@ export default function SuperAgentDetailPage() {
                     <span>Partner</span>
                   </div>
                   <div className="text-obus-primary dark:text-white font-medium">
-                    {superAgent.partner.name}
+                    {currentSuperAgent.partnerName || "N/A"}
                   </div>
                   <div className="text-sm text-obus-text-secondary dark:text-obus-text-light">
-                    Code: {superAgent.partner.code}
+                    Code: {currentSuperAgent.partnerCode || "N/A"}
                   </div>
                 </div>
 
@@ -172,14 +194,13 @@ export default function SuperAgentDetailPage() {
                     <span>Registration Date</span>
                   </div>
                   <div className="text-obus-primary dark:text-white font-medium">
-                    {new Date(superAgent.registrationDate).toLocaleDateString(
-                      "en-US",
-                      {
-                        year: "numeric",
-                        month: "short",
-                        day: "numeric",
-                      }
-                    )}
+                    {new Date(
+                      currentSuperAgent.registrationDate
+                    ).toLocaleDateString("en-US", {
+                      year: "numeric",
+                      month: "short",
+                      day: "numeric",
+                    })}
                   </div>
                 </div>
               </div>

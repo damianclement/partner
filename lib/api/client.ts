@@ -147,6 +147,13 @@ class ApiClient {
     options: RequestInit = {},
     retryCount = 0
   ): Promise<ApiResponse<T>> {
+    console.log("🔧 API Client Debug:", {
+      endpoint,
+      baseURL: this.getBaseURL(),
+      fullURL: `${this.getBaseURL()}${endpoint}`,
+      options,
+      retryCount,
+    });
     const baseURL = this.getBaseURL();
     const url = `${baseURL}${endpoint}`;
 
@@ -172,6 +179,14 @@ class ApiClient {
     const apiKey = apiKeyManager.getApiKey();
     const apiSecret = apiKeyManager.getApiSecret();
 
+    console.log("🔐 Auth Debug:", {
+      hasAccessToken: !!accessToken,
+      hasApiKey: !!apiKey,
+      hasApiSecret: !!apiSecret,
+      accessToken: accessToken ? `${accessToken.substring(0, 20)}...` : null,
+      apiKey: apiKey ? `${apiKey.substring(0, 10)}...` : null,
+    });
+
     if (accessToken) {
       headers["Authorization"] = `Bearer ${accessToken}`;
     }
@@ -191,8 +206,48 @@ class ApiClient {
     };
 
     try {
+      console.log("🚀 Making fetch request:", {
+        url,
+        method: requestOptions.method || "GET",
+        headers: requestOptions.headers,
+      });
+
       const response = await fetch(url, requestOptions);
-      const data = await response.json();
+
+      console.log("📥 Fetch response received:", {
+        status: response.status,
+        statusText: response.statusText,
+        headers: Object.fromEntries(response.headers.entries()),
+        url: response.url,
+      });
+
+      // Check if response is JSON
+      const contentType = response.headers.get("content-type");
+      const isJson = contentType && contentType.includes("application/json");
+
+      let data;
+      if (isJson) {
+        data = await response.json();
+      } else {
+        // If not JSON, get text to see what we're actually receiving
+        const text = await response.text();
+        console.error("🚨 Non-JSON Response:", {
+          url,
+          status: response.status,
+          statusText: response.statusText,
+          contentType,
+          responseText:
+            text.substring(0, 500) + (text.length > 500 ? "..." : ""),
+        });
+
+        throw new ApiError(
+          `Expected JSON response but received ${
+            contentType || "unknown content type"
+          }. Status: ${response.status}`,
+          response.status,
+          { responseText: text }
+        );
+      }
 
       if (!response.ok) {
         throw new ApiError(
@@ -290,13 +345,13 @@ class ApiClient {
     endpoint: string,
     params: Record<string, string>
   ): string {
-    const url = new URL(`${this.getBaseURL()}${endpoint}`);
+    const url = new URL(endpoint, "http://localhost"); // Use dummy base for URL construction
 
     Object.entries(params).forEach(([key, value]) => {
       url.searchParams.append(key, value);
     });
 
-    return url.pathname + url.search;
+    return endpoint + url.search;
   }
 }
 
