@@ -12,11 +12,35 @@ import {
   Rocket,
 } from "lucide-react";
 import { useUser } from "@/lib/contexts/UserContext";
+import { AuthGuard } from "@/components/AuthGuard";
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { apiKeyManager } from "@/lib/api/client";
 
 export default function Home() {
-  const { user } = useUser();
+  const { user, hasRole, isAuthenticated } = useUser();
+  const router = useRouter();
+
+  // Check if admin user needs API credentials
+  useEffect(() => {
+    if (
+      isAuthenticated &&
+      hasRole("admin") &&
+      !apiKeyManager.hasApiCredentials()
+    ) {
+      router.push("/setup");
+    }
+  }, [isAuthenticated, hasRole, router]);
+
+  // Show setup page for admin users without API credentials
+  if (
+    isAuthenticated &&
+    hasRole("admin") &&
+    !apiKeyManager.hasApiCredentials()
+  ) {
+    return null; // Will redirect to setup
+  }
 
   // Live time state
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -314,8 +338,14 @@ export default function Home() {
   );
 
   return (
-    <DashboardLayout>
-      {user?.userType === "partner" ? <PartnerDashboard /> : <AdminDashboard />}
-    </DashboardLayout>
+    <AuthGuard>
+      <DashboardLayout>
+        {user?.userType === "partner" ? (
+          <PartnerDashboard />
+        ) : (
+          <AdminDashboard />
+        )}
+      </DashboardLayout>
+    </AuthGuard>
   );
 }

@@ -12,16 +12,23 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { useUser } from "@/lib/contexts/UserContext";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { login, isLoading, error: authError, isAuthenticated } = useUser();
   const [formData, setFormData] = useState({
     username: "",
     password: "",
   });
-  const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [formError, setFormError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+
+  // Redirect if already authenticated
+  if (isAuthenticated) {
+    router.push("/");
+    return null;
+  }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -29,32 +36,27 @@ export default function LoginPage() {
       ...prev,
       [name]: value,
     }));
-    // Clear error when user starts typing
-    if (error) setError("");
+    // Clear errors when user starts typing
+    if (formError) setFormError("");
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
+    setFormError("");
 
     // Basic validation
     if (!formData.username || !formData.password) {
-      setError("Please enter both username and password");
+      setFormError("Please enter both username and password");
       return;
     }
 
-    setIsLoading(true);
-
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // For demo purposes, redirect to dashboard
+      await login(formData.username, formData.password);
+      // If login successful, redirect to dashboard
       router.push("/");
     } catch (err) {
-      setError("Login failed. Please check your credentials.");
-    } finally {
-      setIsLoading(false);
+      // Error is already handled by the UserContext
+      setFormError(authError || "Login failed. Please check your credentials.");
     }
   };
 
@@ -168,10 +170,10 @@ export default function LoginPage() {
                 </div>
               </div>
 
-              {error && (
+              {(formError || authError) && (
                 <div className="text-sm text-red-600 bg-red-50 p-3 rounded-lg border border-red-200 flex items-center gap-2">
                   <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                  <span>{error}</span>
+                  <span>{formError || authError}</span>
                 </div>
               )}
 
