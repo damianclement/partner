@@ -62,13 +62,6 @@ const navigationItems: NavigationItem[] = [
     ],
   },
   {
-    name: "System Configuration",
-    href: "/system-config",
-    icon: Settings,
-    allowedUserTypes: ["ROOT_USER", "SYSTEM_USER"],
-    allowedUserRoles: ["ROOT_ADMIN", "SYSTEM_ADMIN", "SYSTEM_SUPPORT"],
-  },
-  {
     name: "Partner Management",
     href: "/partners",
     icon: Handshake,
@@ -183,46 +176,6 @@ const navigationItems: NavigationItem[] = [
     ],
   },
   {
-    name: "System Administration",
-    href: "/admin",
-    icon: Shield,
-    hasDropdown: true,
-    allowedUserTypes: ["ROOT_USER", "SYSTEM_USER"],
-    allowedUserRoles: ["ROOT_ADMIN", "SYSTEM_ADMIN", "SYSTEM_SUPPORT"],
-    dropdownItems: [
-      {
-        name: "System Settings",
-        href: "/settings",
-        allowedUserTypes: ["ROOT_USER", "SYSTEM_USER"],
-        allowedUserRoles: ["ROOT_ADMIN", "SYSTEM_ADMIN"],
-      },
-      {
-        name: "API Management",
-        href: "/admin/api-keys",
-        allowedUserTypes: ["ROOT_USER", "SYSTEM_USER"],
-        allowedUserRoles: ["ROOT_ADMIN", "SYSTEM_ADMIN"],
-      },
-      {
-        name: "System Logs",
-        href: "/admin/logs",
-        allowedUserTypes: ["ROOT_USER", "SYSTEM_USER"],
-        allowedUserRoles: ["ROOT_ADMIN", "SYSTEM_ADMIN", "SYSTEM_SUPPORT"],
-      },
-      {
-        name: "Database Management",
-        href: "/admin/database",
-        allowedUserTypes: ["ROOT_USER"],
-        allowedUserRoles: ["ROOT_ADMIN"],
-      },
-      {
-        name: "Security Settings",
-        href: "/admin/security",
-        allowedUserTypes: ["ROOT_USER", "SYSTEM_USER"],
-        allowedUserRoles: ["ROOT_ADMIN", "SYSTEM_ADMIN"],
-      },
-    ],
-  },
-  {
     name: "Reports & Analytics",
     href: "/reports",
     icon: TrendingUp,
@@ -235,12 +188,12 @@ const navigationItems: NavigationItem[] = [
       "PARTNER_ADMIN",
     ],
     dropdownItems: [
-      {
-        name: "System Reports",
-        href: "/reports/system",
-        allowedUserTypes: ["ROOT_USER", "SYSTEM_USER"],
-        allowedUserRoles: ["ROOT_ADMIN", "SYSTEM_ADMIN", "SYSTEM_SUPPORT"],
-      },
+      // {
+      //   name: "System Reports",
+      //   href: "/reports/system",
+      //   allowedUserTypes: ["ROOT_USER", "SYSTEM_USER"],
+      //   allowedUserRoles: ["ROOT_ADMIN", "SYSTEM_ADMIN", "SYSTEM_SUPPORT"],
+      // },
       {
         name: "Partner Reports",
         href: "/reports/partners",
@@ -263,12 +216,12 @@ const navigationItems: NavigationItem[] = [
           "PARTNER_ADMIN",
         ],
       },
-      {
-        name: "Financial Reports",
-        href: "/reports/financial",
-        allowedUserTypes: ["ROOT_USER", "SYSTEM_USER"],
-        allowedUserRoles: ["ROOT_ADMIN", "SYSTEM_ADMIN"],
-      },
+      // {
+      //   name: "Financial Reports",
+      //   href: "/reports/financial",
+      //   allowedUserTypes: ["ROOT_USER", "SYSTEM_USER"],
+      //   allowedUserRoles: ["ROOT_ADMIN", "SYSTEM_ADMIN"],
+      // },
     ],
   },
 ];

@@ -56,66 +56,61 @@ export default function NotFound() {
   ];
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-obus-primary via-obus-primary/90 to-[#0b1645] flex items-center justify-center px-4 py-8">
-      <div className="w-full max-w-4xl">
+    <div className="h-screen bg-linear-to-br from-obus-primary via-obus-primary/90 to-[#0b1645] flex items-center justify-center px-4 overflow-hidden">
+      <div className="w-full max-w-3xl">
         {/* Main Error Card */}
         <Card className="bg-white/95 backdrop-blur-sm border-white/20 shadow-2xl">
-          <CardHeader className="text-center pb-8">
+          <CardHeader className="text-center pb-4">
             {/* Logo/Brand Section */}
-            <div className="inline-flex items-center justify-center w-20 h-20 bg-obus-primary/10 rounded-full mb-6">
-              <div className="w-12 h-12 bg-obus-accent rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-2xl">O</span>
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-obus-primary/10 rounded-full mb-4">
+              <div className="w-10 h-10 bg-obus-accent rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-xl">O</span>
               </div>
             </div>
 
-            <div className="space-y-4">
-              <div className="flex items-center justify-center gap-3">
-                <AlertTriangle className="w-8 h-8 text-orange-500" />
-                <CardTitle className="text-4xl font-bold text-obus-primary">
+            <div className="space-y-3">
+              <div className="flex items-center justify-center gap-2">
+                <AlertTriangle className="w-6 h-6 text-orange-500" />
+                <CardTitle className="text-3xl font-bold text-obus-primary">
                   404
                 </CardTitle>
               </div>
 
-              <CardDescription className="text-xl text-obus-text-secondary max-w-2xl mx-auto">
+              <CardDescription className="text-lg text-obus-text-secondary max-w-xl mx-auto">
                 Oops! The page you're looking for seems to have taken a detour.
-                Don't worry, we'll help you get back on track.
               </CardDescription>
             </div>
           </CardHeader>
 
-          <CardContent className="space-y-8">
+          <CardContent className="space-y-6">
             {/* Error Details */}
-            <div className="text-center space-y-2">
-              <h3 className="text-lg font-semibold text-obus-primary">
+            <div className="text-center space-y-1">
+              <h3 className="text-base font-semibold text-obus-primary">
                 Page Not Found
               </h3>
-              <p className="text-obus-text-secondary">
-                The requested page could not be found. It may have been moved,
-                deleted, or you may have entered an incorrect URL.
+              <p className="text-sm text-obus-text-secondary">
+                The requested page could not be found.
               </p>
             </div>
 
-            {/* Quick Actions */}
-            <div className="space-y-4">
-              <h4 className="text-center font-semibold text-obus-primary">
+            {/* Quick Actions - Compact Grid */}
+            <div className="space-y-3">
+              <h4 className="text-center text-sm font-semibold text-obus-primary">
                 Quick Actions
               </h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {quickActions.map((action, index) => {
                   const Icon = action.icon;
                   return (
                     <Link key={index} href={action.href}>
                       <div
-                        className={`p-4 rounded-lg border-2 transition-all duration-200 hover:scale-105 cursor-pointer ${action.color}`}
+                        className={`p-3 rounded-lg border-2 transition-all duration-200 hover:scale-105 cursor-pointer ${action.color}`}
                       >
-                        <div className="flex flex-col items-center text-center space-y-2">
-                          <Icon className="w-6 h-6" />
-                          <h5 className="font-semibold text-sm">
+                        <div className="flex flex-col items-center text-center space-y-1">
+                          <Icon className="w-5 h-5" />
+                          <h5 className="font-semibold text-xs">
                             {action.title}
                           </h5>
-                          <p className="text-xs opacity-75">
-                            {action.description}
-                          </p>
                         </div>
                       </div>
                     </Link>
@@ -124,11 +119,12 @@ export default function NotFound() {
               </div>
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            {/* Action Buttons - Compact */}
+            <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
               <Button
                 onClick={() => router.back()}
                 variant="outline"
+                size="sm"
                 className="w-full sm:w-auto border-obus-primary/20 text-obus-primary hover:bg-obus-primary/5 dark:border-white/20 dark:text-white dark:hover:bg-white/10"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
@@ -137,26 +133,28 @@ export default function NotFound() {
 
               <Button
                 onClick={() => router.push("/")}
+                size="sm"
                 className="w-full sm:w-auto bg-obus-accent hover:bg-obus-accent/90"
               >
                 <Home className="w-4 h-4 mr-2" />
-                Go to Dashboard
+                Dashboard
               </Button>
 
               <Button
                 onClick={() => window.location.reload()}
                 variant="outline"
+                size="sm"
                 className="w-full sm:w-auto border-obus-primary/20 text-obus-primary hover:bg-obus-primary/5 dark:border-white/20 dark:text-white dark:hover:bg-white/10"
               >
                 <RefreshCw className="w-4 h-4 mr-2" />
-                Refresh Page
+                Refresh
               </Button>
             </div>
 
-            {/* Help Section */}
-            <div className="text-center pt-6 border-t border-obus-primary/10">
-              <p className="text-sm text-obus-text-secondary">
-                Still having trouble? Contact our support team at{" "}
+            {/* Help Section - Compact */}
+            <div className="text-center pt-4 border-t border-obus-primary/10">
+              <p className="text-xs text-obus-text-secondary">
+                Need help? Contact{" "}
                 <a
                   href="mailto:support@obus.co.tz"
                   className="text-obus-accent hover:text-obus-accent/80 underline font-medium"

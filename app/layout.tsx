@@ -72,7 +72,9 @@ export default function RootLayout({
                       <RolesProvider>
                         <BookingsProvider>
                           <BusCoreSystemsProvider>
-                            <GroupAgentsProvider>{children}</GroupAgentsProvider>
+                            <GroupAgentsProvider>
+                              {children}
+                            </GroupAgentsProvider>
                           </BusCoreSystemsProvider>
                         </BookingsProvider>
                       </RolesProvider>

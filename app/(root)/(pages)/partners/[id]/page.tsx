@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { DashboardLayout } from "@/components/DashboardLayout";
@@ -25,6 +25,7 @@ import { usePartners } from "@/lib/contexts/PartnersContext";
 export default function PartnerDetailPage() {
   const params = useParams<{ id: string }>();
   const partnerUid = params?.id as string;
+  const loadingRef = useRef(false);
 
   const {
     currentPartner,
@@ -37,8 +38,11 @@ export default function PartnerDetailPage() {
 
   // Load partner data when component mounts or partnerUid changes
   useEffect(() => {
-    if (partnerUid) {
-      loadPartnerByUid(partnerUid);
+    if (partnerUid && !loadingRef.current) {
+      loadingRef.current = true;
+      loadPartnerByUid(partnerUid).finally(() => {
+        loadingRef.current = false;
+      });
     }
 
     // Cleanup when component unmounts

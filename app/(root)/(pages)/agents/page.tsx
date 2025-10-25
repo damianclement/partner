@@ -1,10 +1,19 @@
 "use client";
 
 import * as React from "react";
+import { useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Plus, MoreHorizontal, Search, Filter, RefreshCw } from "lucide-react";
+import {
+  Plus,
+  MoreHorizontal,
+  Search,
+  Filter,
+  RefreshCw,
+  ArrowLeft,
+} from "lucide-react";
 // Simple table implementation without external dependencies
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -25,8 +34,12 @@ import {
 import Link from "next/link";
 import { useAgents } from "@/lib/contexts/AgentsContext";
 import { useUser } from "@/lib/contexts/UserContext";
+import { usePartners } from "@/lib/contexts/PartnersContext";
 
 export default function AgentsPage() {
+  const searchParams = useSearchParams();
+  const partnerUid = searchParams.get("partner");
+
   const {
     agents,
     stats,
@@ -46,13 +59,103 @@ export default function AgentsPage() {
     clearError,
   } = useAgents();
 
-  const { isPartner } = useUser();
+  const { isPartner, user } = useUser();
+  const { partners, loadPartners } = usePartners();
 
   // Local state for UI interactions
   const [searchValue, setSearchValue] = React.useState("");
   const [selectedAgents, setSelectedAgents] = React.useState<number[]>([]);
   const [searchTimeout, setSearchTimeout] =
     React.useState<NodeJS.Timeout | null>(null);
+  const [currentPartner, setCurrentPartner] = React.useState<any>(null);
+  const [hasLoadedInitialData, setHasLoadedInitialData] = React.useState(false);
+
+  // Calculate real-time stats from current agents
+  const calculateStats = () => {
+    const totalAgents = agents.length;
+    const activeAgents = agents.filter(
+      (agent) => agent.status === "active"
+    ).length;
+    const pendingAgents = agents.filter(
+      (agent) => agent.status === "pending"
+    ).length;
+    const inactiveAgents = agents.filter(
+      (agent) => agent.status === "inactive"
+    ).length;
+    const suspendedAgents = agents.filter(
+      (agent) => agent.status === "suspended"
+    ).length;
+
+    return {
+      totalAgents,
+      activeAgents,
+      pendingAgents,
+      inactiveAgents,
+      suspendedAgents,
+      activeRate:
+        totalAgents > 0
+          ? ((activeAgents / totalAgents) * 100).toFixed(1)
+          : "0.0",
+    };
+  };
+
+  const realTimeStats = calculateStats();
+
+  // Determine which partner to filter by
+  const getFilterPartnerId = () => {
+    if (partnerUid) {
+      // If partnerUid is provided in URL, find the partner
+      const partner = partners.find((p) => p.uid === partnerUid);
+      return partner?.id;
+    } else if (isPartner() && user?.partner?.id) {
+      // If current user is a partner, filter by their partner ID
+      return user.partner.id;
+    }
+    return undefined;
+  };
+
+  const filterPartnerId = getFilterPartnerId();
+
+  // Load partners if we need to find a partner by UID
+  useEffect(() => {
+    if (partnerUid && partners.length === 0) {
+      loadPartners();
+    }
+  }, [partnerUid, partners.length, loadPartners]);
+
+  // Set current partner when partners are loaded
+  useEffect(() => {
+    if (partnerUid && partners.length > 0) {
+      const partner = partners.find((p) => p.uid === partnerUid);
+      setCurrentPartner(partner);
+      // Reset loading state when partner changes
+      setHasLoadedInitialData(false);
+    }
+  }, [partnerUid, partners]);
+
+  // Load agents with partner filtering
+  useEffect(() => {
+    if (hasLoadedInitialData) return; // Prevent multiple loads
+
+    const loadAgentsWithFilter = async () => {
+      try {
+        if (filterPartnerId !== undefined) {
+          // Filter agents by partner ID
+          const newFilters = { partnerId: filterPartnerId };
+          setFilters(newFilters);
+          await loadAgents({ filters: newFilters });
+        } else {
+          // Load all agents (for admin users)
+          await loadAgents();
+        }
+        setHasLoadedInitialData(true);
+      } catch (error) {
+        console.error("Error loading agents:", error);
+      }
+    };
+
+    loadAgentsWithFilter();
+  }, [filterPartnerId, hasLoadedInitialData]); // Add hasLoadedInitialData to trigger reload when reset
 
   // Handle search with debouncing
   const handleSearch = (value: string) => {
@@ -64,9 +167,21 @@ export default function AgentsPage() {
 
     const timeout = setTimeout(() => {
       if (value.trim()) {
-        searchAgents(value.trim());
+        // Search with partner filter maintained
+        const searchFilters: any = { search: value.trim() };
+        if (filterPartnerId !== undefined) {
+          searchFilters.partnerId = filterPartnerId;
+        }
+        setFilters(searchFilters);
+        loadAgents({ filters: searchFilters });
       } else {
-        loadAgents();
+        // Load agents with partner filter maintained
+        const loadFilters: any = {};
+        if (filterPartnerId !== undefined) {
+          loadFilters.partnerId = filterPartnerId;
+        }
+        setFilters(loadFilters);
+        loadAgents({ filters: loadFilters });
       }
     }, 500);
 
@@ -76,7 +191,12 @@ export default function AgentsPage() {
   // Handle refresh
   const handleRefresh = () => {
     clearError();
-    loadAgents();
+    const refreshFilters: any = {};
+    if (filterPartnerId !== undefined) {
+      refreshFilters.partnerId = filterPartnerId;
+    }
+    setFilters(refreshFilters);
+    loadAgents({ filters: refreshFilters });
   };
 
   // Handle individual agent selection
@@ -115,10 +235,27 @@ export default function AgentsPage() {
         {/* Page Header */}
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-h1">Agent Management</h1>
-            <p className="text-caption mt-2">
-              Manage and monitor all agents across your partner network
-            </p>
+            <div className="flex items-center gap-4">
+              {partnerUid && (
+                <Link href="/partners">
+                  <Button variant="ghost" size="sm" className="p-2">
+                    <ArrowLeft className="w-4 h-4" />
+                  </Button>
+                </Link>
+              )}
+              <div>
+                <h1 className="text-h1">
+                  {currentPartner
+                    ? `${currentPartner.businessName} - Agents`
+                    : "Agent Management"}
+                </h1>
+                <p className="text-caption mt-2">
+                  {currentPartner
+                    ? `Manage and monitor agents for ${currentPartner.businessName}`
+                    : "Manage and monitor all agents across your partner network"}
+                </p>
+              </div>
+            </div>
           </div>
           <Button className="bg-obus-accent hover:bg-obus-accent/90">
             <Plus className="w-4 h-4 mr-2" />
@@ -133,13 +270,17 @@ export default function AgentsPage() {
               Total Agents
             </div>
             <div className="text-2xl font-bold text-obus-primary dark:text-white">
-              {isStatsLoading ? (
+              {isLoading ? (
                 <div className="w-8 h-8 border-2 border-obus-primary/30 border-t-obus-primary rounded-full animate-spin" />
               ) : (
-                stats?.totalAgents?.toLocaleString() || "0"
+                realTimeStats.totalAgents.toLocaleString()
               )}
             </div>
-            <p className="text-xs text-obus-accent mt-1">+8% this month</p>
+            <p className="text-xs text-obus-text-secondary dark:text-obus-text-light mt-1">
+              {currentPartner
+                ? `For ${currentPartner.businessName}`
+                : "All partners"}
+            </p>
           </div>
 
           <div className="rounded-lg border border-obus-primary/10 bg-white p-6 shadow-sm transition-colors dark:border-white/20 dark:bg-white/5">
@@ -147,18 +288,14 @@ export default function AgentsPage() {
               Active Agents
             </div>
             <div className="text-2xl font-bold text-obus-primary dark:text-white">
-              {isStatsLoading ? (
+              {isLoading ? (
                 <div className="w-8 h-8 border-2 border-obus-primary/30 border-t-obus-primary rounded-full animate-spin" />
               ) : (
-                stats?.activeAgents?.toLocaleString() || "0"
+                realTimeStats.activeAgents.toLocaleString()
               )}
             </div>
             <p className="text-xs text-obus-accent mt-1">
-              {stats
-                ? `${((stats.activeAgents / stats.totalAgents) * 100).toFixed(
-                    1
-                  )}% active rate`
-                : "0% active rate"}
+              {realTimeStats.activeRate}% active rate
             </p>
           </div>
 
@@ -167,10 +304,10 @@ export default function AgentsPage() {
               Pending Approval
             </div>
             <div className="text-2xl font-bold text-obus-primary dark:text-white">
-              {isStatsLoading ? (
+              {isLoading ? (
                 <div className="w-8 h-8 border-2 border-obus-primary/30 border-t-obus-primary rounded-full animate-spin" />
               ) : (
-                stats?.pendingApproval?.toLocaleString() || "0"
+                realTimeStats.pendingAgents.toLocaleString()
               )}
             </div>
             <p className="text-xs text-obus-text-secondary dark:text-obus-text-light mt-1">
@@ -180,16 +317,21 @@ export default function AgentsPage() {
 
           <div className="rounded-lg border border-obus-primary/10 bg-white p-6 shadow-sm transition-colors dark:border-white/20 dark:bg-white/5">
             <div className="text-sm font-medium text-obus-text-secondary dark:text-obus-text-light mb-2">
-              Avg. Rating
+              Inactive/Suspended
             </div>
             <div className="text-2xl font-bold text-obus-primary dark:text-white">
-              {isStatsLoading ? (
+              {isLoading ? (
                 <div className="w-8 h-8 border-2 border-obus-primary/30 border-t-obus-primary rounded-full animate-spin" />
               ) : (
-                stats?.averageRating?.toFixed(1) || "0.0"
+                (
+                  realTimeStats.inactiveAgents + realTimeStats.suspendedAgents
+                ).toLocaleString()
               )}
             </div>
-            <p className="text-xs text-obus-accent mt-1">+0.2 this month</p>
+            <p className="text-xs text-obus-text-secondary dark:text-obus-text-light mt-1">
+              {realTimeStats.inactiveAgents} inactive,{" "}
+              {realTimeStats.suspendedAgents} suspended
+            </p>
           </div>
         </div>
 

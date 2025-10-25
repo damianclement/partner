@@ -195,6 +195,58 @@ export function UsersProvider({ children }: { children: React.ReactNode }) {
     []
   );
 
+  // Helper function to calculate statistics from users data
+  const calculateStatsFromUsers = useCallback((usersData: User[]) => {
+    console.log("UsersContext - Calculating stats from users data:", {
+      totalUsers: usersData.length,
+      users: usersData.map((user) => ({
+        id: user.id,
+        username: user.username,
+        userType: user.userType,
+        enabled: user.enabled,
+        department: user.department,
+      })),
+    });
+
+    const totalUsers = usersData.length;
+    const activeUsers = usersData.filter((user) => user.enabled).length;
+    const inactiveUsers = usersData.filter((user) => !user.enabled).length;
+    const adminUsers = usersData.filter(
+      (user) => user.userType === "SYSTEM_USER" || user.userType === "ROOT_USER"
+    ).length;
+    const partnerUsers = usersData.filter(
+      (user) => user.userType === "PARTNER_USER"
+    ).length;
+    const partnerAgents = usersData.filter(
+      (user) => user.userType === "PARTNER_AGENT"
+    ).length;
+
+    // Get unique departments
+    const departments = new Set(
+      usersData.map((user) => user.department).filter(Boolean)
+    );
+    const totalDepartments = departments.size;
+    const averageUsersPerDepartment =
+      totalDepartments > 0 ? totalUsers / totalDepartments : 0;
+
+    const stats = {
+      totalUsers,
+      activeUsers,
+      inactiveUsers,
+      suspendedUsers: 0, // This would need additional status field
+      pendingVerificationUsers: 0, // This would need additional status field
+      lockedUsers: usersData.filter((user) => !user.accountNonLocked).length,
+      adminUsers,
+      partnerUsers,
+      partnerAgents,
+      totalDepartments,
+      averageUsersPerDepartment,
+    };
+
+    console.log("UsersContext - Calculated statistics:", stats);
+    return stats;
+  }, []);
+
   // Load users with pagination
   const loadUsers = useCallback(
     async (params?: PageRequest) => {
@@ -218,6 +270,10 @@ export function UsersProvider({ children }: { children: React.ReactNode }) {
           setUsers(transformedUsers);
           setTotalPages(response.totalPages || 0);
           setTotalItems(response.totalElements || 0);
+
+          // Recalculate statistics from loaded users data
+          const calculatedStats = calculateStatsFromUsers(transformedUsers);
+          setStats(calculatedStats);
         } else {
           console.warn(
             "UsersContext - API response invalid, using empty array"
@@ -226,6 +282,21 @@ export function UsersProvider({ children }: { children: React.ReactNode }) {
           setUsers([]);
           setTotalPages(0);
           setTotalItems(0);
+
+          // Set empty statistics
+          setStats({
+            totalUsers: 0,
+            activeUsers: 0,
+            inactiveUsers: 0,
+            suspendedUsers: 0,
+            pendingVerificationUsers: 0,
+            lockedUsers: 0,
+            adminUsers: 0,
+            partnerUsers: 0,
+            partnerAgents: 0,
+            totalDepartments: 0,
+            averageUsersPerDepartment: 0,
+          });
         }
       } catch (err) {
         const errorMessage =
@@ -248,32 +319,70 @@ export function UsersProvider({ children }: { children: React.ReactNode }) {
       filters.status,
       filters.department,
       filters.search,
+      calculateStatsFromUsers,
     ]
   );
 
   // Load user by UID
-  const loadUserByUid = async (uid: string) => {
-    try {
-      setIsLoading(true);
-      setError(null);
+  const loadUserByUid = useCallback(
+    async (uid: string) => {
+      try {
+        console.log("UsersContext - Loading user by UID:", uid);
+        setIsLoading(true);
+        setError(null);
 
-      const response = await usersService.getUserByUid(uid);
+        const response: any = await usersService.getUserByUid(uid);
+        console.log("UsersContext - User response:", response);
+        console.log("UsersContext - Response type:", typeof response);
+        console.log(
+          "UsersContext - Response keys:",
+          response ? Object.keys(response) : "No response"
+        );
 
-      if (response.status && response.data) {
-        const transformedUser = transformUserResponse(response.data);
+        // Check what we actually received
+        if (!response) {
+          throw new Error("No response received from server");
+        }
+
+        // The response could be either:
+        // 1. The full ApiResponse { status: true, data: {...} }
+        // 2. Just the data object with status field
+        let userData;
+
+        if (
+          response.data &&
+          typeof response.data === "object" &&
+          "id" in response.data
+        ) {
+          // Standard ApiResponse structure
+          console.log("UsersContext - Standard ApiResponse structure");
+          userData = response.data;
+        } else if (response.uid || response.userId) {
+          // Response is already the user data object
+          console.log("UsersContext - Response is user data directly");
+          userData = response;
+        } else {
+          console.error(
+            "UsersContext - Unable to determine response structure:",
+            response
+          );
+          throw new Error("Unexpected response structure");
+        }
+
+        const transformedUser = transformUserResponse(userData as any);
+        console.log("UsersContext - Transformed user:", transformedUser);
         setCurrentUser(transformedUser);
-      } else {
-        throw new Error(response.message || "Failed to load user");
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : "Failed to load user";
+        setError(errorMessage);
+        console.error("Error loading user:", err);
+      } finally {
+        setIsLoading(false);
       }
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to load user";
-      setError(errorMessage);
-      console.error("Error loading user:", err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    },
+    [transformUserResponse]
+  );
 
   // Create admin user
   const createAdminUser = async (userData: CreateAdminUserRequestDto) => {
@@ -604,32 +713,33 @@ export function UsersProvider({ children }: { children: React.ReactNode }) {
       setIsStatsLoading(true);
       setError(null);
 
-      const response = await usersService.getUserStatistics();
-      setStats(response);
+      // First try to calculate from loaded users data (more reliable)
+      if (users.length > 0) {
+        const calculatedStats = calculateStatsFromUsers(users);
+        setStats(calculatedStats);
+        console.log(
+          "UsersContext - Calculated stats from users data:",
+          calculatedStats
+        );
+      } else {
+        // If no users loaded, try API calls
+        const response = await usersService.getUserStatistics();
+        setStats(response);
+        console.log("UsersContext - Stats from API:", response);
+      }
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Failed to load user statistics";
       setError(errorMessage);
       console.error("Error loading user statistics:", err);
 
-      // Set default statistics on error
-      setStats({
-        totalUsers: 0,
-        activeUsers: 0,
-        inactiveUsers: 0,
-        suspendedUsers: 0,
-        pendingVerificationUsers: 0,
-        lockedUsers: 0,
-        adminUsers: 0,
-        partnerUsers: 0,
-        partnerAgents: 0,
-        totalDepartments: 0,
-        averageUsersPerDepartment: 0,
-      });
+      // Calculate statistics from loaded users data as fallback
+      const calculatedStats = calculateStatsFromUsers(users);
+      setStats(calculatedStats);
     } finally {
       setIsStatsLoading(false);
     }
-  }, []);
+  }, [users, calculateStatsFromUsers]);
 
   // UI State Management
   const clearError = () => setError(null);
@@ -641,9 +751,9 @@ export function UsersProvider({ children }: { children: React.ReactNode }) {
     if (isAuthenticated) {
       console.log("UsersContext - Loading initial data");
       loadUsers({ page: 0, size: 10 });
-      loadUserStatistics();
+      // Statistics will be calculated from loaded users data
     }
-  }, [isAuthenticated]); // Run when authentication status changes
+  }, [isAuthenticated, loadUsers]); // Run when authentication status changes
 
   const value: UsersContextType = {
     // State

@@ -1,14 +1,12 @@
 "use client";
 
 import * as React from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { partnersService } from "@/lib/api/services/partners";
-import { usersService } from "@/lib/api/services/users";
 import {
   Card,
   CardContent,
@@ -33,11 +31,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useUsers } from "@/lib/contexts/UsersContext";
 
 interface UserFormData {
-  // Partner Selection (for partner users only)
-  partnerId: number | null;
-
   // Section 1: Basic Information
   username: string;
   email: string;
@@ -86,13 +82,15 @@ const timezones = [
   { value: "UTC", label: "UTC (GMT)" },
 ];
 
-export default function NewUserPage() {
+export default function EditUserPage() {
+  const params = useParams<{ id: string }>();
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const userType = searchParams.get("type") || "admin"; // Default to admin if no type specified
+  const userId = params?.id;
+
+  const { currentUser, isLoading, error, loadUserByUid, updateUser } =
+    useUsers();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [formData, setFormData] = React.useState<UserFormData>({
-    partnerId: null,
     username: "",
     email: "",
     firstName: "",
@@ -121,38 +119,54 @@ export default function NewUserPage() {
   });
 
   const [errors, setErrors] = React.useState<Record<string, string>>({});
-  const [partners, setPartners] = React.useState<any[]>([]);
-  const [isLoadingPartners, setIsLoadingPartners] = React.useState(false);
   const [submitError, setSubmitError] = React.useState<string>("");
   const [submitSuccess, setSubmitSuccess] = React.useState<string>("");
 
-  // Fetch partners when component mounts and user type is partner
+  // Load user data when component mounts
   React.useEffect(() => {
-    if (userType === "partner") {
-      fetchPartners();
+    if (userId) {
+      loadUserByUid(userId as string);
     }
-  }, [userType]);
+  }, [userId, loadUserByUid]);
 
-  const fetchPartners = async () => {
-    setIsLoadingPartners(true);
-    try {
-      const response = await partnersService.getPartnersForAssignment();
-      setPartners(response.data || []);
-    } catch (error) {
-      console.error("Error fetching partners:", error);
-      setPartners([]);
-    } finally {
-      setIsLoadingPartners(false);
+  // Populate form data when currentUser is loaded
+  React.useEffect(() => {
+    if (currentUser) {
+      setFormData({
+        username: currentUser.username || "",
+        email: currentUser.email || "",
+        firstName: currentUser.firstName || "",
+        lastName: currentUser.lastName || "",
+        displayName: currentUser.displayName || "",
+        employeeId: currentUser.employeeId || "",
+        phoneNumber: currentUser.phoneNumber || "",
+        personalEmail: currentUser.personalEmail || "",
+        workPhone: currentUser.workPhone || "",
+        workEmail: currentUser.workEmail || "",
+        department: currentUser.department || "",
+        position: currentUser.position || "",
+        officeLocation: currentUser.officeLocation || "",
+        gender: currentUser.gender as "Male" | "Female" | "Other" | "",
+        address: currentUser.address || "",
+        city: currentUser.city || "",
+        state: currentUser.state || "",
+        country: currentUser.country || "",
+        postalCode: currentUser.postalCode || "",
+        timezone: currentUser.timezone || "",
+        nationalId: currentUser.nationalId || "",
+        passportNumber: currentUser.passportNumber || "",
+        preferredLanguage: currentUser.preferredLanguage as
+          | "English"
+          | "Swahili"
+          | "",
+        emergencyContactName: currentUser.emergencyContactName || "",
+        emergencyContactPhone: currentUser.emergencyContactPhone || "",
+      });
     }
-  };
+  }, [currentUser]);
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
-
-    // Validate partner selection for partner users
-    if (userType === "partner" && !formData.partnerId) {
-      newErrors.partnerId = "Partner selection is required";
-    }
 
     // Only validate required fields: Username, Email, First Name, Last Name, Display Name, Phone Number
     if (!formData.username.trim()) newErrors.username = "Username is required";
@@ -205,6 +219,11 @@ export default function NewUserPage() {
       return;
     }
 
+    if (!userId) {
+      setSubmitError("User ID is required");
+      return;
+    }
+
     // Clear previous errors and success messages
     setSubmitError("");
     setSubmitSuccess("");
@@ -212,7 +231,7 @@ export default function NewUserPage() {
     setIsSubmitting(true);
     try {
       // Prepare user data according to API DTO structure
-      const baseUserData = {
+      const userData = {
         username: formData.username,
         email: formData.email,
         displayName: formData.displayName,
@@ -240,41 +259,26 @@ export default function NewUserPage() {
         emergencyContactPhone: formData.emergencyContactPhone || "",
       };
 
-      // Create user data based on type
-      const userData =
-        userType === "partner"
-          ? { ...baseUserData, partnerId: formData.partnerId! }
-          : baseUserData;
+      console.log("Updating user data:", userData);
 
-      console.log("Submitting user data:", userData);
+      // Make API call to update user
+      await updateUser(userId, userData as any);
 
-      // Make API call based on user type
-      let response;
-      if (userType === "admin") {
-        response = await usersService.createAdminUser(userData as any);
-      } else {
-        response = await usersService.createPartnerUser(userData as any);
-      }
-
-      console.log("User creation response:", response);
+      console.log("User updated successfully");
 
       // Show success message
-      setSubmitSuccess(
-        `${
-          userType === "admin" ? "Admin" : "Partner"
-        } user created successfully!`
-      );
+      setSubmitSuccess("User updated successfully!");
 
-      // Redirect to users list after a short delay
+      // Redirect to user details after a short delay
       setTimeout(() => {
-        router.push("/users");
+        router.push(`/users/${userId}`);
       }, 2000);
     } catch (error: any) {
-      console.error("Error creating user:", error);
+      console.error("Error updating user:", error);
 
       // Handle different types of errors
       let errorMessage =
-        "An unexpected error occurred while creating the user.";
+        "An unexpected error occurred while updating the user.";
 
       if (error?.response?.data?.message) {
         errorMessage = error.response.data.message;
@@ -294,7 +298,7 @@ export default function NewUserPage() {
       } else if (error?.response?.status === 401) {
         errorMessage = "Unauthorized. Please check your permissions.";
       } else if (error?.response?.status === 403) {
-        errorMessage = "Forbidden. You don't have permission to create users.";
+        errorMessage = "Forbidden. You don't have permission to update users.";
       }
 
       setSubmitError(errorMessage);
@@ -302,6 +306,42 @@ export default function NewUserPage() {
       setIsSubmitting(false);
     }
   };
+
+  if (isLoading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-64">
+          <div className="w-8 h-8 border-2 border-obus-primary/30 border-t-obus-primary rounded-full animate-spin" />
+          <span className="ml-3 text-obus-text-secondary dark:text-obus-text-light">
+            Loading user details...
+          </span>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <DashboardLayout>
+        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-800 dark:border-red-800 dark:bg-red-900/20 dark:text-red-200">
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="w-5 h-5" />
+            <span className="text-sm font-medium">{error}</span>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (!currentUser) {
+    return (
+      <DashboardLayout>
+        <div className="rounded-lg border border-obus-primary/10 bg-white p-6 shadow-sm text-obus-text-secondary dark:border-white/20 dark:bg-white/5 dark:text-obus-text-light">
+          User not found.
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
@@ -317,15 +357,9 @@ export default function NewUserPage() {
             <ArrowLeft className="w-4 h-4" />
           </Button>
           <div>
-            <h1 className="text-h1">
-              {userType === "admin"
-                ? "Create Admin User"
-                : "Create Partner User"}
-            </h1>
+            <h1 className="text-h1">Edit User</h1>
             <p className="text-caption mt-2">
-              {userType === "admin"
-                ? "Create a new system administrator account"
-                : "Create a new partner user account"}
+              Update user information and settings
             </p>
           </div>
         </div>
@@ -337,7 +371,7 @@ export default function NewUserPage() {
               <div className="w-2 h-2 bg-green-500 rounded-full"></div>
               <span className="text-sm font-medium">{submitSuccess}</span>
             </div>
-            <p className="text-sm mt-1">Redirecting to users list...</p>
+            <p className="text-sm mt-1">Redirecting to user details...</p>
           </div>
         )}
 
@@ -347,7 +381,7 @@ export default function NewUserPage() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                <span className="text-sm font-medium">Error creating user</span>
+                <span className="text-sm font-medium">Error updating user</span>
               </div>
               <Button
                 variant="ghost"
@@ -367,90 +401,14 @@ export default function NewUserPage() {
           className="space-y-8"
           style={{ opacity: submitSuccess ? 0.6 : 1 }}
         >
-          {/* Partner Selection Section (for partner users only) */}
-          {userType === "partner" && (
-            <Card className="border border-obus-primary/10 bg-white shadow-sm transition-colors dark:border-white/20 dark:bg-white/5">
-              <CardHeader>
-                <CardTitle className="text-obus-primary dark:text-white flex items-center gap-2">
-                  <Building2 className="w-5 h-5" />
-                  Partner Assignment
-                  <Badge className="bg-blue-500/20 text-blue-400 hover:bg-blue-500/20">
-                    REQUIRED
-                  </Badge>
-                </CardTitle>
-                <CardDescription>
-                  Select the partner organization this user will be assigned to
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <Label htmlFor="partnerId" className="text-sm font-medium">
-                    Partner Organization <span className="text-red-500">*</span>
-                  </Label>
-                  <Select
-                    value={formData.partnerId ? String(formData.partnerId) : ""}
-                    onValueChange={(value: string) =>
-                      handleInputChange(
-                        "partnerId",
-                        value ? Number(value) : null
-                      )
-                    }
-                    disabled={isLoadingPartners}
-                  >
-                    <SelectTrigger
-                      className={errors.partnerId ? "border-red-500" : ""}
-                    >
-                      <SelectValue
-                        placeholder={
-                          isLoadingPartners
-                            ? "Loading partners..."
-                            : "Select a partner organization"
-                        }
-                      />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {partners.map((partner) => (
-                        <SelectItem key={partner.id} value={String(partner.id)}>
-                          <div className="flex flex-col">
-                            <span className="font-medium">
-                              {partner.businessName}
-                            </span>
-                            <span className="text-xs text-muted-foreground">
-                              {partner.code} • {partner.city}, {partner.country}
-                            </span>
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {errors.partnerId && (
-                    <p className="text-sm text-red-500">{errors.partnerId}</p>
-                  )}
-                  {partners.length === 0 && !isLoadingPartners && (
-                    <p className="text-sm text-amber-600 dark:text-amber-400">
-                      No partners available for assignment. Please create a
-                      partner first.
-                    </p>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
           {/* Section 1: Basic Information */}
           <Card className="border border-obus-primary/10 bg-white shadow-sm transition-colors dark:border-white/20 dark:bg-white/5">
             <CardHeader>
               <CardTitle className="text-obus-primary dark:text-white flex items-center gap-2">
                 <User className="w-5 h-5" />
                 Basic Information
-                <Badge
-                  className={
-                    userType === "admin"
-                      ? "bg-red-500/20 text-red-400 hover:bg-red-500/20"
-                      : "bg-blue-500/20 text-blue-400 hover:bg-blue-500/20"
-                  }
-                >
-                  {userType === "admin" ? "ADMIN USER" : "PARTNER USER"}
+                <Badge className="bg-blue-500/20 text-blue-400 hover:bg-blue-500/20">
+                  EDIT USER
                 </Badge>
               </CardTitle>
               <CardDescription>
@@ -1029,16 +987,12 @@ export default function NewUserPage() {
               {isSubmitting ? (
                 <>
                   <div className="w-4 h-4 mr-2 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                  {userType === "admin"
-                    ? "Creating Admin User..."
-                    : "Creating Partner User..."}
+                  Updating User...
                 </>
               ) : (
                 <>
                   <Save className="w-4 h-4 mr-2" />
-                  {userType === "admin"
-                    ? "Create Admin User"
-                    : "Create Partner User"}
+                  Update User
                 </>
               )}
             </Button>

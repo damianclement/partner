@@ -1,7 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useRef } from "react";
+import { useParams, useRouter } from "next/navigation";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,7 +34,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { usePartners } from "@/lib/contexts/PartnersContext";
-import type { CreatePartnerRequestDto } from "@/lib/api/types";
+import type { UpdatePartnerRequestDto } from "@/lib/api/types";
 
 interface PartnerFormData {
   // Section 1: Basic Information
@@ -67,9 +68,22 @@ interface PartnerFormData {
   notes: string;
 }
 
-export default function NewPartnerPage() {
+export default function EditPartnerPage() {
   const router = useRouter();
-  const { createPartner, error, clearError } = usePartners();
+  const params = useParams<{ id: string }>();
+  const partnerUid = params?.id as string;
+  const loadingRef = useRef(false);
+
+  const {
+    currentPartner,
+    isLoading,
+    error,
+    loadPartnerByUid,
+    updatePartnerByUid,
+    clearError,
+    clearCurrentPartner,
+  } = usePartners();
+
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [formData, setFormData] = React.useState<PartnerFormData>({
     code: "",
@@ -95,6 +109,50 @@ export default function NewPartnerPage() {
   });
 
   const [errors, setErrors] = React.useState<Record<string, string>>({});
+
+  // Load partner data when component mounts or partnerUid changes
+  useEffect(() => {
+    if (partnerUid && !loadingRef.current) {
+      loadingRef.current = true;
+      loadPartnerByUid(partnerUid).finally(() => {
+        loadingRef.current = false;
+      });
+    }
+
+    // Cleanup when component unmounts
+    return () => {
+      clearCurrentPartner();
+    };
+  }, [partnerUid, loadPartnerByUid, clearCurrentPartner]);
+
+  // Populate form when partner data is loaded
+  useEffect(() => {
+    if (currentPartner) {
+      setFormData({
+        code: currentPartner.code || "",
+        businessName: currentPartner.businessName || "",
+        legalName: currentPartner.legalName || "",
+        email: currentPartner.email || "",
+        phoneNumber: currentPartner.phoneNumber || "",
+        businessRegistrationNumber:
+          currentPartner.businessRegistrationNumber || "",
+        taxIdentificationNumber: currentPartner.taxIdentificationNumber || "",
+        businessAddress: currentPartner.businessAddress || "",
+        type: currentPartner.type || "",
+        tier: currentPartner.tier || "",
+        commissionRate: currentPartner.commissionRate?.toString() || "",
+        contactPersonName: currentPartner.contactPerson?.name || "",
+        contactPersonEmail: currentPartner.contactPerson?.email || "",
+        contactPersonPhone: currentPartner.contactPerson?.phone || "",
+        city: currentPartner.location?.city || "",
+        state: currentPartner.location?.state || "",
+        country: currentPartner.location?.country || "",
+        postalCode: currentPartner.location?.postalCode || "",
+        description: currentPartner.description || "",
+        notes: currentPartner.notes || "",
+      });
+    }
+  }, [currentPartner]);
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -150,14 +208,14 @@ export default function NewPartnerPage() {
   };
 
   const handleSubmit = async () => {
-    if (!validateForm()) {
+    if (!validateForm() || !partnerUid || !currentPartner) {
       return;
     }
 
     setIsSubmitting(true);
     try {
       // Prepare the partner data for API
-      const partnerData: CreatePartnerRequestDto = {
+      const partnerData: UpdatePartnerRequestDto = {
         businessName: formData.businessName,
         legalName: formData.legalName,
         email: formData.email,
@@ -175,24 +233,89 @@ export default function NewPartnerPage() {
         contactPersonPhone: formData.contactPersonPhone,
         description: formData.description,
         notes: formData.notes,
+        status: currentPartner.status,
+        tier: formData.tier as
+          | "BRONZE"
+          | "SILVER"
+          | "GOLD"
+          | "PLATINUM"
+          | "DIAMOND",
+        isActive: currentPartner.status === "ACTIVE",
+        isVerified: currentPartner.verified,
+        commissionRate: Number(formData.commissionRate),
       };
 
-      // Create the partner via API
-      const response = await createPartner(partnerData);
+      // Update the partner via API
+      const response = await updatePartnerByUid(partnerUid, partnerData);
 
       if (response.status && response.data) {
-        // Redirect back to partners list
-        router.push("/partners");
+        // Redirect back to partner details
+        router.push(`/partners/${partnerUid}`);
       } else {
-        throw new Error(response.message || "Failed to create partner");
+        throw new Error(response.message || "Failed to update partner");
       }
     } catch (error) {
-      console.error("Error saving partner:", error);
+      console.error("Error updating partner:", error);
       // Error is already handled by the context
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  if (isLoading) {
+    return (
+      <DashboardLayout>
+        <div className="space-y-6">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => router.back()}
+              className="p-2"
+            >
+              <ArrowLeft className="w-4 h-4" />
+            </Button>
+            <div>
+              <h1 className="text-h1">Edit Partner</h1>
+              <p className="text-caption mt-2">Loading partner details...</p>
+            </div>
+          </div>
+          <div className="rounded-lg border border-obus-primary/10 bg-white p-6 shadow-sm dark:border-white/20 dark:bg-white/5">
+            <div className="flex items-center justify-center gap-2 text-obus-text-secondary dark:text-obus-text-light">
+              <div className="w-4 h-4 border-2 border-obus-primary/30 border-t-obus-primary rounded-full animate-spin" />
+              Loading partner details...
+            </div>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (!currentPartner) {
+    return (
+      <DashboardLayout>
+        <div className="space-y-6">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => router.back()}
+              className="p-2"
+            >
+              <ArrowLeft className="w-4 h-4" />
+            </Button>
+            <div>
+              <h1 className="text-h1">Edit Partner</h1>
+              <p className="text-caption mt-2">Partner not found</p>
+            </div>
+          </div>
+          <div className="rounded-lg border border-obus-primary/10 bg-white p-6 shadow-sm text-obus-text-secondary dark:border-white/20 dark:bg-white/5 dark:text-obus-text-light">
+            Partner not found.
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
@@ -208,9 +331,9 @@ export default function NewPartnerPage() {
             <ArrowLeft className="w-4 h-4" />
           </Button>
           <div>
-            <h1 className="text-h1">Add New Partner</h1>
+            <h1 className="text-h1">Edit Partner</h1>
             <p className="text-caption mt-2">
-              Create a new transportation partner in your network
+              Update partner information for {currentPartner.businessName}
             </p>
           </div>
         </div>
@@ -222,7 +345,7 @@ export default function NewPartnerPage() {
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 bg-red-500 rounded-full"></div>
                 <span className="text-sm font-medium">
-                  Error creating partner
+                  Error updating partner
                 </span>
               </div>
               <Button
@@ -718,12 +841,12 @@ export default function NewPartnerPage() {
             {isSubmitting ? (
               <>
                 <div className="w-4 h-4 mr-2 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                Creating Partner...
+                Updating Partner...
               </>
             ) : (
               <>
                 <Save className="w-4 h-4 mr-2" />
-                Create Partner
+                Update Partner
               </>
             )}
           </Button>

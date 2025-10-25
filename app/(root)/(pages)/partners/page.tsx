@@ -5,7 +5,21 @@ import { useRouter } from "next/navigation";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Plus, MoreHorizontal, Search, Filter, RefreshCw } from "lucide-react";
+import {
+  Plus,
+  MoreHorizontal,
+  Search,
+  Filter,
+  RefreshCw,
+  Edit,
+  Key,
+  Users,
+  Shield,
+  Trash2,
+  CheckCircle,
+  XCircle,
+  AlertTriangle,
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -21,7 +35,17 @@ import {
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuTrigger,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import Link from "next/link";
 import { usePartners } from "@/lib/contexts/PartnersContext";
 
@@ -45,6 +69,14 @@ export default function PartnersPage() {
     setCurrentPage,
     setPageSize,
     clearError,
+    verifyPartner,
+    unverifyPartner,
+    activatePartner,
+    deactivatePartner,
+    setPartnerStatus,
+    setPartnerTier,
+    setPartnerCommission,
+    softDeletePartner,
   } = usePartners();
 
   // Local state for UI interactions
@@ -52,6 +84,23 @@ export default function PartnersPage() {
   const [selectedPartners, setSelectedPartners] = React.useState<number[]>([]);
   const [searchTimeout, setSearchTimeout] =
     React.useState<NodeJS.Timeout | null>(null);
+
+  // Dialog states
+  const [confirmDialog, setConfirmDialog] = React.useState<{
+    isOpen: boolean;
+    title: string;
+    description: string;
+    action: () => void;
+    variant: "default" | "destructive";
+  }>({
+    isOpen: false,
+    title: "",
+    description: "",
+    action: () => {},
+    variant: "default",
+  });
+
+  const [actionLoading, setActionLoading] = React.useState<number | null>(null);
 
   // Handle search with debouncing
   const handleSearch = (value: string) => {
@@ -103,6 +152,174 @@ export default function PartnersPage() {
   // Check if all partners are selected
   const isAllSelected =
     partners.length > 0 && selectedPartners.length === partners.length;
+
+  // Action handlers
+  const handleAction = async (
+    action: () => Promise<void>,
+    partnerId: number
+  ) => {
+    setActionLoading(partnerId);
+    try {
+      await action();
+      await loadPartners(); // Refresh the list
+    } catch (error) {
+      console.error("Action failed:", error);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const showConfirmDialog = (
+    title: string,
+    description: string,
+    action: () => void,
+    variant: "default" | "destructive" = "default"
+  ) => {
+    setConfirmDialog({
+      isOpen: true,
+      title,
+      description,
+      action,
+      variant,
+    });
+  };
+
+  const handleVerifyPartner = (partnerId: number, partnerName: string) => {
+    showConfirmDialog(
+      "Verify Partner",
+      `Are you sure you want to verify ${partnerName}? This will mark them as verified.`,
+      () => handleAction(() => verifyPartner(partnerId), partnerId)
+    );
+  };
+
+  const handleUnverifyPartner = (partnerId: number, partnerName: string) => {
+    showConfirmDialog(
+      "Unverify Partner",
+      `Are you sure you want to unverify ${partnerName}? This will remove their verified status.`,
+      () => handleAction(() => unverifyPartner(partnerId), partnerId)
+    );
+  };
+
+  const handleActivatePartner = (partnerId: number, partnerName: string) => {
+    showConfirmDialog(
+      "Activate Partner",
+      `Are you sure you want to activate ${partnerName}?`,
+      () => handleAction(() => activatePartner(partnerId), partnerId)
+    );
+  };
+
+  const handleDeactivatePartner = (partnerId: number, partnerName: string) => {
+    showConfirmDialog(
+      "Deactivate Partner",
+      `Are you sure you want to deactivate ${partnerName}?`,
+      () => handleAction(() => deactivatePartner(partnerId), partnerId)
+    );
+  };
+
+  const handleSuspendPartner = (partnerId: number, partnerName: string) => {
+    showConfirmDialog(
+      "Suspend Partner",
+      `Are you sure you want to suspend ${partnerName}? This will prevent them from accessing the system.`,
+      () =>
+        handleAction(() => setPartnerStatus(partnerId, "SUSPENDED"), partnerId),
+      "destructive"
+    );
+  };
+
+  const handleDeletePartner = (partnerId: number, partnerName: string) => {
+    showConfirmDialog(
+      "Delete Partner",
+      `Are you sure you want to delete ${partnerName}? This action cannot be undone.`,
+      () => handleAction(() => softDeletePartner(partnerId), partnerId),
+      "destructive"
+    );
+  };
+
+  const handleViewAgents = (partnerUid: string) => {
+    router.push(`/agents?partner=${partnerUid}`);
+  };
+
+  const handleManageApiKeys = (partnerUid: string) => {
+    router.push(`/partners/${partnerUid}/api-keys`);
+  };
+
+  const handleEditPartner = (partnerUid: string) => {
+    router.push(`/partners/${partnerUid}/edit`);
+  };
+
+  // Bulk actions
+  const handleBulkVerify = () => {
+    showConfirmDialog(
+      "Verify Selected Partners",
+      `Are you sure you want to verify ${selectedPartners.length} selected partners?`,
+      () => handleBulkAction("verify")
+    );
+  };
+
+  const handleBulkUnverify = () => {
+    showConfirmDialog(
+      "Unverify Selected Partners",
+      `Are you sure you want to unverify ${selectedPartners.length} selected partners?`,
+      () => handleBulkAction("unverify")
+    );
+  };
+
+  const handleBulkActivate = () => {
+    showConfirmDialog(
+      "Activate Selected Partners",
+      `Are you sure you want to activate ${selectedPartners.length} selected partners?`,
+      () => handleBulkAction("activate")
+    );
+  };
+
+  const handleBulkDeactivate = () => {
+    showConfirmDialog(
+      "Deactivate Selected Partners",
+      `Are you sure you want to deactivate ${selectedPartners.length} selected partners?`,
+      () => handleBulkAction("deactivate")
+    );
+  };
+
+  const handleBulkDelete = () => {
+    showConfirmDialog(
+      "Delete Selected Partners",
+      `Are you sure you want to delete ${selectedPartners.length} selected partners? This action cannot be undone.`,
+      () => handleBulkAction("delete"),
+      "destructive"
+    );
+  };
+
+  const handleBulkAction = async (action: string) => {
+    if (selectedPartners.length === 0) return;
+
+    setActionLoading(-1); // Use -1 to indicate bulk action
+    try {
+      const promises = selectedPartners.map(async (partnerId) => {
+        switch (action) {
+          case "verify":
+            return verifyPartner(partnerId);
+          case "unverify":
+            return unverifyPartner(partnerId);
+          case "activate":
+            return activatePartner(partnerId);
+          case "deactivate":
+            return deactivatePartner(partnerId);
+          case "delete":
+            return softDeletePartner(partnerId);
+          default:
+            return Promise.resolve();
+        }
+      });
+
+      await Promise.all(promises);
+      setSelectedPartners([]);
+      await loadPartners();
+    } catch (error) {
+      console.error("Bulk action failed:", error);
+    } finally {
+      setActionLoading(null);
+    }
+  };
 
   // Cleanup timeout on unmount
   React.useEffect(() => {
@@ -260,6 +477,83 @@ export default function PartnersPage() {
               </Button>
             </div>
           </div>
+
+          {/* Bulk Actions Bar */}
+          {selectedPartners.length > 0 && (
+            <div className="rounded-lg border border-obus-primary/10 bg-obus-accent/5 p-4 dark:border-white/20 dark:bg-obus-accent/10">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-obus-primary dark:text-white">
+                    {selectedPartners.length} partner
+                    {selectedPartners.length > 1 ? "s" : ""} selected
+                  </span>
+                  {actionLoading === -1 && (
+                    <div className="w-4 h-4 border-2 border-obus-primary/30 border-t-obus-primary rounded-full animate-spin" />
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleBulkVerify}
+                    disabled={actionLoading === -1}
+                    className="border-obus-primary/20 text-obus-text-primary hover:bg-obus-primary/5 dark:border-white/20 dark:text-white dark:hover:bg-white/10"
+                  >
+                    <CheckCircle className="w-4 h-4 mr-2" />
+                    Verify
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleBulkUnverify}
+                    disabled={actionLoading === -1}
+                    className="border-obus-primary/20 text-obus-text-primary hover:bg-obus-primary/5 dark:border-white/20 dark:text-white dark:hover:bg-white/10"
+                  >
+                    <XCircle className="w-4 h-4 mr-2" />
+                    Unverify
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleBulkActivate}
+                    disabled={actionLoading === -1}
+                    className="border-obus-primary/20 text-obus-text-primary hover:bg-obus-primary/5 dark:border-white/20 dark:text-white dark:hover:bg-white/10"
+                  >
+                    <CheckCircle className="w-4 h-4 mr-2" />
+                    Activate
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleBulkDeactivate}
+                    disabled={actionLoading === -1}
+                    className="border-obus-primary/20 text-obus-text-primary hover:bg-obus-primary/5 dark:border-white/20 dark:text-white dark:hover:bg-white/10"
+                  >
+                    <XCircle className="w-4 h-4 mr-2" />
+                    Deactivate
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={handleBulkDelete}
+                    disabled={actionLoading === -1}
+                    className="bg-red-600 hover:bg-red-700 text-white"
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Delete
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setSelectedPartners([])}
+                    className="text-obus-text-secondary hover:text-obus-text-primary dark:text-obus-text-light dark:hover:text-white"
+                  >
+                    Clear Selection
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="rounded-md border border-obus-primary/10 bg-white overflow-hidden shadow-sm transition-colors dark:border-white/20 dark:bg-white/5 overflow-x-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-obus-primary/20 hover:scrollbar-thumb-obus-primary/30 dark:scrollbar-thumb-white/20 dark:hover:scrollbar-thumb-white/30">
             <Table>
@@ -476,32 +770,156 @@ export default function PartnersPage() {
                       <TableCell>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 w-8 p-0">
+                            <Button
+                              variant="ghost"
+                              className="h-8 w-8 p-0"
+                              disabled={actionLoading === partner.id}
+                            >
                               <span className="sr-only">Open menu</span>
-                              <MoreHorizontal />
+                              {actionLoading === partner.id ? (
+                                <div className="w-4 h-4 border-2 border-obus-primary/30 border-t-obus-primary rounded-full animate-spin" />
+                              ) : (
+                                <MoreHorizontal />
+                              )}
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent
                             align="end"
-                            className="border border-obus-primary/10 bg-white text-obus-text-primary dark:border-white/20 dark:bg-obus-primary dark:text-white"
+                            className="border border-obus-primary/10 bg-white text-obus-text-primary dark:border-white/20 dark:bg-obus-primary dark:text-white min-w-[200px]"
                           >
                             <Link href={`/partners/${partner.uid}`}>
-                              <DropdownMenuCheckboxItem className="text-obus-text-primary dark:text-white cursor-pointer">
+                              <DropdownMenuItem className="text-obus-text-primary dark:text-white cursor-pointer">
+                                <Users className="w-4 h-4 mr-2" />
                                 View Details
-                              </DropdownMenuCheckboxItem>
+                              </DropdownMenuItem>
                             </Link>
-                            <DropdownMenuCheckboxItem className="text-obus-text-primary dark:text-white">
+
+                            <DropdownMenuItem
+                              className="text-obus-text-primary dark:text-white cursor-pointer"
+                              onClick={() => handleEditPartner(partner.uid)}
+                            >
+                              <Edit className="w-4 h-4 mr-2" />
                               Edit Partner
-                            </DropdownMenuCheckboxItem>
-                            <DropdownMenuCheckboxItem className="text-obus-text-primary dark:text-white">
+                            </DropdownMenuItem>
+
+                            <DropdownMenuItem
+                              className="text-obus-text-primary dark:text-white cursor-pointer"
+                              onClick={() => handleManageApiKeys(partner.uid)}
+                            >
+                              <Key className="w-4 h-4 mr-2" />
                               API Keys
-                            </DropdownMenuCheckboxItem>
-                            <DropdownMenuCheckboxItem className="text-obus-text-primary dark:text-white">
+                            </DropdownMenuItem>
+
+                            <DropdownMenuItem
+                              className="text-obus-text-primary dark:text-white cursor-pointer"
+                              onClick={() => handleViewAgents(partner.uid)}
+                            >
+                              <Users className="w-4 h-4 mr-2" />
                               View Agents
-                            </DropdownMenuCheckboxItem>
-                            <DropdownMenuCheckboxItem className="text-obus-text-primary dark:text-white">
-                              Toggle Status
-                            </DropdownMenuCheckboxItem>
+                            </DropdownMenuItem>
+
+                            <DropdownMenuSeparator />
+
+                            {/* Verification Actions */}
+                            {partner.verified ? (
+                              <DropdownMenuItem
+                                className="text-obus-text-primary dark:text-white cursor-pointer"
+                                onClick={() =>
+                                  handleUnverifyPartner(
+                                    partner.id,
+                                    partner.businessName
+                                  )
+                                }
+                              >
+                                <XCircle className="w-4 h-4 mr-2" />
+                                Unverify Partner
+                              </DropdownMenuItem>
+                            ) : (
+                              <DropdownMenuItem
+                                className="text-obus-text-primary dark:text-white cursor-pointer"
+                                onClick={() =>
+                                  handleVerifyPartner(
+                                    partner.id,
+                                    partner.businessName
+                                  )
+                                }
+                              >
+                                <CheckCircle className="w-4 h-4 mr-2" />
+                                Verify Partner
+                              </DropdownMenuItem>
+                            )}
+
+                            {/* Status Actions */}
+                            {partner.status === "ACTIVE" ? (
+                              <DropdownMenuItem
+                                className="text-obus-text-primary dark:text-white cursor-pointer"
+                                onClick={() =>
+                                  handleDeactivatePartner(
+                                    partner.id,
+                                    partner.businessName
+                                  )
+                                }
+                              >
+                                <XCircle className="w-4 h-4 mr-2" />
+                                Deactivate
+                              </DropdownMenuItem>
+                            ) : partner.status === "INACTIVE" ? (
+                              <DropdownMenuItem
+                                className="text-obus-text-primary dark:text-white cursor-pointer"
+                                onClick={() =>
+                                  handleActivatePartner(
+                                    partner.id,
+                                    partner.businessName
+                                  )
+                                }
+                              >
+                                <CheckCircle className="w-4 h-4 mr-2" />
+                                Activate
+                              </DropdownMenuItem>
+                            ) : partner.status === "SUSPENDED" ? (
+                              <DropdownMenuItem
+                                className="text-obus-text-primary dark:text-white cursor-pointer"
+                                onClick={() =>
+                                  handleActivatePartner(
+                                    partner.id,
+                                    partner.businessName
+                                  )
+                                }
+                              >
+                                <CheckCircle className="w-4 h-4 mr-2" />
+                                Reactivate
+                              </DropdownMenuItem>
+                            ) : null}
+
+                            {partner.status !== "SUSPENDED" && (
+                              <DropdownMenuItem
+                                className="text-red-600 dark:text-red-400 cursor-pointer"
+                                onClick={() =>
+                                  handleSuspendPartner(
+                                    partner.id,
+                                    partner.businessName
+                                  )
+                                }
+                              >
+                                <AlertTriangle className="w-4 h-4 mr-2" />
+                                Suspend
+                              </DropdownMenuItem>
+                            )}
+
+                            <DropdownMenuSeparator />
+
+                            <DropdownMenuItem
+                              className="text-red-600 dark:text-red-400 cursor-pointer"
+                              onClick={() =>
+                                handleDeletePartner(
+                                  partner.id,
+                                  partner.businessName
+                                )
+                              }
+                            >
+                              <Trash2 className="w-4 h-4 mr-2" />
+                              Delete Partner
+                            </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>
@@ -560,6 +978,54 @@ export default function PartnersPage() {
             )}
           </div>
         </div>
+
+        {/* Confirmation Dialog */}
+        <Dialog
+          open={confirmDialog.isOpen}
+          onOpenChange={(open) =>
+            setConfirmDialog((prev) => ({ ...prev, isOpen: open }))
+          }
+        >
+          <DialogContent className="border border-obus-primary/10 bg-white dark:border-white/20 dark:bg-obus-primary">
+            <DialogHeader>
+              <DialogTitle className="text-obus-primary dark:text-white">
+                {confirmDialog.title}
+              </DialogTitle>
+              <DialogDescription className="text-obus-text-secondary dark:text-obus-text-light">
+                {confirmDialog.description}
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() =>
+                  setConfirmDialog((prev) => ({ ...prev, isOpen: false }))
+                }
+                className="border-obus-primary/20 text-obus-text-primary hover:bg-obus-primary/5 dark:border-white/20 dark:text-white dark:hover:bg-white/10"
+              >
+                Cancel
+              </Button>
+              <Button
+                variant={
+                  confirmDialog.variant === "destructive"
+                    ? "destructive"
+                    : "default"
+                }
+                onClick={() => {
+                  confirmDialog.action();
+                  setConfirmDialog((prev) => ({ ...prev, isOpen: false }));
+                }}
+                className={
+                  confirmDialog.variant === "destructive"
+                    ? "bg-red-600 hover:bg-red-700 text-white"
+                    : "bg-obus-accent hover:bg-obus-accent/90 text-white"
+                }
+              >
+                {confirmDialog.variant === "destructive" ? "Delete" : "Confirm"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   );

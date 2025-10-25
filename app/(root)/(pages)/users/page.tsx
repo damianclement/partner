@@ -147,13 +147,23 @@ export default function UsersPage() {
               Manage system users, roles, and permissions
             </p>
           </div>
-          <Button
-            className="bg-obus-accent hover:bg-obus-accent/90"
-            onClick={() => router.push("/users/new")}
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Add New User
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              className="border-obus-primary/20 text-obus-text-primary hover:bg-obus-primary/5 dark:border-white/20 dark:text-white dark:hover:bg-white/10"
+              onClick={() => router.push("/users/new?type=admin")}
+            >
+              <ShieldCheck className="w-4 h-4 mr-2" />
+              Create Admin User
+            </Button>
+            <Button
+              className="bg-obus-accent hover:bg-obus-accent/90"
+              onClick={() => router.push("/users/new?type=partner")}
+            >
+              <Building2 className="w-4 h-4 mr-2" />
+              Create Partner User
+            </Button>
+          </div>
         </div>
 
         {/* Stats Cards */}
@@ -462,7 +472,7 @@ export default function UsersPage() {
                             align="end"
                             className="border border-obus-primary/10 bg-white text-obus-text-primary dark:border-white/20 dark:bg-obus-primary dark:text-white"
                           >
-                            <Link href={`/users/${user.id}`}>
+                            <Link href={`/users/${user.uid}`}>
                               <DropdownMenuCheckboxItem className="text-obus-text-primary dark:text-white flex items-center gap-2 cursor-pointer">
                                 <Eye className="w-4 h-4" />
                                 View details

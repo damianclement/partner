@@ -293,7 +293,7 @@ export function PartnersProvider({ children }: { children: React.ReactNode }) {
   );
 
   // Load partner by UID
-  const loadPartnerByUid = async (uid: string) => {
+  const loadPartnerByUid = useCallback(async (uid: string) => {
     try {
       setIsLoading(true);
       setError(null);
@@ -314,10 +314,10 @@ export function PartnersProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   // Load partner by ID
-  const loadPartnerById = async (id: number) => {
+  const loadPartnerById = useCallback(async (id: number) => {
     try {
       setIsLoading(true);
       setError(null);
@@ -338,10 +338,10 @@ export function PartnersProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   // Load partner by code
-  const loadPartnerByCode = async (code: string) => {
+  const loadPartnerByCode = useCallback(async (code: string) => {
     try {
       setIsLoading(true);
       setError(null);
@@ -362,7 +362,7 @@ export function PartnersProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   // Create partner
   const createPartner = async (
@@ -803,7 +803,7 @@ export function PartnersProvider({ children }: { children: React.ReactNode }) {
   };
 
   // API Key Management
-  const loadPartnerApiKeys = async (partnerUid: string) => {
+  const loadPartnerApiKeys = useCallback(async (partnerUid: string) => {
     try {
       setIsApiKeysLoading(true);
       setApiKeysError(null);
@@ -823,7 +823,7 @@ export function PartnersProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsApiKeysLoading(false);
     }
-  };
+  }, []);
 
   const loadPartnerActiveApiKeys = async (partnerUid: string) => {
     try {
@@ -1038,9 +1038,9 @@ export function PartnersProvider({ children }: { children: React.ReactNode }) {
   };
 
   // UI State Management
-  const clearError = () => setError(null);
-  const clearCurrentPartner = () => setCurrentPartner(null);
-  const clearApiKeysError = () => setApiKeysError(null);
+  const clearError = useCallback(() => setError(null), []);
+  const clearCurrentPartner = useCallback(() => setCurrentPartner(null), []);
+  const clearApiKeysError = useCallback(() => setApiKeysError(null), []);
 
   // Load initial data
   useEffect(() => {

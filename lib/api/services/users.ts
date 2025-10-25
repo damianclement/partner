@@ -165,28 +165,34 @@ export const usersService = {
   // Get user statistics
   async getUserStatistics(): Promise<UserStatistics> {
     try {
-      // Since the API doesn't have a single statistics endpoint, we'll aggregate from multiple calls
+      // Get counts for each user type
       const [
-        totalUsers,
+        systemUsers,
+        partnerUsers,
+        partnerAgents,
+        rootUsers,
         activeUsers,
         inactiveUsers,
         suspendedUsers,
         pendingUsers,
         lockedUsers,
-        adminUsers,
-        partnerUsers,
-        partnerAgents,
       ] = await Promise.all([
         this.getUsersCountByType("SYSTEM_USER"),
+        this.getUsersCountByType("PARTNER_USER"),
+        this.getUsersCountByType("PARTNER_AGENT"),
+        this.getUsersCountByType("ROOT_USER"),
         this.getUsersCountByStatus("ACTIVE"),
         this.getUsersCountByStatus("INACTIVE"),
         this.getUsersCountByStatus("SUSPENDED"),
         this.getUsersCountByStatus("PENDING_VERIFICATION"),
         this.getUsersCountByStatus("LOCKED"),
-        this.getUsersCountByType("SYSTEM_USER"),
-        this.getUsersCountByType("PARTNER_USER"),
-        this.getUsersCountByType("PARTNER_AGENT"),
       ]);
+
+      // Calculate total users from all types
+      const totalUsers = systemUsers + partnerUsers + partnerAgents + rootUsers;
+
+      // Admin users include both SYSTEM_USER and ROOT_USER
+      const adminUsers = systemUsers + rootUsers;
 
       return {
         totalUsers,
